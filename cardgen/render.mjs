@@ -1,5 +1,5 @@
 // 카드/오버레이 렌더러.
-// 사용법: node render.mjs <all | card <id> | back | overlays | preview> [--copy <dir>]
+// 사용법: node render.mjs <all | card <id> | back | overlays | stamps | preview> [--copy <dir>]
 // Node 내장 http로 cardgen/을 서빙하고 playwright chromium으로 캡처한다.
 import http from "node:http";
 import path from "node:path";
@@ -10,6 +10,7 @@ import { chromium } from "playwright";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const OUT_CARDS = path.join(ROOT, "out", "cards");
 const OUT_OVERLAYS = path.join(ROOT, "out", "overlays");
+const OUT_STAMPS = path.join(ROOT, "out", "stamps");
 const READY_TIMEOUT_MS = 30000;
 
 const MIME = {
@@ -92,6 +93,14 @@ async function captureOverlay(page, base, name, prefix) {
   return out;
 }
 
+async function captureStamp(page, base, name) {
+  await page.goto(`${base}/template.html?stamp=${encodeURIComponent(name)}`);
+  await waitReady(page);
+  const out = path.join(OUT_STAMPS, `${name}.png`);
+  await page.locator(`#stamp-${name}`).screenshot({ omitBackground: true, path: out });
+  return out;
+}
+
 // frames/*.svg → frame_<이름>, badges/*.svg → badge_<이름>
 async function listOverlays() {
   const found = [];
@@ -105,6 +114,16 @@ async function listOverlays() {
     }
   }
   return found;
+}
+
+async function listStamps() {
+  let files = [];
+  try {
+    files = await readdir(path.join(ROOT, "stamps"));
+  } catch { /* no stamps directory */ }
+  return files
+    .filter((f) => f.toLowerCase().endsWith(".svg"))
+    .map((f) => f.slice(0, -4));
 }
 
 async function withBrowser(fn) {
@@ -128,6 +147,7 @@ async function copyOut(dir) {
   const jobs = [
     [OUT_CARDS, path.join(target, "Base")],
     [OUT_OVERLAYS, path.join(target, "Overlays")],
+    [OUT_STAMPS, path.join(target, "Stamps")],
   ];
   for (const [src, dst] of jobs) {
     try {
@@ -142,7 +162,7 @@ async function copyOut(dir) {
 }
 
 function usage() {
-  console.error("사용법: node render.mjs <all | card <id> | back | overlays | preview> [--copy <dir>]");
+  console.error("사용법: node render.mjs <all | card <id> | back | overlays | stamps | preview> [--copy <dir>]");
   process.exit(1);
 }
 
@@ -170,6 +190,7 @@ switch (cmd) {
   case "all": {
     const { cards } = await loadCards();
     await mkdir(OUT_CARDS, { recursive: true });
+    await mkdir(OUT_STAMPS, { recursive: true });
     await withBrowser(async (page, base) => {
       let n = 0;
       for (const card of cards) {
@@ -178,6 +199,10 @@ switch (cmd) {
       }
       await captureBack(page, base);
       console.log("card_back.png");
+      for (const name of await listStamps()) {
+        await captureStamp(page, base, name);
+        console.log(`stamp ${name}.png`);
+      }
     });
     if (copyDir) await copyOut(copyDir);
     break;
@@ -220,6 +245,23 @@ switch (cmd) {
       for (const { name, prefix } of overlays) {
         await captureOverlay(page, base, name, prefix);
         console.log(`${prefix}_${name}.png`);
+      }
+    });
+    if (copyDir) await copyOut(copyDir);
+    break;
+  }
+
+  case "stamps": {
+    const stamps = await listStamps();
+    if (stamps.length === 0) {
+      console.error("stamps/*.svg not found");
+      process.exit(1);
+    }
+    await mkdir(OUT_STAMPS, { recursive: true });
+    await withBrowser(async (page, base) => {
+      for (const name of stamps) {
+        await captureStamp(page, base, name);
+        console.log(`${name}.png`);
       }
     });
     if (copyDir) await copyOut(copyDir);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hwatu.Core;
 using Hwatu.Run;
 using Hwatu.View.Flow;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,14 +33,17 @@ namespace Hwatu.View.Screens
 
         private readonly EffectSystem _effects = new EffectSystem();
         private GameObject _hubPanel;
-        private Text _statusText;
+        private TextMeshProUGUI _statusText;
         private RectTransform _actionZone;      // 오늘 노드별 행동 영역 (매 갱신 재구성)
         private RectTransform _choicesRow;      // 내일 갈림길 버튼들 (매 갱신 재구성)
         private GameObject _resultPanel;
-        private Text _resultText;
+        private TextMeshProUGUI _resultText;
         private GameObject _nightPanel;
-        private Text _nightText;
+        private TextMeshProUGUI _nightText;
         private RoundResult _pendingResult;
+        private RunController _trackedRun;
+        private int _lastHonbul;
+        private InkBleedEffect _inkBleed;
 
         private RunController Run => Flow.CurrentRun;
 
@@ -87,13 +91,40 @@ namespace Hwatu.View.Screens
             // ── 밤 패널 (CompleteNode 직후 — 낮/밤 시스템 이음매) ──
             _nightPanel = BuildOverlayPanel(canvasRoot, "NightPanel", out _nightText,
                 "NightConfirmButton", "다음 날로", ConfirmNight);
+            _inkBleed = Root.AddComponent<InkBleedEffect>();
+            TrackRunResources();
 
             RefreshHub();
+        }
+
+        private void TrackRunResources()
+        {
+            _trackedRun = Run;
+            if (_trackedRun == null) return;
+            _lastHonbul = _trackedRun.State.honbul;
+            _trackedRun.ResourcesChanged += OnRunResourcesChanged;
+        }
+
+        private void UntrackRunResources()
+        {
+            if (_trackedRun != null)
+                _trackedRun.ResourcesChanged -= OnRunResourcesChanged;
+            _trackedRun = null;
+        }
+
+        private void OnRunResourcesChanged()
+        {
+            if (_trackedRun == null) return;
+            int current = _trackedRun.State.honbul;
+            if (current < _lastHonbul)
+                _inkBleed?.Play();
+            _lastHonbul = current;
         }
 
         protected override void OnExit()
         {
             // 어떤 경로로 나가든 구독·임베드 잔재를 남기지 않는다
+            UntrackRunResources();
             _effects.DetachAll();
             TearDownEmbeddedGame();
         }
@@ -185,9 +216,9 @@ namespace Hwatu.View.Screens
             ClearChildren(_choicesRow);
             if (!Run.TodayNodeCleared)
             {
-                var hint = UIBuilder.CreateText(_choicesRow, "Hint",
+                var hint = UIStyles.CreateText(_choicesRow, "Hint", UITextPreset.Body,
                     "오늘 노드를 완료하면 내일 갈림길이 열린다", 20,
-                    new Color(0.5f, 0.5f, 0.5f), TextAnchor.MiddleCenter);
+                    UIStyles.Ash, TextAnchor.MiddleCenter);
                 UIBuilder.SetPreferred(hint.gameObject, 500f, 60f);
                 return;
             }
@@ -252,9 +283,9 @@ namespace Hwatu.View.Screens
             // 임베드 캔버스에 붙여 임베드 정리와 함께 사라진다.
             if (isJudgment && EmbeddedGame.UiRoot != null)
             {
-                var line = UIBuilder.CreateText(EmbeddedGame.UiRoot.transform, "JudgmentLine",
+                var line = UIStyles.CreateText(EmbeddedGame.UiRoot.transform, "JudgmentLine", UITextPreset.Hwaje,
                     $"심판: {JudgmentLine(node.day)}", 22,
-                    new Color(1f, 0.8f, 0.55f), TextAnchor.MiddleCenter);
+                    UIStyles.Gold, TextAnchor.MiddleCenter);
                 var rt = (RectTransform)line.transform;
                 rt.anchorMin = new Vector2(0f, 1f);
                 rt.anchorMax = new Vector2(1f, 1f);
@@ -324,6 +355,7 @@ namespace Hwatu.View.Screens
             _effects.DetachAll(); // 판 종료: 효과 전부 해제 (구독 누수 금지)
 
             int targetScore = EmbeddedGame != null ? EmbeddedGame.Engine.Config.TargetScore : 0;
+            bool wasJudgment = Run.CurrentNode.kind == NodeKind.Judgment;
             Run.ApplyRoundResult(result);
 
             _resultText.text = result.Success
@@ -333,6 +365,11 @@ namespace Hwatu.View.Screens
                   + $"혼불 -1 → {Run.State.honbul}"
                   + (Run.IsOver ? "\n혼불이 모두 꺼졌다…" : "\n같은 노드를 다시 친다 (딜이 달라진다).");
             _resultPanel.SetActive(true);
+            if (result.Success)
+            {
+                SealStampEffect.Play((RectTransform)_resultText.transform,
+                    wasJudgment ? SealStampKind.Gold : SealStampKind.Red);
+            }
         }
 
         /// <summary>결과 패널 [계속]: 임베드 정리 후 허브 복귀 또는 (소멸) 엔딩 전환.</summary>
@@ -364,7 +401,7 @@ namespace Hwatu.View.Screens
 
         // ── 빌드 헬퍼 ───────────────────────────────────────────
 
-        private GameObject BuildOverlayPanel(Transform canvasRoot, string name, out Text bodyText,
+        private GameObject BuildOverlayPanel(Transform canvasRoot, string name, out TextMeshProUGUI bodyText,
                                              string buttonName, string buttonLabel, System.Action onClick)
         {
             var dim = UIBuilder.CreatePanel(canvasRoot, name, new Color(0f, 0f, 0f, 0.55f));
@@ -378,8 +415,8 @@ namespace Hwatu.View.Screens
             boxRt.sizeDelta = new Vector2(760f, 250f);
             boxRt.anchoredPosition = new Vector2(0f, 40f);
 
-            bodyText = UIBuilder.CreateText(box.transform, "Body", "", 26,
-                new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
+            bodyText = UIStyles.CreateText(box.transform, "Body", UITextPreset.Body, "", 26,
+                UIStyles.Gold, TextAnchor.MiddleCenter);
             var textRt = (RectTransform)bodyText.transform;
             textRt.anchorMin = new Vector2(0f, 0f);
             textRt.anchorMax = new Vector2(1f, 1f);
@@ -399,8 +436,8 @@ namespace Hwatu.View.Screens
 
         private void AddZoneLabel(string text)
         {
-            var t = UIBuilder.CreateText(_actionZone, "ZoneLabel", text, 28,
-                new Color(0.9f, 0.9f, 0.9f), TextAnchor.MiddleCenter);
+            var t = UIStyles.CreateText(_actionZone, "ZoneLabel", UITextPreset.Body, text, 28,
+                UIStyles.Paper, TextAnchor.MiddleCenter);
             UIBuilder.SetPreferred(t.gameObject, 860f, 46f);
         }
 

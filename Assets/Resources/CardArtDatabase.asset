@@ -120,4 +120,9 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: cc5ff8edba380df4eb385858775aac6d, type: 3}
   - Key: frame_gold
     Sprite: {fileID: 21300000, guid: 93b7243aa29e1d740ae800c8793f74eb, type: 3}
+  StampEntries:
+  - Key: seal_gold
+    Sprite: {fileID: 21300000, guid: ed481f5a52f0d144dbb12e17265de786, type: 3}
+  - Key: seal_red
+    Sprite: {fileID: 21300000, guid: 1e9c63d18c67984478ca5a0ef1fb5002, type: 3}
   BackSprite: {fileID: 21300000, guid: 0b766a4d134c77043a2a1d12c8a1d236, type: 3}

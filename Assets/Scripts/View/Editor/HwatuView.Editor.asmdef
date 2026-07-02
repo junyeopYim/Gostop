@@ -2,7 +2,8 @@
     "name": "HwatuView.Editor",
     "rootNamespace": "Hwatu.View.Editor",
     "references": [
-        "HwatuView"
+        "HwatuView",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

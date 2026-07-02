@@ -17,7 +17,7 @@
       background: var(--ash);
     }
     /* 단일 카드 / 오버레이 캡처 모드: 페이지 배경 투명 */
-    body.single-mode, body.overlay-mode { background: transparent; }
+    body.single-mode, body.overlay-mode, body.stamp-mode { background: transparent; }
 
     /* ── 격자 프리뷰 ─────────────────────────────── */
     #stage.grid {
@@ -126,6 +126,14 @@
       background: transparent;
     }
     .overlay-box > svg { display: block; width: 100%; height: 100%; }
+
+    .stamp-box {
+      position: relative;
+      width: 256px;
+      height: 256px;
+      background: transparent;
+    }
+    .stamp-box > svg { display: block; width: 100%; height: 100%; }
   </style>
 </head>
 <body>
@@ -246,6 +254,13 @@
       return box;
     }
 
+    async function buildStamp(name) {
+      const box = el("div", "stamp-box");
+      box.id = `stamp-${name}`;
+      box.append(await inlineSvgCached(`stamps/${name}.svg`));
+      return box;
+    }
+
     async function main() {
       const data = await (await fetch("cards.json")).json();
 
@@ -259,8 +274,12 @@
       const params = new URLSearchParams(location.search);
       const cardId = params.get("card");
       const overlayName = params.get("overlay");
+      const stampName = params.get("stamp");
 
-      if (overlayName) {
+      if (stampName) {
+        document.body.classList.add("stamp-mode");
+        stage.append(await buildStamp(stampName));
+      } else if (overlayName) {
         document.body.classList.add("overlay-mode");
         stage.append(await buildOverlay(overlayName));
       } else if (params.get("back")) {

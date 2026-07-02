@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,55 +9,43 @@ namespace Hwatu.View
     public sealed class UiRefs
     {
         public Canvas Canvas;
-        public InputField SeedField;
-        public InputField TargetField;
-        public Text ExpectedText;
-        public Text TurnText;
-        public Text DeckText;
-        public Text DeckBackText;
-        public Text LogText;
-        public Text BreakdownText;
-        public Text BannerText;
-        public Text RoundOverTitle;
-        public Text RoundOverBody;
+        public TMP_InputField SeedField;
+        public TMP_InputField TargetField;
+        public TextMeshProUGUI ExpectedText;
+        public TextMeshProUGUI TurnText;
+        public TextMeshProUGUI DeckText;
+        public TextMeshProUGUI DeckBackText;
+        public TextMeshProUGUI LogText;
+        public TextMeshProUGUI BreakdownText;
+        public TextMeshProUGUI BannerText;
+        public TextMeshProUGUI RoundOverTitle;
+        public TextMeshProUGUI RoundOverBody;
         public RectTransform HandArea;
         public RectTransform FloorArea;
         public RectTransform CardLayer;     // 모든 테이블 카드 뷰의 부모 (재조정 렌더)
         public RectTransform DeckBackRect;
         public RectTransform FlipSlotRect;
         public GameObject DealBlocker;      // 딜 중 입력 잠금 + 클릭 스킵
-        public Text[] CapturedHeaders;      // 광/열끗/띠/피 순
+        public TextMeshProUGUI[] CapturedHeaders;      // 광/열끗/띠/피 순
         public RectTransform[] CapturedGrids;
         public GameObject RoundOverPanel;
         public Button NewRoundButton;       // 임베드 모드에서 숨김 (자체 재시작 UI)
         public GameObject RoundOverButtons; // 임베드 모드에서 숨김 (자체 재시작 UI)
         public ScrollRect LogScroll;
         public GameObject GoStopModal;
-        public Text GoStopBody;
-        public Text GoStopWarn;
+        public TextMeshProUGUI GoStopBody;
+        public TextMeshProUGUI GoStopWarn;
         public Button StopButton;           // 스톱 차단(심판 기믹) 시 비활성화
-        public Text StopButtonLabel;
-        public Text GoButtonLabel;
+        public TextMeshProUGUI StopButtonLabel;
+        public TextMeshProUGUI GoButtonLabel;
     }
 
     /// <summary>
     /// 씬/프리팹 YAML 편집 없이 전체 UI를 코드로 조립하는 정적 빌더.
-    /// 기준 해상도 1920x1080, 레거시 uGUI Text/InputField 사용(한글 OS 폴백).
+    /// 기준 해상도 1920x1080, TMP 텍스트와 코드 생성 uGUI 레이아웃 사용.
     /// </summary>
     public static class UIBuilder
     {
-        private static Font _font;
-
-        public static Font UiFont
-        {
-            get
-            {
-                if (_font == null)
-                    _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                return _font;
-            }
-        }
-
         public static UiRefs Build(Action onNewRound, Action onRetrySeed, Action onNewSeed,
                                    Action onStop, Action onGo)
         {
@@ -139,20 +128,15 @@ namespace Hwatu.View
             refs.LogScroll.horizontal = false;
             scrollGo.AddComponent<RectMask2D>();
 
-            var contentGo = new GameObject("Content", typeof(RectTransform));
-            contentGo.transform.SetParent(scrollGo.transform, false);
-            var contentRt = (RectTransform)contentGo.transform;
+            refs.LogText = UIStyles.CreateText(scrollGo.transform, "Content", UITextPreset.Body, "",
+                18, UIStyles.MutedPaper, TextAnchor.UpperLeft);
+            var contentRt = (RectTransform)refs.LogText.transform;
             contentRt.anchorMin = new Vector2(0f, 1f);
             contentRt.anchorMax = new Vector2(1f, 1f);
             contentRt.pivot = new Vector2(0.5f, 1f);
             contentRt.sizeDelta = new Vector2(0f, 0f);
-            refs.LogText = contentGo.AddComponent<Text>();
-            refs.LogText.font = UiFont;
-            refs.LogText.fontSize = 18;
-            refs.LogText.color = new Color(0.85f, 0.85f, 0.85f);
-            refs.LogText.alignment = TextAnchor.UpperLeft;
             refs.LogText.raycastTarget = false;
-            var fitter = contentGo.AddComponent<ContentSizeFitter>();
+            var fitter = refs.LogText.gameObject.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             refs.LogScroll.content = contentRt;
 
@@ -175,7 +159,7 @@ namespace Hwatu.View
 
             string[] rowNames = { "광", "열끗", "띠", "피" };
             float[] gridHeights = { 72f, 72f, 72f, 141f };
-            refs.CapturedHeaders = new Text[4];
+            refs.CapturedHeaders = new TextMeshProUGUI[4];
             refs.CapturedGrids = new RectTransform[4];
             for (int i = 0; i < 4; i++)
             {
@@ -318,10 +302,10 @@ namespace Hwatu.View
             var stopButton = CreateButton(goStopButtons.transform, "StopButton", "스톱", new Vector2(230f, 56f), 24, onStop);
             stopButton.image.color = new Color(0.70f, 0.30f, 0.28f);
             refs.StopButton = stopButton;
-            refs.StopButtonLabel = stopButton.GetComponentInChildren<Text>();
+            refs.StopButtonLabel = stopButton.GetComponentInChildren<TextMeshProUGUI>();
             var goButton = CreateButton(goStopButtons.transform, "GoButton", "고", new Vector2(230f, 56f), 24, onGo);
             goButton.image.color = new Color(0.28f, 0.55f, 0.32f);
-            refs.GoButtonLabel = goButton.GetComponentInChildren<Text>();
+            refs.GoButtonLabel = goButton.GetComponentInChildren<TextMeshProUGUI>();
 
             refs.GoStopModal.SetActive(false);
 
@@ -399,22 +383,17 @@ namespace Hwatu.View
 
         // ── 공용 헬퍼 ───────────────────────────────────────────────
 
-        public static Text CreateText(Transform parent, string name, string content, int fontSize,
+        private static TextMeshProUGUI CreateText(Transform parent, string name, string content, int fontSize,
             Color color, TextAnchor anchor, FontStyle style = FontStyle.Normal)
         {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            var text = go.AddComponent<Text>();
-            text.font = UiFont;
-            text.fontSize = fontSize;
-            text.color = color;
-            text.alignment = anchor;
-            text.fontStyle = style;
-            text.text = content;
-            text.raycastTarget = false;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            return text;
+            return UIStyles.CreateText(parent, name, InferPreset(fontSize, style), content, fontSize, color, anchor, style);
+        }
+
+        private static UITextPreset InferPreset(int fontSize, FontStyle style)
+        {
+            if (fontSize >= 48) return UITextPreset.Jeho;
+            if (style != FontStyle.Normal || fontSize >= 28) return UITextPreset.Hwaje;
+            return UITextPreset.Body;
         }
 
         public static Image CreatePanel(Transform parent, string name, Color color)
@@ -445,7 +424,7 @@ namespace Hwatu.View
             return button;
         }
 
-        public static InputField CreateInputField(Transform parent, string name, string placeholderText, Vector2 size)
+        public static TMP_InputField CreateInputField(Transform parent, string name, string placeholderText, Vector2 size)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -454,19 +433,26 @@ namespace Hwatu.View
             var bg = go.AddComponent<Image>();
             bg.color = new Color(0.92f, 0.92f, 0.92f);
 
-            var text = CreateText(go.transform, "Text", "", 22, new Color(0.1f, 0.1f, 0.1f), TextAnchor.MiddleLeft);
-            text.supportRichText = false;
+            var viewportGo = new GameObject("InputViewport", typeof(RectTransform));
+            viewportGo.transform.SetParent(go.transform, false);
+            Stretch((RectTransform)viewportGo.transform, 10f, 4f);
+            viewportGo.AddComponent<RectMask2D>();
+
+            var text = CreateText(viewportGo.transform, "Text", "", 22, UIStyles.Ink, TextAnchor.MiddleLeft);
+            text.richText = false;
             Stretch((RectTransform)text.transform, 10f, 4f);
 
-            var placeholder = CreateText(go.transform, "Placeholder", placeholderText, 22,
-                new Color(0.45f, 0.45f, 0.45f), TextAnchor.MiddleLeft, FontStyle.Italic);
+            var placeholder = CreateText(viewportGo.transform, "Placeholder", placeholderText, 22,
+                UIStyles.Ash, TextAnchor.MiddleLeft, FontStyle.Italic);
             Stretch((RectTransform)placeholder.transform, 10f, 4f);
 
-            var field = go.AddComponent<InputField>();
+            var field = go.AddComponent<TMP_InputField>();
             field.targetGraphic = bg;
             field.textComponent = text;
             field.placeholder = placeholder;
-            field.contentType = InputField.ContentType.IntegerNumber;
+            field.textViewport = (RectTransform)viewportGo.transform;
+            field.contentType = TMP_InputField.ContentType.IntegerNumber;
+            field.richText = false;
             return field;
         }
 

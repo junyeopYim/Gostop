@@ -10,6 +10,7 @@ namespace Hwatu.View.Editor
     {
         private const string BaseDir = "Assets/Art/Cards/Base";
         private const string OverlayDir = "Assets/Art/Cards/Overlays";
+        private const string StampDir = "Assets/Art/Cards/Stamps";
         private const string ResourcesDir = "Assets/Resources";
         private const string AssetPath = ResourcesDir + "/CardArtDatabase.asset";
 
@@ -27,11 +28,12 @@ namespace Hwatu.View.Editor
 
             db.BaseEntries = CollectSprites(BaseDir);       // 파일명 = 카드 id
             db.OverlayEntries = CollectSprites(OverlayDir); // 파일명 = 오버레이 이름 (frame_*, badge_*)
+            db.StampEntries = CollectSprites(StampDir);     // 파일명 = 낙관 이름 (seal_red, seal_gold)
             db.BackSprite = TakeBackSprite(db.BaseEntries); // card_back은 카드 id가 아니라 전용 슬롯
             db.ClearLookupCaches();
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장, "
+            Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장, stamp {db.StampEntries.Count}장, "
                       + $"back {(db.BackSprite != null ? "있음" : "없음")} → {AssetPath}");
         }
 

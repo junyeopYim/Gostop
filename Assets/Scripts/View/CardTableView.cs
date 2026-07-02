@@ -573,8 +573,8 @@ namespace Hwatu.View
             foreach (var stack in _engine.BoundStacks)
             {
                 var pos = FloorCellPosition(cell++, cellCount) + new Vector2(0f, -87f);
-                var badge = UIBuilder.CreateText(_layer, $"Badge_{stack.Month}", $"묶임 x{stack.Cards.Count}", 20,
-                    new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter, FontStyle.Bold);
+                var badge = UIStyles.CreateText(_layer, $"Badge_{stack.Month}", UITextPreset.Hwaje,
+                    $"묶임 x{stack.Cards.Count}", 20, UIStyles.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
                 var rt = (RectTransform)badge.transform;
                 rt.sizeDelta = new Vector2(150f, 30f);
                 rt.anchoredPosition = pos;

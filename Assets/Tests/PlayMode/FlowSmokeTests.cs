@@ -21,12 +21,17 @@ namespace Hwatu.View.Tests
         private GameObject _appRoot;
 
         [SetUp]
-        public void SetUp() => SaveSystem.Delete();
+        public void SetUp()
+        {
+            GameFlowController.DefaultTransitionFactory = () => new InstantTransition();
+            SaveSystem.Delete();
+        }
 
         [TearDown]
         public void TearDown()
         {
             SaveSystem.Delete();
+            GameFlowController.DefaultTransitionFactory = null;
             if (_appRoot != null) Object.DestroyImmediate(_appRoot);
             var embedded = GameObject.Find("EmbeddedGame");
             if (embedded != null) Object.DestroyImmediate(embedded);
@@ -194,6 +199,32 @@ namespace Hwatu.View.Tests
             Assert.IsFalse(SaveSystem.Exists(), "구버전 세이브 파일은 로드 검사에서 삭제된다");
         }
 
+        [UnityTest]
+        public IEnumerator InkWipeTransition_RoundTripAndSpam_IsStable()
+        {
+            GameFlowController.DefaultTransitionFactory = () => new InkWipeTransition();
+            var flow = Boot();
+            yield return WaitForRealtime(() => Settled<TitleScreen>(flow), "Ink title settle");
+
+            flow.StartNewGame(20260703);
+            flow.StartNewGame(20260704);
+            flow.StartNewGame(20260705);
+            yield return WaitForRealtime(() => Settled<CharacterSelectScreen>(flow), "Ink character settle");
+
+            flow.ConfirmCharacter(GameFlowController.DefaultCharacterId);
+            flow.ConfirmCharacter(GameFlowController.DefaultCharacterId);
+            yield return WaitForRealtime(() => Settled<StoryScreen>(flow), "Ink story settle");
+
+            flow.ReturnToTitle();
+            flow.ReturnToTitle();
+            yield return WaitForRealtime(() => Settled<TitleScreen>(flow), "Ink title return");
+
+            var wipeCanvases = Object.FindObjectsByType<Canvas>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Count(c => c != null && c.name == "InkWipeTransitionCanvas");
+            Assert.LessOrEqual(wipeCanvases, 1, "Ink wipe overlay canvas should not multiply during spammed transitions.");
+        }
+
         private const string V0SaveJson = @"{
     ""runSeed"": 424242,
     ""characterId"": ""gambler"",
@@ -263,6 +294,17 @@ namespace Hwatu.View.Tests
                 yield return null;
             }
             Assert.Fail($"제한 프레임 안에 도달하지 못함: {what}");
+        }
+
+        private static IEnumerator WaitForRealtime(System.Func<bool> condition, string what, float maxSeconds = 5f)
+        {
+            float deadline = Time.realtimeSinceStartup + maxSeconds;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                if (condition()) yield break;
+                yield return null;
+            }
+            Assert.Fail($"Timed out waiting for {what}.");
         }
     }
 }

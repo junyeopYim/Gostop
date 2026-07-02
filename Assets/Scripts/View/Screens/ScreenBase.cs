@@ -1,4 +1,5 @@
 using Hwatu.View.Flow;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -72,17 +73,17 @@ namespace Hwatu.View.Screens
 
             if (!string.IsNullOrEmpty(title))
             {
-                var t = UIBuilder.CreateText(column.transform, "Title", title, 52, Color.white,
+                var t = UIStyles.CreateText(column.transform, "Title", UITextPreset.Jeho, title, 52, UIStyles.Paper,
                     TextAnchor.MiddleCenter, FontStyle.Bold);
                 UIBuilder.SetPreferred(t.gameObject, 940f, 90f);
             }
             return column.transform;
         }
 
-        protected static Text AddBody(Transform column, string text, int fontSize = 26)
+        protected static TextMeshProUGUI AddBody(Transform column, string text, int fontSize = 26)
         {
-            var t = UIBuilder.CreateText(column, "Body", text, fontSize,
-                new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleCenter);
+            var t = UIStyles.CreateText(column, "Body", UITextPreset.Body, text, fontSize,
+                UIStyles.MutedPaper, TextAnchor.MiddleCenter);
             UIBuilder.SetPreferred(t.gameObject, 900f, 220f);
             return t;
         }

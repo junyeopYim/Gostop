@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Hwatu.Run;
 using Hwatu.View.Screens;
@@ -23,6 +24,7 @@ namespace Hwatu.View.Flow
         public RunController CurrentRun { get; private set; }
         /// <summary>화면 전환 코루틴 실행 중 여부 (중복 내비게이션 차단).</summary>
         public bool IsTransitioning { get; private set; }
+        public static Func<ITransition> DefaultTransitionFactory { get; set; }
 
         private ITransition _transition;
         private int _pendingRunSeed;
@@ -31,9 +33,14 @@ namespace Hwatu.View.Flow
         {
             EnsureCamera();
             EnsureEventSystem();
-            _transition = new InstantTransition();
+            _transition = CreateDefaultTransition();
             Screens = new ScreenStack(this);
             Navigate(Screens.Replace(new TitleScreen(), _transition));
+        }
+
+        public void SetTransition(ITransition transition)
+        {
+            _transition = transition ?? new InstantTransition();
         }
 
         // ── 타이틀 ──────────────────────────────────────────────
@@ -41,7 +48,7 @@ namespace Hwatu.View.Flow
         /// <summary>새 게임 시작. seedOverride는 테스트/디버그용 (없으면 랜덤 런 시드).</summary>
         public void StartNewGame(int? seedOverride = null)
         {
-            _pendingRunSeed = seedOverride ?? Random.Range(0, int.MaxValue);
+            _pendingRunSeed = seedOverride ?? UnityEngine.Random.Range(0, int.MaxValue);
             Navigate(Screens.Replace(new CharacterSelectScreen(), _transition));
         }
 
@@ -113,17 +120,24 @@ namespace Hwatu.View.Flow
                 Debug.LogWarning("화면 전환 중 중복 내비게이션 요청을 무시했습니다.");
                 return;
             }
+            IsTransitioning = true;
             StartCoroutine(RunNavigation(navigation));
         }
 
         private IEnumerator RunNavigation(IEnumerator navigation)
         {
-            IsTransitioning = true;
             yield return navigation;
             IsTransitioning = false;
         }
 
         // ── 부트스트랩 보조 (HwatuPrototype 쪽 GameController와 동일 정책) ──
+
+        private static ITransition CreateDefaultTransition()
+        {
+            return DefaultTransitionFactory != null
+                ? DefaultTransitionFactory()
+                : new InkWipeTransition();
+        }
 
         private static void EnsureCamera()
         {

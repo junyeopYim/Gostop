@@ -99,16 +99,16 @@ namespace Hwatu.View
                 view._background.color = view._baseColor;
 
                 var textColor = TextColorFor(view._baseColor);
-                var month = UIBuilder.CreateText(bgGo.transform, "Month", card.Month.ToString(),
-                    Mathf.RoundToInt(size.y * 0.30f), textColor, TextAnchor.MiddleCenter, FontStyle.Bold);
+                var month = UIStyles.CreateText(bgGo.transform, "Month", UITextPreset.Numeral,
+                    card.Month.ToString(), Mathf.RoundToInt(size.y * 0.30f), textColor, TextAnchor.MiddleCenter, FontStyle.Bold);
                 var monthRt = (RectTransform)month.transform;
                 monthRt.anchorMin = new Vector2(0f, 0.42f);
                 monthRt.anchorMax = new Vector2(1f, 1f);
                 monthRt.offsetMin = Vector2.zero;
                 monthRt.offsetMax = Vector2.zero;
 
-                var label = UIBuilder.CreateText(bgGo.transform, "Type", TypeLabel(card),
-                    Mathf.RoundToInt(size.y * 0.15f), textColor, TextAnchor.MiddleCenter);
+                var label = UIStyles.CreateText(bgGo.transform, "Type", UITextPreset.Hwaje,
+                    TypeLabel(card), Mathf.RoundToInt(size.y * 0.15f), textColor, TextAnchor.MiddleCenter);
                 var labelRt = (RectTransform)label.transform;
                 labelRt.anchorMin = new Vector2(0f, 0f);
                 labelRt.anchorMax = new Vector2(1f, 0.42f);
