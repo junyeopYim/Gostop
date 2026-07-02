@@ -26,6 +26,12 @@ namespace Hwatu.Core.Tests
                 deck = CardSpecs.CreateStandardDeckSpecs(),
                 chasa = new ChasaState { jeong = 3, revealedUntilDay = 21 },
                 dayAttempt = 2,
+                stateVersion = RunStateMigration.CurrentVersion,
+                journey = JourneyGenerator.Generate(987654321),
+                currentNodeIndex = 1,
+                honbulMax = 4,
+                todayNodeCleared = true,
+                jaetnalHealedToday = true,
             };
             original.deck[0].enhancements.Add("enh_test_a");
             original.deck[0].enhancements.Add("enh_test_b");
@@ -43,6 +49,14 @@ namespace Hwatu.Core.Tests
             CollectionAssert.AreEqual(original.relicIds, restored.relicIds);
             Assert.AreEqual(original.chasa.jeong, restored.chasa.jeong);
             Assert.AreEqual(original.chasa.revealedUntilDay, restored.chasa.revealedUntilDay);
+
+            // v2 (49일 여정) 필드
+            Assert.AreEqual(original.stateVersion, restored.stateVersion);
+            Assert.AreEqual(original.currentNodeIndex, restored.currentNodeIndex);
+            Assert.AreEqual(original.honbulMax, restored.honbulMax);
+            Assert.AreEqual(original.todayNodeCleared, restored.todayNodeCleared);
+            Assert.AreEqual(original.jaetnalHealedToday, restored.jaetnalHealedToday);
+            JourneyTestUtil.AssertStructurallyEqual(original.journey, restored.journey, "journey 왕복");
 
             Assert.AreEqual(original.deck.Count, restored.deck.Count);
             for (int i = 0; i < original.deck.Count; i++)

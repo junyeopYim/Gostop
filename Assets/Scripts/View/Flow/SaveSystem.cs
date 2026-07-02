@@ -20,15 +20,17 @@ namespace Hwatu.View.Flow
             File.WriteAllText(SavePath, JsonUtility.ToJson(state, prettyPrint: true));
         }
 
-        /// <summary>세이브가 없거나 읽을 수 없으면 null.</summary>
+        /// <summary>
+        /// 세이브가 없거나 읽을 수 없으면 null. 구버전 세이브(뼈대 v0)는
+        /// RunStateMigration이 그 자리에서 v2로 승격한다 (실패 시에만 null).
+        /// </summary>
         public static RunState Load()
         {
             if (!Exists()) return null;
             try
             {
                 var state = JsonUtility.FromJson<RunState>(File.ReadAllText(SavePath));
-                // 최소한의 온전성 검사: 덱이 비어 있으면 쓸 수 없는 세이브다
-                return state != null && state.deck != null && state.deck.Count > 0 ? state : null;
+                return RunStateMigration.EnsureCurrent(state) ? state : null;
             }
             catch (System.Exception e)
             {
