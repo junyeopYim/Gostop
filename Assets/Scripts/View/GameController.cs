@@ -218,6 +218,7 @@ namespace Hwatu.View
         private void OnStopClicked()
         {
             if (_engine.Phase != Phase.GoStopDecision) return;
+            if (_engine.StopBlockReason != null) return; // 심판 기믹 등이 스톱을 차단 (버튼도 비활성)
             _logLines.Add($"스톱! — 끗수 {_engine.CurrentBreakdown.Total} x 배수 {_engine.CurrentMultiplier} = {_engine.StopScoreNow}점 확정");
             _table.PrepareCommand();
             _engine.DeclareStop();
@@ -456,8 +457,14 @@ namespace Hwatu.View
             int handLeft = _engine.Hand.Count;
             _ui.GoStopBody.text =
                 $"현재 끗수  {score}\n현재 배수  x{_engine.CurrentMultiplier}\n남은 손패  {handLeft}장";
-            _ui.GoStopWarn.text = handLeft <= 2 ? $"남은 손패 {handLeft}장 — 고박 주의!" : "";
-            _ui.StopButtonLabel.text = $"스톱 — {_engine.StopScoreNow}점 확정";
+            // 스톱 차단(심판 기믹) 시: 버튼 비활성 + 사유 한 줄 (고박 경고보다 우선)
+            string stopBlock = _engine.StopBlockReason;
+            _ui.StopButton.interactable = stopBlock == null;
+            _ui.GoStopWarn.text = stopBlock
+                ?? (handLeft <= 2 ? $"남은 손패 {handLeft}장 — 고박 주의!" : "");
+            _ui.StopButtonLabel.text = stopBlock == null
+                ? $"스톱 — {_engine.StopScoreNow}점 확정"
+                : "스톱 불가";
             _ui.GoButtonLabel.text = $"고 — 배수 x{ScoreCalculator.GetMultiplier(_engine.GoCount + 1)}";
         }
 

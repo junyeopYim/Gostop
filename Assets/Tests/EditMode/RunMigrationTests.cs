@@ -5,10 +5,11 @@ using UnityEngine;
 namespace Hwatu.Core.Tests
 {
     /// <summary>
-    /// v0(걸어다니는 뼈대) 세이브 → v2 마이그레이션 검증.
-    /// v0 JSON은 뼈대 SaveSystem(JsonUtility, prettyPrint)이 쓰던 필드 구성을 그대로
-    /// 박제한 고정 문자열이다 (덱은 48장 대신 2장으로 축약 — 구조는 동일).
-    /// 필드명 오타는 아래의 "원본 값 보존" 단언이 잡는다 (오타 = 기본값 복원 = 실패).
+    /// 세이브 버전 정책 검증 (v3): 구버전 세이브는 마이그레이션하지 않고 폐기한다.
+    /// 생성 규칙(주간 역할제)이 바뀌어 구버전 journey와 호환되지 않기 때문 —
+    /// 프로토타입 단계의 의도적 단순화. (파일 삭제·이어하기 숨김은 View 계층
+    /// SaveSystem/TitleScreen의 몫이고, PlayMode FlowSmokeTests가 검증한다)
+    /// V0SaveJson은 뼈대 SaveSystem이 쓰던 필드 구성을 박제한 고정 문자열이다.
     /// </summary>
     public class RunMigrationTests
     {
@@ -52,57 +53,33 @@ namespace Hwatu.Core.Tests
 }";
 
         [Test]
-        public void v0_세이브는_v2로_승격되고_원본_값이_보존된다()
+        public void v0_뼈대_세이브는_마이그레이션하지_않고_거부한다()
         {
             var state = JsonUtility.FromJson<RunState>(V0SaveJson);
             Assert.AreEqual(0, state.stateVersion, "v0 JSON에는 stateVersion이 없어 0이어야 한다");
 
-            Assert.IsTrue(RunStateMigration.EnsureCurrent(state), "v0 → v2 마이그레이션 성공");
-
-            // 승격된 필드
-            Assert.AreEqual(RunStateMigration.CurrentVersion, state.stateVersion);
-            Assert.IsNotNull(state.journey);
-            Assert.AreEqual(JourneyGenerator.JourneyDays, state.journey.days.Count, "journey가 생성되어야 한다");
-            Assert.AreEqual(0, state.currentNodeIndex);
-            Assert.AreEqual(RunController.StartingHonbul, state.honbulMax);
-            Assert.IsFalse(state.todayNodeCleared);
-            Assert.IsFalse(state.jaetnalHealedToday);
-
-            // 같은 시드는 같은 맵 (마이그레이션 = 그 자리 생성)
-            JourneyTestUtil.AssertStructurallyEqual(
-                JourneyGenerator.Generate(424242), state.journey, "마이그레이션 journey");
-
-            // 원본 값 보존 (필드명 오타 감지 겸용)
-            Assert.AreEqual(424242, state.runSeed);
-            Assert.AreEqual("gambler", state.characterId);
-            Assert.AreEqual(17, state.currentDay);
-            Assert.AreEqual(2, state.honbul);
-            Assert.AreEqual(35, state.nojatdon);
-            CollectionAssert.AreEqual(
-                new[] { DemoMultiplierPlusEffect.EffectId, DemoJjokNojatdonEffect.EffectId },
-                state.relicIds);
-            Assert.AreEqual(2, state.deck.Count);
-            Assert.AreEqual(CardType.Tti, state.deck[1].type);
-            Assert.AreEqual(RibbonColor.Hong, state.deck[1].ribbon);
-            CollectionAssert.AreEqual(new[] { "enh_test" }, state.deck[1].enhancements);
-            Assert.AreEqual(1, state.chasa.jeong);
-            Assert.AreEqual(20, state.chasa.revealedUntilDay);
-            Assert.AreEqual(1, state.dayAttempt);
-
-            // 마이그레이션된 상태로 컨트롤러가 정상 동작해야 한다 (17일차 노드 접근)
-            var run = RunController.FromState(state);
-            Assert.IsNotNull(run.CurrentNode);
-            Assert.AreEqual(17, run.CurrentNode.day);
+            Assert.IsFalse(RunStateMigration.EnsureCurrent(state), "구버전은 폐기 대상");
         }
 
         [Test]
-        public void v2_상태는_손대지_않고_통과시킨다()
+        public void 직전_버전_세이브도_거부한다()
+        {
+            // 직전 버전(v3: 잿날/최종판 맵)에서 온 세이브 — 온전해 보여도 맵 생성 규칙이 다르다
+            var state = RunController.StartNew(777, "gambler").State;
+            state.stateVersion = RunStateMigration.CurrentVersion - 1;
+
+            Assert.IsFalse(RunStateMigration.EnsureCurrent(state), "구버전은 폐기 대상");
+        }
+
+        [Test]
+        public void 현재_버전_상태는_손대지_않고_통과시킨다()
         {
             var state = RunController.StartNew(777, "gambler").State;
             var journeyBefore = state.journey;
 
             Assert.IsTrue(RunStateMigration.EnsureCurrent(state));
-            Assert.AreSame(journeyBefore, state.journey, "v2 상태의 journey를 재생성하면 안 된다");
+            Assert.AreSame(journeyBefore, state.journey, "현재 버전 상태의 journey를 재생성하면 안 된다");
+            Assert.AreEqual(RunStateMigration.CurrentVersion, state.stateVersion);
         }
 
         [Test]
@@ -114,7 +91,7 @@ namespace Hwatu.Core.Tests
             Assert.IsFalse(RunStateMigration.EnsureCurrent(emptyDeck), "빈 덱");
 
             var brokenJourney = RunController.StartNew(1, "gambler").State;
-            brokenJourney.journey = new JourneyMap(); // v2인데 여정이 비어 있음
+            brokenJourney.journey = new JourneyMap(); // 현재 버전인데 여정이 비어 있음
             Assert.IsFalse(RunStateMigration.EnsureCurrent(brokenJourney), "깨진 journey");
         }
     }

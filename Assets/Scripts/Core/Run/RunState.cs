@@ -43,7 +43,7 @@ namespace Hwatu.Run
         public int honbulMax = 3;
         /// <summary>오늘 노드 완료(판 승리/지나가기/쉬어가기) 여부 — 갈림길 선택 가능 상태.</summary>
         public bool todayNodeCleared;
-        /// <summary>오늘 잿날 회복이 이미 발동했는지 (재입장 중복 회복 금지).</summary>
+        /// <summary>오늘 재 의식(심판일 입장 회복)이 이미 발동했는지 (재입장 중복 회복 금지). 필드명은 잿날 시절 그대로.</summary>
         public bool jaetnalHealedToday;
     }
 

@@ -11,7 +11,7 @@ namespace Hwatu.View.Screens
     /// <summary>
     /// 런 화면 v2 — "오늘의 노드" 기반 여정 허브.
     /// 상단: 일차/혼불/노잣돈/오늘 노드 종류. 중앙: 노드별 행동
-    /// (판 치기 / 지나가기 / 쉬어가기). 하단: 내일 갈림길 선택 버튼
+    /// (판 치기 / 지나가기 / 심판 받기). 하단: 내일 갈림길 선택 버튼
     /// (오늘 노드 완료 후 활성화, 클릭 = CompleteNode).
     ///
     /// 판 임베드 수명주기(뼈대와 동일):
@@ -106,17 +106,31 @@ namespace Hwatu.View.Screens
             var s = Run.State;
             var node = Run.CurrentNode;
 
-            // 잿날 회복은 "입장" 시 1회 — 직렬화된 플래그가 재입장 중복 회복을 막는다
-            if (node.kind == NodeKind.Jaetnal) Run.TryJaetnalHeal();
+            // 재 의식은 심판일 "입장" 시 1회 — 직렬화된 플래그가 재입장 중복 회복을 막는다
+            if (node.kind == NodeKind.Judgment) Run.TryJaetnalHeal();
+
+            // 활성 효과 표시 줄: 부적 + (심판일이면) 대왕명·지옥명·기믹 한 줄 병기
+            string effectsLine =
+                $"부적: {(s.relicIds.Count == 0 ? "(없음)" : string.Join(", ", s.relicIds))}" +
+                (s.dayAttempt > 0 ? $"  ·  오늘 재도전 {s.dayAttempt}회" : "");
+            if (node.kind == NodeKind.Judgment)
+                effectsLine += $"\n심판: {JudgmentLine(node.day)}";
 
             _statusText.text =
                 $"{s.currentDay}일차 / {RunController.FinalDay}일 — 오늘: {KindLabel(node.kind)}\n" +
                 $"혼불 {s.honbul}/{s.honbulMax}  ·  노잣돈 {s.nojatdon}\n" +
-                $"부적: {(s.relicIds.Count == 0 ? "(없음)" : string.Join(", ", s.relicIds))}" +
-                (s.dayAttempt > 0 ? $"  ·  오늘 재도전 {s.dayAttempt}회" : "");
+                effectsLine;
 
             RebuildActionZone(node);
             RebuildChoices();
+        }
+
+        /// <summary>대왕명 + 지옥명 + 기믹 한 줄 (기믹 없는 대왕은 이름·지옥만).</summary>
+        private static string JudgmentLine(int day)
+        {
+            var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(day));
+            return $"{king.KingName}({king.HellName})"
+                + (king.HasGimmick ? $" — {king.GimmickLine}" : "");
         }
 
         private void RebuildActionZone(NodeSpec node)
@@ -152,14 +166,16 @@ namespace Hwatu.View.Screens
                     if (!cleared) AddZoneButton("PassButton", "지나가기", PassStubNode);
                     break;
 
-                case NodeKind.Jaetnal:
-                    AddZoneLabel($"잿날 — 혼불이 1 회복되었다 ({Run.State.honbul}/{Run.State.honbulMax})");
-                    // 정비 슬롯 자리 표시 (실 콘텐츠는 다음 지시서)
-                    var slot = UIBuilder.CreatePanel(_actionZone, "MaintenanceSlot", new Color(0.14f, 0.14f, 0.17f, 1f));
-                    UIBuilder.SetPreferred(slot.gameObject, 520f, 70f);
-                    UIBuilder.Stretch((RectTransform)UIBuilder.CreateText(slot.transform, "Label",
-                        "정비 (준비 중)", 22, new Color(0.55f, 0.55f, 0.55f), TextAnchor.MiddleCenter).transform, 4f, 4f);
-                    if (!cleared) AddZoneButton("RestButton", "쉬어가기", PassStubNode);
+                case NodeKind.Judgment:
+                    // 재 의식(회복)은 RefreshHub 입장 처리에서 이미 발동했다 — 여기는 표기만 (연출 없음)
+                    var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
+                    AddZoneLabel($"이승에서 재가 닿았다 — 혼불 +1 ({Run.State.honbul}/{Run.State.honbulMax})");
+                    AddZoneLabel($"{king.KingName} — {king.HellName}");
+                    if (king.HasGimmick) AddZoneLabel(king.GimmickLine);
+                    if (!cleared)
+                        AddZoneButton("PlayRoundButton", $"심판 받기 — 목표 {king.TargetScore}점", PlayTodaysRound);
+                    else
+                        AddZoneLabel("심판을 통과했다.");
                     break;
             }
         }
@@ -195,12 +211,17 @@ namespace Hwatu.View.Screens
 
         // ── 노드 행동 ───────────────────────────────────────────
 
-        /// <summary>오늘의 판 치기: 임베드 GameController로 판 1회 (목표 점수는 커브 주입).</summary>
+        /// <summary>
+        /// 오늘의 판 치기: 임베드 GameController로 판 1회 (목표 점수는 커브/심판 테이블 주입).
+        /// 심판일이면 대왕 기믹 효과를 부적과 같은 경로로 attach한다 — 판 종료 시
+        /// DetachAll이 함께 해제한다 (잔여 구독 없음).
+        /// </summary>
         public void PlayTodaysRound()
         {
             if (IsRoundInProgress || Run == null || Run.IsOver || Run.TodayNodeCleared) return;
             var node = Run.CurrentNode;
-            if (node.kind != NodeKind.Battle && node.kind != NodeKind.FinalBattle) return;
+            if (node.kind != NodeKind.Battle && node.kind != NodeKind.FinalBattle
+                && node.kind != NodeKind.Judgment) return;
 
             _hubPanel.SetActive(false);
 
@@ -209,8 +230,16 @@ namespace Hwatu.View.Screens
             EmbeddedGame.SetEmbeddedMode(true);
             EmbeddedGame.RoundFinished += OnRoundFinished;
 
-            // 부적 부착은 딜 이전 — 딜 직후 총통 같은 즉시 종료 이벤트도 관찰할 수 있어야 한다
-            _effects.AttachAll(Run.State.relicIds, new EffectContext(EmbeddedGame.Engine, Run));
+            // 부적(+심판일이면 대왕 기믹) 부착은 딜 이전 — 딜 직후 총통 같은
+            // 즉시 종료 이벤트도 관찰할 수 있어야 한다
+            var effectIds = new List<string>(Run.State.relicIds);
+            bool isJudgment = node.kind == NodeKind.Judgment;
+            if (isJudgment)
+            {
+                var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
+                if (king.HasGimmick) effectIds.Add(king.EffectId);
+            }
+            _effects.AttachAll(effectIds, new EffectContext(EmbeddedGame.Engine, Run));
 
             // [C] 딜 시드 규약: Derive(runSeed, DeckShuffle, currentDay, dayAttempt)
             int dealSeed = SeedDerivation.Derive(Run.State.runSeed, RngStream.DeckShuffle,
@@ -218,6 +247,21 @@ namespace Hwatu.View.Screens
             var deck = CardSpecs.ToCards(Run.State.deck);
             var config = new RoundConfig { TargetScore = TargetScoreCurve.GetTarget(node.day, node.kind) };
             EmbeddedGame.StartExternalRound(deck, dealSeed, config);
+
+            // 판 중 활성 효과 표기: 대왕명 + 지옥명 + 기믹 한 줄 (텍스트 수준, 연출 없음).
+            // 임베드 캔버스에 붙여 임베드 정리와 함께 사라진다.
+            if (isJudgment && EmbeddedGame.UiRoot != null)
+            {
+                var line = UIBuilder.CreateText(EmbeddedGame.UiRoot.transform, "JudgmentLine",
+                    $"심판: {JudgmentLine(node.day)}", 22,
+                    new Color(1f, 0.8f, 0.55f), TextAnchor.MiddleCenter);
+                var rt = (RectTransform)line.transform;
+                rt.anchorMin = new Vector2(0f, 1f);
+                rt.anchorMax = new Vector2(1f, 1f);
+                rt.pivot = new Vector2(0.5f, 1f);
+                rt.sizeDelta = new Vector2(0f, 32f);
+                rt.anchoredPosition = new Vector2(0f, -100f);
+            }
         }
 
         /// <summary>스텁 노드(주막/이벤트)의 [지나가기] / 잿날의 [쉬어가기].</summary>
@@ -378,8 +422,9 @@ namespace Hwatu.View.Screens
                 case NodeKind.Battle: return "판";
                 case NodeKind.Jumak: return "주막";
                 case NodeKind.Event: return "이벤트";
-                case NodeKind.Jaetnal: return "잿날";
-                case NodeKind.FinalBattle: return "최종판";
+                case NodeKind.Judgment: return "심판";
+                case NodeKind.Jaetnal: return "잿날 (레거시)";       // 생성되지 않음
+                case NodeKind.FinalBattle: return "최종판 (레거시)"; // 생성되지 않음
                 default: return kind.ToString();
             }
         }

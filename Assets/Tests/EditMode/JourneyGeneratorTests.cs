@@ -93,27 +93,29 @@ namespace Hwatu.Core.Tests
                 int day = d + 1;
                 var nodes = map.days[d].nodes;
 
-                // ②/⑤ 고정 레이어 구성 (잿날/1일차/최종일은 단일 노드)
+                // ②/⑤ 고정 레이어 구성 (1일차·심판일(7의 배수, 49 포함)은 단일 노드)
                 if (day == 1)
                 {
                     Assert.AreEqual(1, nodes.Count, $"{ctx} 1일차는 단일 노드");
                     Assert.AreEqual(NodeKind.Battle, nodes[0].kind, $"{ctx} 1일차는 Battle");
                 }
-                else if (day == JourneyGenerator.JourneyDays)
-                {
-                    Assert.AreEqual(1, nodes.Count, $"{ctx} 49일차는 단일 노드");
-                    Assert.AreEqual(NodeKind.FinalBattle, nodes[0].kind, $"{ctx} 49일차는 FinalBattle");
-                }
                 else if (day % 7 == 0)
                 {
-                    Assert.AreEqual(1, nodes.Count, $"{ctx} {day}일차(잿날)는 단일 노드");
-                    Assert.AreEqual(NodeKind.Jaetnal, nodes[0].kind, $"{ctx} {day}일차는 Jaetnal");
+                    Assert.AreEqual(1, nodes.Count, $"{ctx} {day}일차(심판일)는 단일 노드");
+                    Assert.AreEqual(NodeKind.Judgment, nodes[0].kind, $"{ctx} {day}일차는 Judgment");
                 }
                 else
                 {
-                    Assert.That(nodes.Count, Is.InRange(2, 3), $"{ctx} {day}일차 노드 수는 2~3");
-                    Assert.IsTrue(nodes.Any(n => n.kind == NodeKind.Battle),
-                        $"{ctx} {day}일차에 Battle이 최소 1개");
+                    // 일반일 역할제: Forced = 단일 Battle / Mixed·Free = 2~3 노드에 Battle 최대 1.
+                    // ("레이어당 Battle 최소 1개" 규칙은 삭제 — 주간 쿼터 계약이 대체하며,
+                    //  그 계약은 JourneyWeeklyQuotaTests가 경로 DP로 고정한다)
+                    Assert.That(nodes.Count, Is.InRange(1, 3), $"{ctx} {day}일차 노드 수는 1~3");
+                    if (nodes.Count == 1)
+                        Assert.AreEqual(NodeKind.Battle, nodes[0].kind,
+                            $"{ctx} {day}일차 단일 노드 일반일은 Forced Battle");
+                    else
+                        Assert.LessOrEqual(nodes.Count(n => n.kind == NodeKind.Battle), 1,
+                            $"{ctx} {day}일차 다중 노드 레이어의 Battle은 최대 1");
                     foreach (var n in nodes)
                         Assert.That(n.kind,
                             Is.EqualTo(NodeKind.Battle).Or.EqualTo(NodeKind.Jumak).Or.EqualTo(NodeKind.Event),

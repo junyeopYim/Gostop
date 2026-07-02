@@ -1,6 +1,6 @@
 ﻿<Solution>
-  <Project Path="HwatuView.csproj" />
   <Project Path="HwatuCore.csproj" />
+  <Project Path="HwatuView.csproj" />
   <Project Path="HwatuView.Editor.csproj" />
   <Project Path="HwatuCore.Tests.csproj" />
   <Project Path="HwatuView.Tests.csproj" />

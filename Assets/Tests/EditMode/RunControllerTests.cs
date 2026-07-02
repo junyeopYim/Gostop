@@ -70,7 +70,8 @@ namespace Hwatu.Core.Tests
             run.ApplyRoundResult(Success());
 
             var choices = run.GetTodayChoices();
-            Assert.That(choices.Count, Is.InRange(2, 3), "1일차 단일 노드는 2일차 전체로 연결");
+            // 1일차 단일 노드는 2일차 전체로 부챗살 연결. 2일차는 역할에 따라 1노드(Forced)~3노드.
+            Assert.That(choices.Count, Is.InRange(1, 3), "갈림길 수 = 2일차 노드 수");
             var chosen = choices[choices.Count - 1];
 
             int dayChangedTo = 0;
@@ -108,6 +109,14 @@ namespace Hwatu.Core.Tests
         }
 
         [Test]
+        public void 심판_노드도_지나가기로_완료할_수_없다()
+        {
+            var run = RunController.StartNew(1, "gambler");
+            JumpTo(run, FindNode(run.State.journey, NodeKind.Judgment));
+            Assert.Throws<System.InvalidOperationException>(() => run.MarkTodayNodeCleared());
+        }
+
+        [Test]
         public void 스텁_노드는_지나가기로_완료된다()
         {
             var run = RunController.StartNew(7, "gambler");
@@ -123,15 +132,17 @@ namespace Hwatu.Core.Tests
             Assert.AreEqual(stub.day + 1, run.State.currentDay);
         }
 
+        // ── 재 의식 (심판일 입장 회복 — 잿날 테스트에서 이관) ────
+
         [Test]
-        public void 잿날_회복은_1회만_발동하고_재호출은_무효과()
+        public void 재_의식은_1회만_발동하고_재호출은_무효과()
         {
             var run = RunController.StartNew(1, "gambler");
-            var jaetnal = FindNode(run.State.journey, NodeKind.Jaetnal);
-            JumpTo(run, jaetnal);
+            var judgment = FindNode(run.State.journey, NodeKind.Judgment);
+            JumpTo(run, judgment);
             run.State.honbul = 1;
 
-            Assert.IsTrue(run.TryJaetnalHeal(), "첫 입장은 회복 발동");
+            Assert.IsTrue(run.TryJaetnalHeal(), "첫 입장은 재 의식 발동");
             Assert.AreEqual(2, run.State.honbul);
             Assert.IsTrue(run.State.jaetnalHealedToday);
 
@@ -140,11 +151,11 @@ namespace Hwatu.Core.Tests
         }
 
         [Test]
-        public void 잿날_회복은_honbulMax를_넘지_않는다()
+        public void 재_의식은_honbulMax를_넘지_않는다()
         {
             var run = RunController.StartNew(1, "gambler");
-            var jaetnal = FindNode(run.State.journey, NodeKind.Jaetnal);
-            JumpTo(run, jaetnal);
+            var judgment = FindNode(run.State.journey, NodeKind.Judgment);
+            JumpTo(run, judgment);
             run.State.honbul = run.State.honbulMax;
 
             Assert.IsTrue(run.TryJaetnalHeal());
@@ -152,32 +163,35 @@ namespace Hwatu.Core.Tests
         }
 
         [Test]
-        public void 잿날이_아닌_노드에서_회복은_발동하지_않는다()
+        public void 심판일이_아닌_노드에서_재_의식은_발동하지_않는다()
         {
             var run = RunController.StartNew(1, "gambler"); // 1일차 = Battle
             Assert.IsFalse(run.TryJaetnalHeal());
         }
 
         [Test]
-        public void 잿날을_지나면_회복_플래그가_리셋된다()
+        public void 심판일을_지나면_재_의식_플래그가_리셋된다()
         {
             var run = RunController.StartNew(1, "gambler");
-            var jaetnal = FindNode(run.State.journey, NodeKind.Jaetnal);
-            JumpTo(run, jaetnal);
+            var judgment = FindNode(run.State.journey, NodeKind.Judgment);
+            JumpTo(run, judgment);
             run.State.honbul = 1;
             run.TryJaetnalHeal();
-            run.MarkTodayNodeCleared();
-            run.CompleteNode(jaetnal.nextIndices[0]);
+            run.ApplyRoundResult(Success()); // 심판 판은 성공으로만 완료된다
+            run.CompleteNode(judgment.nextIndices[0]);
 
             Assert.IsFalse(run.State.jaetnalHealedToday, "다음 날은 플래그 리셋");
         }
 
+        // ── 태산대왕 최종 심판 (49일차) ──────────────────────────
+
         [Test]
-        public void 마지막_날_완료는_환생_엔딩()
+        public void 마지막_날_태산_심판_성공은_환생_엔딩()
         {
             var run = RunController.StartNew(1, "gambler");
             var final = run.State.journey.days[JourneyGenerator.JourneyDays - 1].nodes[0];
-            Assert.AreEqual(NodeKind.FinalBattle, final.kind);
+            Assert.AreEqual(NodeKind.Judgment, final.kind, "49일차는 심판 노드");
+            Assert.AreEqual(7, JourneyGenerator.KingIndexFor(final.day), "49일차는 태산대왕(7)");
             JumpTo(run, final);
 
             RunEnding? ended = null;
@@ -191,6 +205,21 @@ namespace Hwatu.Core.Tests
 
             Assert.AreEqual(RunEnding.Reincarnated, run.Ending);
             Assert.AreEqual(RunEnding.Reincarnated, ended);
+        }
+
+        [Test]
+        public void 마지막_날_태산_심판_실패는_혼불_감소_후_같은_날_재도전()
+        {
+            var run = RunController.StartNew(1, "gambler");
+            JumpTo(run, run.State.journey.days[JourneyGenerator.JourneyDays - 1].nodes[0]);
+
+            run.ApplyRoundResult(Failure());
+
+            Assert.AreEqual(2, run.State.honbul, "혼불 -1");
+            Assert.AreEqual(1, run.State.dayAttempt, "재도전 카운트 +1");
+            Assert.AreEqual(JourneyGenerator.JourneyDays, run.State.currentDay, "같은 날 유지");
+            Assert.IsFalse(run.TodayNodeCleared);
+            Assert.AreEqual(RunEnding.None, run.Ending, "혼불이 남았으면 런은 계속");
         }
 
         [Test]
@@ -250,7 +279,7 @@ namespace Hwatu.Core.Tests
             for (int day = 1; day < RunController.FinalDay; day++)
                 run.AdvanceDayDebug();
             Assert.AreEqual(RunController.FinalDay, run.State.currentDay);
-            Assert.AreEqual(NodeKind.FinalBattle, run.CurrentNode.kind);
+            Assert.AreEqual(NodeKind.Judgment, run.CurrentNode.kind, "49일차는 태산 심판 노드");
             Assert.AreEqual(RunEnding.None, run.Ending, "49일차 도달만으로는 끝나지 않는다");
 
             run.AdvanceDayDebug(); // 49일차를 통과

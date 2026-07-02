@@ -17,6 +17,11 @@ namespace Hwatu.Run
             // 데모 효과 2종 (임시 콘텐츠 — 다음 지시서에서 실제 부적으로 교체 예정)
             Register(DemoMultiplierPlusEffect.EffectId, () => new DemoMultiplierPlusEffect());
             Register(DemoJjokNojatdonEffect.EffectId, () => new DemoJjokNojatdonEffect());
+
+            // 대왕 기믹 3종 — "음(-)의 부적". BossRegistry.EffectId가 이 id들을 참조한다
+            Register(HwatangBossEffect.EffectId, () => new HwatangBossEffect());
+            Register(EopchingBossEffect.EffectId, () => new EopchingBossEffect());
+            Register(EopgyeongdaeBossEffect.EffectId, () => new EopgyeongdaeBossEffect());
         }
 
         public static void Register(string id, Func<IEffect> factory)

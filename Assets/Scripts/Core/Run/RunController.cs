@@ -16,7 +16,7 @@ namespace Hwatu.Run
 
     /// <summary>
     /// RunState를 소유하고 런 규칙을 집행하는 컨트롤러 (순수 C#).
-    /// 49일 여정: 하루의 노드를 "완료"(판 승리 / 지나가기 / 쉬어가기)하면
+    /// 49일 여정: 하루의 노드를 "완료"(판/심판 승리 또는 스텁 지나가기)하면
     /// CompleteNode(선택 인덱스)로 다음 날 레이어의 갈림길 하나로 이동한다.
     /// </summary>
     public sealed class RunController : IRunServices
@@ -91,24 +91,26 @@ namespace Hwatu.Run
             }
         }
 
-        /// <summary>스텁 노드(주막/이벤트)의 [지나가기], 잿날의 [쉬어가기] — 판 없는 노드 완료.</summary>
+        /// <summary>스텁 노드(주막/이벤트)의 [지나가기] — 판 없는 노드 완료.</summary>
         public void MarkTodayNodeCleared()
         {
             EnsureRunning();
             var kind = CurrentNode.kind;
-            if (kind == NodeKind.Battle || kind == NodeKind.FinalBattle)
+            if (kind == NodeKind.Battle || kind == NodeKind.FinalBattle || kind == NodeKind.Judgment)
                 throw new InvalidOperationException("판 노드는 판 성공으로만 완료할 수 있습니다.");
             State.todayNodeCleared = true;
         }
 
         /// <summary>
-        /// 잿날 입장 회복: honbul = min(honbul+1, honbulMax). 오늘 이미 발동했으면 false.
+        /// 재 의식 — 심판일 입장 시 이승의 재가 닿아 혼불 회복:
+        /// honbul = min(honbul+1, honbulMax). 오늘 이미 발동했으면 false.
         /// 재입장/새로고침 중복 회복은 jaetnalHealedToday(직렬화)로 막는다.
+        /// (메서드·필드명은 잿날 시절 그대로 둔다 — 불필요한 churn 금지)
         /// </summary>
         public bool TryJaetnalHeal()
         {
             EnsureRunning();
-            if (CurrentNode.kind != NodeKind.Jaetnal || State.jaetnalHealedToday) return false;
+            if (CurrentNode.kind != NodeKind.Judgment || State.jaetnalHealedToday) return false;
             State.jaetnalHealedToday = true;
             State.honbul = Math.Min(State.honbul + 1, State.honbulMax);
             ResourcesChanged?.Invoke();

@@ -34,6 +34,7 @@ namespace Hwatu.View
         public GameObject GoStopModal;
         public Text GoStopBody;
         public Text GoStopWarn;
+        public Button StopButton;           // 스톱 차단(심판 기믹) 시 비활성화
         public Text StopButtonLabel;
         public Text GoButtonLabel;
     }
@@ -316,6 +317,7 @@ namespace Hwatu.View
             goStopRow.childForceExpandHeight = false;
             var stopButton = CreateButton(goStopButtons.transform, "StopButton", "스톱", new Vector2(230f, 56f), 24, onStop);
             stopButton.image.color = new Color(0.70f, 0.30f, 0.28f);
+            refs.StopButton = stopButton;
             refs.StopButtonLabel = stopButton.GetComponentInChildren<Text>();
             var goButton = CreateButton(goStopButtons.transform, "GoButton", "고", new Vector2(230f, 56f), 24, onGo);
             goButton.image.color = new Color(0.28f, 0.55f, 0.32f);

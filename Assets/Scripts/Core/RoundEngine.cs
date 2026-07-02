@@ -58,6 +58,37 @@ namespace Hwatu.Core
             _multiplierModifiers.Remove(modifier);
         }
 
+        // [효과 계층 이음매] 스톱 가능 여부 질의 목록. 고/스톱 제안 시점(UI)과
+        // DeclareStop에서 질의하며, 하나라도 사유를 반환하면 스톱이 막힌다.
+        // 질의가 없으면 기존 동작과 완전히 동일하다 (기본 허용 — 기존 테스트가 증명).
+        private readonly List<Func<string>> _stopBlockers = new List<Func<string>>();
+
+        /// <summary>스톱 차단 질의 등록. 질의는 { () → 차단 사유 문자열 or null(허용) }.</summary>
+        public void AddStopBlocker(Func<string> blocker)
+        {
+            if (blocker == null) throw new ArgumentNullException(nameof(blocker));
+            _stopBlockers.Add(blocker);
+        }
+
+        public void RemoveStopBlocker(Func<string> blocker)
+        {
+            _stopBlockers.Remove(blocker);
+        }
+
+        /// <summary>지금 스톱을 막는 첫 사유 (null = 스톱 가능). 질의가 없으면 항상 null.</summary>
+        public string StopBlockReason
+        {
+            get
+            {
+                for (int i = 0; i < _stopBlockers.Count; i++)
+                {
+                    string reason = _stopBlockers[i]();
+                    if (reason != null) return reason;
+                }
+                return null;
+            }
+        }
+
         // 턴 진행 중 임시 상태
         private Card _playedCard;
         private int _playMatchCount;
@@ -318,11 +349,18 @@ namespace Hwatu.Core
             }
         }
 
-        /// <summary>스톱 선언: 최종점수 = 끗수 x 배수로 판을 끝낸다.</summary>
+        /// <summary>
+        /// 스톱 선언: 최종점수 = 끗수 x 배수로 판을 끝낸다.
+        /// 등록된 스톱 차단 질의가 거부하면(StopBlockReason != null) 예외 — UI는
+        /// 같은 질의로 버튼을 비활성화해 이 경로에 오지 않게 한다.
+        /// </summary>
         public void DeclareStop()
         {
             if (Phase != Phase.GoStopDecision)
                 throw new InvalidOperationException($"GoStopDecision 상태가 아닙니다: {Phase}");
+            string blockReason = StopBlockReason;
+            if (blockReason != null)
+                throw new InvalidOperationException($"스톱 불가: {blockReason}");
             EndRound(EndReason.Stop);
         }
 

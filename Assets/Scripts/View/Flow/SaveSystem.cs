@@ -21,8 +21,9 @@ namespace Hwatu.View.Flow
         }
 
         /// <summary>
-        /// 세이브가 없거나 읽을 수 없으면 null. 구버전 세이브(뼈대 v0)는
-        /// RunStateMigration이 그 자리에서 v2로 승격한다 (실패 시에만 null).
+        /// 세이브가 없거나 읽을 수 없으면 null. 구버전/깨진 세이브는 마이그레이션하지
+        /// 않고 그 자리에서 파일까지 안전 폐기한다 (프로토타입 단계의 의도적 단순화 —
+        /// 생성 규칙이 바뀔 때마다 세이브 버전을 올리고 구버전은 버린다).
         /// </summary>
         public static RunState Load()
         {
@@ -30,7 +31,9 @@ namespace Hwatu.View.Flow
             try
             {
                 var state = JsonUtility.FromJson<RunState>(File.ReadAllText(SavePath));
-                return RunStateMigration.EnsureCurrent(state) ? state : null;
+                if (RunStateMigration.EnsureCurrent(state)) return state;
+                Delete(); // 구버전 폐기
+                return null;
             }
             catch (System.Exception e)
             {
@@ -38,6 +41,12 @@ namespace Hwatu.View.Flow
                 return null;
             }
         }
+
+        /// <summary>
+        /// 이어하기 가능한(현재 버전) 세이브가 있는가. 타이틀이 [이어하기] 표시 여부에
+        /// 쓴다 — 구버전 세이브는 이 검사에서 이미 폐기되므로 버튼이 숨는다.
+        /// </summary>
+        public static bool HasUsableSave() => Load() != null;
 
         public static void Delete()
         {
