@@ -16,6 +16,12 @@ namespace Hwatu.View
         public int CardId { get; private set; }
         public Card Card { get; private set; }
         public bool FaceUp => _faceUp;
+        /// <summary>테스트/프리뷰용 상태 조회.</summary>
+        public bool IsDimmed { get; private set; }
+        public bool IsHighlighted => _border != null && _border.enabled;
+
+        /// <summary>호버 진입/이탈 통지 (매치 프리뷰 등). Create 후 소유자(테이블)가 할당한다.</summary>
+        public Action<int, bool> HoverChanged;
 
         private Image _hitImage;          // 루트 히트 영역 (호버로 비주얼이 떠도 움직이지 않는다)
         private RectTransform _visualRt;  // 호버 오프셋이 적용되는 비주얼 컨테이너
@@ -195,6 +201,7 @@ namespace Hwatu.View
             _hovered = true;
             transform.SetAsLastSibling();
             RetargetHover(Ease.OutBack);
+            HoverChanged?.Invoke(CardId, true);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -214,6 +221,7 @@ namespace Hwatu.View
             if (transform.parent != null)
                 transform.SetSiblingIndex(Mathf.Min(_baseSibling, transform.parent.childCount - 1));
             RetargetHover(Ease.OutCubic);
+            HoverChanged?.Invoke(CardId, false);
         }
 
         // ── 앞뒷면 ──────────────────────────────────────────────────
@@ -289,6 +297,7 @@ namespace Hwatu.View
 
         public void SetDim(bool dim)
         {
+            IsDimmed = dim;
             var c = dim ? _baseColor * 0.6f : _baseColor;
             c.a = 1f;
             _background.color = c;

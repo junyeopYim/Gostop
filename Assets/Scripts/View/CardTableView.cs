@@ -25,6 +25,7 @@ namespace Hwatu.View
         private readonly List<GameObject> _badges = new List<GameObject>();
         private readonly HashSet<int> _choiceIds = new HashSet<int>();  // 바닥 선택 후보
         private int _waitingCardId = -1;                                // 바닥 선택 동안 떠 있는 낸 카드
+        private int _previewSourceId = -1;                              // 매치 프리뷰 중인 손패 카드
 
         // 엔진 호출 중 동기 수신한 턴 이벤트 기록 (PrepareCommand→엔진 호출→CommitTurn)
         private Card _played;
@@ -78,6 +79,7 @@ namespace Hwatu.View
         /// <summary>엔진 호출 직전. 남은 연출을 즉시 완료하고 턴 기록을 비운다.</summary>
         public void PrepareCommand()
         {
+            ClearMatchPreview(); // 명령 경계: 엔진 상태가 바뀌기 전에 프리뷰 해제
             if (IsBusy) Flush();
             else ResetTimeline(); // 소진됐지만 아직 Update가 정리하지 않은 스케줄 잔재 제거
             _played = null;
@@ -157,6 +159,7 @@ namespace Hwatu.View
             ClearAllViews();
             _choiceIds.Clear();
             _waitingCardId = -1;
+            _previewSourceId = -1;
             _played = null;
             _flipped = null;
             ResetTimeline();
@@ -341,6 +344,76 @@ namespace Hwatu.View
             return false;
         }
 
+        // ── 매치 프리뷰 (손패 호버 → 같은 월 바닥 패 표시) ───────────
+
+        /// <summary>
+        /// 손패 카드 호버 시 같은 월의 바닥 패(묶임 스택 포함)를 하이라이트하고
+        /// 나머지 바닥 패는 어둡게 한다. 내기 대기 상태에서만 동작한다.
+        /// </summary>
+        public void ShowMatchPreview(int handCardId)
+        {
+            if (_engine.Phase != Phase.AwaitingPlay || IsBusy) return;
+            Card handCard = null;
+            foreach (var c in _engine.Hand)
+                if (c.Id == handCardId) { handCard = c; break; }
+            if (handCard == null) return;
+
+            _previewSourceId = handCardId;
+            ApplyPreviewVisuals(handCard.Month);
+        }
+
+        /// <summary>프리뷰 해제: 바닥 패의 딤/하이라이트를 기본 상태로 되돌린다.</summary>
+        public void ClearMatchPreview()
+        {
+            if (_previewSourceId < 0) return;
+            _previewSourceId = -1;
+            SetFloorPreview(match: null);
+        }
+
+        private void OnCardHoverChanged(int cardId, bool hovered)
+        {
+            if (hovered) ShowMatchPreview(cardId);
+            else if (_previewSourceId == cardId) ClearMatchPreview();
+        }
+
+        /// <summary>재조정이 딤/하이라이트를 기본값으로 되돌린 뒤 활성 프리뷰를 복원한다.</summary>
+        private void ReapplyMatchPreview()
+        {
+            if (_previewSourceId < 0) return;
+            if (_engine.Phase != Phase.AwaitingPlay || !IsInHand(_previewSourceId))
+            {
+                _previewSourceId = -1; // 상태가 바뀌어 무효 — 재조정 기본값이 곧 정답
+                return;
+            }
+            if (_views.TryGetValue(_previewSourceId, out var v) && v != null)
+                ApplyPreviewVisuals(v.Card.Month);
+        }
+
+        private void ApplyPreviewVisuals(int month) => SetFloorPreview(month);
+
+        /// <summary>바닥(개별+묶임) 뷰의 딤/하이라이트 일괄 적용. match가 null이면 전부 기본 상태.</summary>
+        private void SetFloorPreview(int? match)
+        {
+            foreach (var stack in _engine.BoundStacks)
+            {
+                bool hit = match.HasValue && stack.Month == match.Value;
+                foreach (var card in stack.Cards)
+                    ApplyPreviewTo(card.Id, match.HasValue, hit);
+            }
+            foreach (var card in _engine.FloorCards)
+            {
+                bool hit = match.HasValue && card.Month == match.Value;
+                ApplyPreviewTo(card.Id, match.HasValue, hit);
+            }
+        }
+
+        private void ApplyPreviewTo(int cardId, bool previewActive, bool hit)
+        {
+            if (!_views.TryGetValue(cardId, out var v) || v == null || _flying.Contains(cardId)) return;
+            v.SetDim(previewActive && !hit);   // 안 맞는 패만 살짝 어둡게
+            v.SetHighlight(previewActive && hit); // 맞는 패는 색 유지 + 가장자리 하이라이트
+        }
+
         /// <summary>이동 없이 호버/클릭 자격만 현재 엔진 페이즈 기준으로 동기화한다.</summary>
         private void SyncInteractivity()
         {
@@ -462,6 +535,9 @@ namespace Hwatu.View
             // 형제 순서 재할당·뱃지 재생성 뒤에도 호버 카드는 맨앞을 유지한다
             foreach (var kv in _views)
                 if (kv.Value != null) kv.Value.ReassertHoverFront();
+
+            // 재조정이 초기화한 딤/하이라이트 위에 활성 매치 프리뷰를 복원한다
+            ReapplyMatchPreview();
         }
 
         private void StartCaptureFly(int id, CardView v)
@@ -512,6 +588,7 @@ namespace Hwatu.View
         {
             if (_views.TryGetValue(card.Id, out var view) && view != null) return view;
             view = CardView.Create(_layer, card, ViewTuning.CardSize, _onCardClicked, withBack: true);
+            view.HoverChanged = OnCardHoverChanged; // 손패 호버 → 매치 프리뷰
             view.PlaceInstant(DeckPos(), 0f, ViewTuning.DeckScale);
             view.SetFaceUp(false, false);
             view.SetInteractable(false);
