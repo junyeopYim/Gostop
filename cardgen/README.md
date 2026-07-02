@@ -17,7 +17,8 @@ node render.mjs all                # 전 카드 → out/cards/*.png (300x450)
 node render.mjs card m08_gwang     # 1장만 재렌더
 node render.mjs overlays           # frames/·badges/ → out/overlays/*.png
 node render.mjs all --copy <dir>   # 렌더 후 out/cards→<dir>/Base, out/overlays→<dir>/Overlays 복사
-node prep-illust.mjs <파일|폴더>    # 래스터 일러스트 전처리 (크롭 + 8색 양자화)
+node prep-illust.mjs <파일|폴더>    # 래스터 일러스트 전처리 (중앙 cover 크롭 + 종이톤 정규화)
+node prep-illust.mjs <파일|폴더> --no-normalize  # 정규화 없이 크롭만 (전후 비교용)
 node prep-illust.mjs --selftest    # 전처리 자가 검증
 ```
 
@@ -25,7 +26,11 @@ node prep-illust.mjs --selftest    # 전처리 자가 검증
 
 ## 일러스트 입력 규격 (사람/AI 워크플로우용)
 
+- 화풍: **담채 민화(수묵담채)** — 낡은 한지 배경을 그림 안에 포함해 full-bleed로 생성한다. 그림 속 한지가 곧 카드 바탕이고, 그 위에 프레임과 라벨이 얹힌다 (광 5장은 금테 `frames/gold.svg`, 나머지는 기본 `frame.svg`)
 - 파일명 = 카드 id (`cards.json`의 id, 예: `m08_gwang.png`). 규칙: `m{두자리월}_{타입}{선택접미사}`
-- 원본 권장 크기: 짧은 변 1024px 이상, 종횡비 무관 (artZone 268:418 ≈ 0.64:1 세로형에 가까울수록 크롭 손실이 적다)
-- 원본은 `illustrations_raw/`에 넣고 `node prep-illust.mjs illustrations_raw`를 실행하면 중앙 cover 크롭(268x418) + 팔레트 8색 양자화를 거쳐 `illustrations/<id>.png`로 저장된다
+- 종횡비 **2:3** (artZone 300x450과 정확히 일치 — 크롭 손실 없음), 짧은 변 1024px 이상 권장
+- 워크플로우: 생성물 → `illustrations_raw/` → `node prep-illust.mjs illustrations_raw` → `node render.mjs all --copy <UnityArt경로>`
+- 전처리는 중앙 cover 크롭(300x450) 후 **종이톤 정규화**(네 모서리 24x24 중앙값으로 원본 종이색을 추정해 palette `paper`로 채널별 게인 보정, 0.7~1.4 클램프)를 거쳐 `illustrations/<id>.png`로 저장한다
+- 같은 월 피 2장은 `cards.json`의 `illust` 필드에 같은 파일을 지정해 일러스트를 공유할 수 있다 (그림 수 48→39 절감)
 - 완성본이 png이면 `cards.json`의 해당 카드 `illust`를 `<id>.png`로 바꾼다 (svg 일러스트는 전처리 없이 `illustrations/`에 직접, 색은 반드시 `var(--팔레트명)`만 사용)
+- 현재 `illustrations/`의 데모 svg 4장(m02_yeol·m03_hongdan·m08_gwang·m11_ssangpi)은 플랫 벡터 구세대 화풍으로, 담채 일러스트로 교체 대상이다

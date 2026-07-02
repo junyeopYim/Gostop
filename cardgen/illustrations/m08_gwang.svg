@@ -1,5 +1,7 @@
 <svg viewBox="0 0 268 418" xmlns="http://www.w3.org/2000/svg">
-  <!-- 8월 광: 공산명월 — 달과 산. 밤하늘은 dark_panel 레이아웃의 먹색이 비친다 -->
+  <!-- 8월 광: 공산명월 — 달과 산. 밤하늘 먹색은 일러스트가 직접 그린다
+       (dark_panel 레이아웃 은퇴로 카드 바탕이 종이색이 되었기 때문) -->
+  <rect x="0" y="0" width="268" height="418" fill="var(--ink)" />
   <circle cx="134" cy="128" r="82" fill="var(--paper)" />
   <circle cx="134" cy="128" r="82" fill="none" stroke="var(--gold)" stroke-width="5" />
   <circle cx="110" cy="110" r="10" fill="var(--gold)" opacity="0.5" />

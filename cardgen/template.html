@@ -45,12 +45,11 @@
       flex: none;
     }
 
+    /* full-bleed: 일러스트가 카드 전면을 덮고 그 위에 프레임·라벨이 얹힌다.
+       카드 모서리 클리핑은 .card의 border-radius + overflow:hidden이 담당한다 */
     .art {
       position: absolute;
-      left: var(--art-x);
-      top: var(--art-y);
-      width: var(--art-w);
-      height: var(--art-h);
+      inset: 0;
       overflow: hidden;
     }
     .art > svg { display: block; width: 100%; height: 100%; }
@@ -58,7 +57,6 @@
 
     /* 레이아웃 변형: 이름 → 클래스 매핑은 스크립트의 LAYOUT_CLASS에서 한다 */
     .layout-standard .art { background: var(--paper); }
-    .layout-dark_panel .art { background: var(--ink); border-radius: 8px; }
 
     .frame { position: absolute; inset: 0; pointer-events: none; }
     .frame > svg { display: block; width: 100%; height: 100%; }
@@ -85,15 +83,6 @@
       color: var(--ink);
       background: color-mix(in srgb, var(--paper) 80%, transparent);
     }
-    .layout-dark_panel .month {
-      color: var(--paper);
-      background: color-mix(in srgb, var(--ink) 65%, transparent);
-    }
-    .layout-dark_panel .label {
-      color: var(--gold);
-      background: color-mix(in srgb, var(--ink) 65%, transparent);
-    }
-
     /* ── 일러스트 플레이스홀더 ────────────────────── */
     .placeholder {
       width: 100%;
@@ -108,9 +97,6 @@
       font-size: 110px;
       color: color-mix(in srgb, var(--ink) 55%, transparent);
     }
-    .layout-dark_panel .placeholder .ph-month {
-      color: color-mix(in srgb, var(--paper) 55%, transparent);
-    }
     .placeholder .ph-block {
       width: 64%;
       height: 56px;
@@ -120,9 +106,6 @@
       font-family: "Malgun Gothic", monospace, sans-serif;
       font-size: 15px;
       color: color-mix(in srgb, var(--ink) 60%, transparent);
-    }
-    .layout-dark_panel .placeholder .ph-id {
-      color: color-mix(in srgb, var(--paper) 60%, transparent);
     }
 
     /* ── 오버레이 캡처 컨테이너 ───────────────────── */
@@ -138,10 +121,9 @@
 <body>
   <main id="stage"></main>
   <script type="module">
-    // 레이아웃 이름 → CSS 클래스 매핑. 새 레이아웃은 여기와 CSS에 한 줄씩 추가.
+    // 레이아웃 이름 → CSS 클래스 매핑. 새 레이아웃(미래 특수 카드)은 여기와 CSS에 한 줄씩 추가.
     const LAYOUT_CLASS = {
       standard: "layout-standard",
-      dark_panel: "layout-dark_panel",
     };
 
     // 플레이스홀더의 타입 색 블록: type → palette 변수
@@ -219,8 +201,9 @@
 
       root.append(await buildArt(card));
 
+      // 카드별 프레임: frame 필드 생략 시 기본 frame.svg (광은 frames/gold.svg)
       const frame = el("div", "frame");
-      frame.append(await inlineSvgCached("frame.svg"));
+      frame.append(await inlineSvgCached(card.frame || "frame.svg"));
       root.append(frame);
 
       if (card.month > 0) root.append(el("div", "month", `${card.month}월`));
@@ -252,10 +235,6 @@
       }
       rootStyle.setProperty("--canvas-w", `${data.canvas.width}px`);
       rootStyle.setProperty("--canvas-h", `${data.canvas.height}px`);
-      rootStyle.setProperty("--art-x", `${data.artZone.x}px`);
-      rootStyle.setProperty("--art-y", `${data.artZone.y}px`);
-      rootStyle.setProperty("--art-w", `${data.artZone.width}px`);
-      rootStyle.setProperty("--art-h", `${data.artZone.height}px`);
 
       const params = new URLSearchParams(location.search);
       const cardId = params.get("card");
