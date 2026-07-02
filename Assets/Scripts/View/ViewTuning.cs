@@ -9,22 +9,22 @@ namespace Hwatu.View
     public static class ViewTuning
     {
         // ── 카드 기준 크기 (존별 크기는 스케일로 표현) ──────────────
-        public static Vector2 CardSize = new Vector2(104f, 146f);
+        public static Vector2 CardSize = new Vector2(156f, 219f);
         public static float FloorScale = 100f / 104f;
         public static float BoundScale = 78f / 104f;
         public static float FlipSlotScale = 84f / 104f;
         public static float DeckScale = 90f / 104f;
-        public static float CaptureEndScale = 0.3f;
+        public static float CaptureEndScale = 45f / 156f;
 
         // ── 부채꼴 손패 ─────────────────────────────────────────────
         public static float FanRadius = 1600f;
         public static float FanAnglePerCard = 4.5f;  // 도 (인접 카드 간격)
         public static float FanMaxAngle = 40f;       // 도 (총각 = min(최대, 장당 x (n-1)))
-        public static float FanApexY = 180f;         // HandArea 로컬 기준 꼭대기 카드 중심 높이
+        public static float FanApexY = 240f;         // HandArea 로컬 기준 꼭대기 카드 중심 높이
                                                      // (가장자리 카드의 호 낙차 ~96px가 화면 밖으로 잘리지 않는 값)
 
         // ── 호버 부양 ───────────────────────────────────────────────
-        public static float HoverLift = 40f;
+        public static float HoverLift = 60f;
         public static float HoverScale = 1.08f;
         public static float HoverDuration = 0.1f;
 

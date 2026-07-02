@@ -173,7 +173,7 @@ namespace Hwatu.View
             capLayout.childForceExpandHeight = false;
 
             string[] rowNames = { "광", "열끗", "띠", "피" };
-            float[] gridHeights = { 48f, 48f, 48f, 94f };
+            float[] gridHeights = { 72f, 72f, 72f, 141f };
             refs.CapturedHeaders = new Text[4];
             refs.CapturedGrids = new RectTransform[4];
             for (int i = 0; i < 4; i++)
@@ -185,8 +185,8 @@ namespace Hwatu.View
                 var gridGo = new GameObject($"Grid_{rowNames[i]}", typeof(RectTransform));
                 gridGo.transform.SetParent(captured.transform, false);
                 var grid = gridGo.AddComponent<GridLayoutGroup>();
-                grid.cellSize = new Vector2(30f, 44f);
-                grid.spacing = new Vector2(2f, 2f);
+                grid.cellSize = new Vector2(45f, 66f);
+                grid.spacing = new Vector2(3f, 3f);
                 grid.childAlignment = TextAnchor.UpperLeft;
                 SetPreferred(gridGo, -1f, gridHeights[i]);
                 refs.CapturedGrids[i] = (RectTransform)gridGo.transform;
@@ -200,13 +200,14 @@ namespace Hwatu.View
             bdLe.flexibleHeight = 1f;
 
             // ── 더미/뒤집힌 카드 슬롯 ────────────────────────────────
+            var deckSlotSize = ViewTuning.CardSize * ViewTuning.DeckScale;
             var flipArea = new GameObject("FlipArea", typeof(RectTransform));
             flipArea.transform.SetParent(root, false);
             var flipAreaRt = (RectTransform)flipArea.transform;
             flipAreaRt.anchorMin = new Vector2(0.5f, 1f);
             flipAreaRt.anchorMax = new Vector2(0.5f, 1f);
             flipAreaRt.pivot = new Vector2(0.5f, 1f);
-            flipAreaRt.sizeDelta = new Vector2(240f, 170f);
+            flipAreaRt.sizeDelta = new Vector2(deckSlotSize.x * 2f + 60f, deckSlotSize.y + 46f);
             flipAreaRt.anchoredPosition = new Vector2(-20f, -76f);
 
             var flipLabel = CreateText(flipArea.transform, "Label", "더미 / 마지막 뒤집힘", 18,
@@ -222,7 +223,7 @@ namespace Hwatu.View
             var deckBackRt = (RectTransform)deckBack.transform;
             deckBackRt.anchorMin = deckBackRt.anchorMax = new Vector2(0f, 0f);
             deckBackRt.pivot = new Vector2(0f, 0f);
-            deckBackRt.sizeDelta = new Vector2(90f, 126f);
+            deckBackRt.sizeDelta = deckSlotSize;
             deckBackRt.anchoredPosition = new Vector2(20f, 8f);
             refs.DeckBackRect = deckBackRt;
             refs.DeckBackText = CreateText(deckBack.transform, "Count", "더미\n-", 20, Color.white, TextAnchor.MiddleCenter);
@@ -232,7 +233,7 @@ namespace Hwatu.View
             var flipSlotRt = (RectTransform)flipSlot.transform;
             flipSlotRt.anchorMin = flipSlotRt.anchorMax = new Vector2(1f, 0f);
             flipSlotRt.pivot = new Vector2(1f, 0f);
-            flipSlotRt.sizeDelta = new Vector2(90f, 126f);
+            flipSlotRt.sizeDelta = deckSlotSize;
             flipSlotRt.anchoredPosition = new Vector2(-20f, 8f);
             refs.FlipSlotRect = flipSlotRt;
 
@@ -252,7 +253,7 @@ namespace Hwatu.View
             refs.HandArea = (RectTransform)handGo.transform;
             refs.HandArea.anchorMin = refs.HandArea.anchorMax = new Vector2(0.5f, 0f);
             refs.HandArea.pivot = new Vector2(0.5f, 0f);
-            refs.HandArea.sizeDelta = new Vector2(1120f, 160f);
+            refs.HandArea.sizeDelta = new Vector2(1120f, 220f);
             refs.HandArea.anchoredPosition = new Vector2(-20f, 10f);
             // 손패는 CardTableView가 부채꼴로 수동 배치한다 (레이아웃 그룹 없음)
 

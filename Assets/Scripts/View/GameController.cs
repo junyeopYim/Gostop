@@ -483,7 +483,7 @@ namespace Hwatu.View
             {
                 ClearChildren(_ui.CapturedGrids[i]);
                 foreach (var card in byRow[i])
-                    CardView.Create(_ui.CapturedGrids[i], card, new Vector2(30f, 44f), null);
+                    CardView.Create(_ui.CapturedGrids[i], card, new Vector2(45f, 66f), null);
             }
 
             var breakdown = _engine.CurrentBreakdown;

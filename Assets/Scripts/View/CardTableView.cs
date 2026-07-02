@@ -572,11 +572,11 @@ namespace Hwatu.View
             int cell = 0;
             foreach (var stack in _engine.BoundStacks)
             {
-                var pos = FloorCellPosition(cell++, cellCount) + new Vector2(0f, -58f);
-                var badge = UIBuilder.CreateText(_layer, $"Badge_{stack.Month}", $"묶임 x{stack.Cards.Count}", 18,
+                var pos = FloorCellPosition(cell++, cellCount) + new Vector2(0f, -87f);
+                var badge = UIBuilder.CreateText(_layer, $"Badge_{stack.Month}", $"묶임 x{stack.Cards.Count}", 20,
                     new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter, FontStyle.Bold);
                 var rt = (RectTransform)badge.transform;
-                rt.sizeDelta = new Vector2(100f, 24f);
+                rt.sizeDelta = new Vector2(150f, 30f);
                 rt.anchoredPosition = pos;
                 _badges.Add(badge.gameObject);
             }
@@ -618,18 +618,20 @@ namespace Hwatu.View
         private Vector2 ToLayer(RectTransform zone, Vector2 local)
             => _layer.InverseTransformPoint(zone.TransformPoint(local));
 
-        private Vector2 DeckPos() => ToLayer(_ui.DeckBackRect, new Vector2(45f, 63f));       // pivot(0,0), 90x126
-        private Vector2 FlipSlotPos() => ToLayer(_ui.FlipSlotRect, new Vector2(-45f, 63f));  // pivot(1,0), 90x126
+        private Vector2 DeckPos() => ToLayer(_ui.DeckBackRect, _ui.DeckBackRect.rect.center);
+        private Vector2 FlipSlotPos() => ToLayer(_ui.FlipSlotRect, _ui.FlipSlotRect.rect.center);
         private Vector2 FloorCenter() => ToLayer(_ui.FloorArea, Vector2.zero);
         private Vector2 CapturedRowPos(int row) => ToLayer(_ui.CapturedGrids[row], Vector2.zero);
 
-        private static Vector2 BoundOffset(int i) => new Vector2(-9f + i * 9f, 18f - i * 9f);
+        private static Vector2 BoundOffset(int i) => new Vector2(-13.5f + i * 13.5f, 27f - i * 13.5f);
 
         private int FloorCellCount() => _engine.BoundStacks.Count + _engine.FloorCards.Count;
 
         private Vector2 FloorCellPosition(int index, int count)
         {
-            const float cw = 100f, ch = 140f, sp = 10f;
+            float cw = ViewTuning.CardSize.x * ViewTuning.FloorScale;
+            float ch = ViewTuning.CardSize.y * ViewTuning.FloorScale;
+            float sp = 15f;
             const int maxCols = 7;
             int cols = Mathf.Clamp(count, 1, maxCols);
             int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)maxCols));
