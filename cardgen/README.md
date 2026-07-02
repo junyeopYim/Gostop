@@ -13,8 +13,9 @@ npx playwright install chromium
 
 ```
 node render.mjs preview            # 브라우저 프리뷰 (50장 격자)
-node render.mjs all                # 전 카드 → out/cards/*.png (300x450)
+node render.mjs all                # 전 카드+뒷면 → out/cards/*.png (300x450)
 node render.mjs card m08_gwang     # 1장만 재렌더
+node render.mjs back               # 뒷면만 → out/cards/card_back.png
 node render.mjs overlays           # frames/·badges/ → out/overlays/*.png
 node render.mjs all --copy <dir>   # 렌더 후 out/cards→<dir>/Base, out/overlays→<dir>/Overlays 복사
 node prep-illust.mjs <파일|폴더>    # 래스터 일러스트 전처리 (중앙 cover 크롭 + 종이톤 정규화)

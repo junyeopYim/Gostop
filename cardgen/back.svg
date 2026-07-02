@@ -1,0 +1,14 @@
+<svg viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- 카드 뒷면: borderRed 전면 바탕 + 앞면과 동일 기하의 라운드 테두리
+       (같은 붉음이라 면에 녹아든다 — 무지 붉은 뒷면 전통) + 중앙 금 문양 -->
+  <rect x="0" y="0" width="300" height="450" rx="14" fill="var(--borderRed)" />
+  <rect x="6" y="6" width="288" height="438" rx="12" fill="none" stroke="var(--borderRed)" stroke-width="11" />
+  <!-- 달무리와 달 원반 -->
+  <circle cx="150" cy="205" r="64" fill="none" stroke="var(--gold)" stroke-width="3" />
+  <circle cx="150" cy="205" r="36" fill="var(--gold)" />
+  <!-- 혼불 곡선: 달을 받치는 두 겹 물결 -->
+  <g fill="none" stroke="var(--gold)" stroke-linecap="round">
+    <path d="M 104 296 Q 150 326 196 296" stroke-width="5" />
+    <path d="M 86 316 Q 150 356 214 316" stroke-width="3.5" />
+  </g>
+</svg>

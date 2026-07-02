@@ -269,8 +269,20 @@ namespace Hwatu.View
             _back.transform.SetParent(parent, false);
             UIBuilder.Stretch((RectTransform)_back.transform, 3f, 3f);
             var bg = _back.AddComponent<Image>();
-            bg.color = new Color(0.52f, 0.13f, 0.15f); // 진홍 단색
             bg.raycastTarget = false;
+
+            var db = CardArtDatabase.Instance;
+            if (db != null && db.BackSprite != null)
+            {
+                bg.sprite = db.BackSprite;
+                bg.color = Color.white;
+                bg.preserveAspect = true;
+                _back.SetActive(false);
+                return;
+            }
+
+            // 뒷면 스프라이트가 없으면 기존 단색 조립 폴백
+            bg.color = new Color(0.52f, 0.13f, 0.15f); // 진홍 단색
 
             var inner = new GameObject("Inner", typeof(RectTransform));
             inner.transform.SetParent(_back.transform, false);

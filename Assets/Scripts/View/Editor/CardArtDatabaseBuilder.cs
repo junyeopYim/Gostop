@@ -27,10 +27,25 @@ namespace Hwatu.View.Editor
 
             db.BaseEntries = CollectSprites(BaseDir);       // 파일명 = 카드 id
             db.OverlayEntries = CollectSprites(OverlayDir); // 파일명 = 오버레이 이름 (frame_*, badge_*)
+            db.BackSprite = TakeBackSprite(db.BaseEntries); // card_back은 카드 id가 아니라 전용 슬롯
             db.ClearLookupCaches();
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장 → {AssetPath}");
+            Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장, "
+                      + $"back {(db.BackSprite != null ? "있음" : "없음")} → {AssetPath}");
+        }
+
+        // Base 폴더에 함께 복사되는 card_back.png을 카드 id 목록에서 빼서 전용 슬롯에 담는다
+        private static Sprite TakeBackSprite(List<CardArtDatabase.Entry> entries)
+        {
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].Key != "card_back") continue;
+                var sprite = entries[i].Sprite;
+                entries.RemoveAt(i);
+                return sprite;
+            }
+            return null;
         }
 
         private static List<CardArtDatabase.Entry> CollectSprites(string dir)

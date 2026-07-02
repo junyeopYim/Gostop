@@ -21,6 +21,9 @@ namespace Hwatu.View
         public List<Entry> BaseEntries = new List<Entry>();
         public List<Entry> OverlayEntries = new List<Entry>();
 
+        /// <summary>카드 뒷면 스프라이트 (card_back.png). 없으면 뷰가 기존 단색 표현으로 폴백.</summary>
+        public Sprite BackSprite;
+
         private Dictionary<string, Sprite> _baseLookup;
         private Dictionary<string, Sprite> _overlayLookup;
 

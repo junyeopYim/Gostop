@@ -120,3 +120,4 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: cc5ff8edba380df4eb385858775aac6d, type: 3}
   - Key: frame_gold
     Sprite: {fileID: 21300000, guid: 93b7243aa29e1d740ae800c8793f74eb, type: 3}
+  BackSprite: {fileID: 21300000, guid: 0b766a4d134c77043a2a1d12c8a1d236, type: 3}

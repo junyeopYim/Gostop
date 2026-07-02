@@ -1,5 +1,5 @@
 // 카드/오버레이 렌더러.
-// 사용법: node render.mjs <all | card <id> | overlays | preview> [--copy <dir>]
+// 사용법: node render.mjs <all | card <id> | back | overlays | preview> [--copy <dir>]
 // Node 내장 http로 cardgen/을 서빙하고 playwright chromium으로 캡처한다.
 import http from "node:http";
 import path from "node:path";
@@ -76,6 +76,14 @@ async function captureCard(page, base, id) {
   return out;
 }
 
+async function captureBack(page, base) {
+  await page.goto(`${base}/template.html?back=1`);
+  await waitReady(page);
+  const out = path.join(OUT_CARDS, "card_back.png");
+  await page.locator("#card-back").screenshot({ omitBackground: true, path: out });
+  return out;
+}
+
 async function captureOverlay(page, base, name, prefix) {
   await page.goto(`${base}/template.html?overlay=${encodeURIComponent(name)}`);
   await waitReady(page);
@@ -134,7 +142,7 @@ async function copyOut(dir) {
 }
 
 function usage() {
-  console.error("사용법: node render.mjs <all | card <id> | overlays | preview> [--copy <dir>]");
+  console.error("사용법: node render.mjs <all | card <id> | back | overlays | preview> [--copy <dir>]");
   process.exit(1);
 }
 
@@ -168,6 +176,18 @@ switch (cmd) {
         await captureCard(page, base, card.id);
         console.log(`[${++n}/${cards.length}] ${card.id}.png`);
       }
+      await captureBack(page, base);
+      console.log("card_back.png");
+    });
+    if (copyDir) await copyOut(copyDir);
+    break;
+  }
+
+  case "back": {
+    await mkdir(OUT_CARDS, { recursive: true });
+    await withBrowser(async (page, base) => {
+      await captureBack(page, base);
+      console.log("card_back.png");
     });
     if (copyDir) await copyOut(copyDir);
     break;
