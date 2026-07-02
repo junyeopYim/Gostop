@@ -19,6 +19,12 @@ namespace Hwatu.View
         /// <summary>테스트/디버그용 read-only 접근.</summary>
         public RoundEngine Engine => _engine;
 
+        /// <summary>[임베드 이음매 ②] 판 종료 시 결과를 외부(런 화면)에 돌려준다.</summary>
+        public event Action<RoundResult> RoundFinished;
+
+        /// <summary>[임베드 이음매] 코드 생성된 UI 캔버스 루트 (임베드 측 정리용).</summary>
+        public GameObject UiRoot => _ui != null && _ui.Canvas != null ? _ui.Canvas.gameObject : null;
+
         private RoundEngine _engine;
         private UiRefs _ui;
         private CardTableView _table;
@@ -103,7 +109,36 @@ namespace Hwatu.View
                 ? t
                 : new RoundConfig().TargetScore; // 기본값의 단일 출처는 Core
             _ui.TargetField.text = target.ToString();
-            _config = new RoundConfig { TargetScore = target };
+            StartRoundCore(CardFactory.CreateStandardDeck(), seed, new RoundConfig { TargetScore = target });
+        }
+
+        /// <summary>
+        /// [임베드 이음매 ①] 외부(런)에서 덱(개조 덱 가능)·파생 시드·설정으로 판을 시작한다.
+        /// 셔플과 무효 딜 재셔플은 내부에서 시드 결정적으로 수행한다.
+        /// </summary>
+        public void StartExternalRound(IReadOnlyList<Card> cards, int shuffleSeed, RoundConfig config)
+        {
+            if (cards == null) throw new ArgumentNullException(nameof(cards));
+            var cfg = config ?? new RoundConfig();
+            _ui.TargetField.text = cfg.TargetScore.ToString();
+            StartRoundCore(new List<Card>(cards), shuffleSeed, cfg);
+        }
+
+        /// <summary>
+        /// [임베드 이음매 ③] 임베드 모드: 새판/재시도 등 자체 재시작 UI를 숨기고
+        /// 시드/목표 입력을 읽기 전용 표시로 전환한다.
+        /// </summary>
+        public void SetEmbeddedMode(bool embedded)
+        {
+            _ui.NewRoundButton.gameObject.SetActive(!embedded);
+            _ui.RoundOverButtons.SetActive(!embedded);
+            _ui.SeedField.interactable = !embedded;
+            _ui.TargetField.interactable = !embedded;
+        }
+
+        private void StartRoundCore(List<Card> deck, int seed, RoundConfig config)
+        {
+            _config = config;
 
             _table.PrepareCommand(); // 이전 판 연출이 남아 있으면 즉시 완료
 
@@ -119,7 +154,6 @@ namespace Hwatu.View
             _bannerQueue.Clear();
 
             var rng = new GameRng(seed);
-            var deck = CardFactory.CreateStandardDeck();
             rng.Shuffle(deck);
             var outcome = _engine.StartRound(deck, _config);
             int reshuffles = 0;
@@ -294,6 +328,8 @@ namespace Hwatu.View
             _ui.RoundOverBody.text = body.ToString();
             _roundOverPending = true; // 진행 중 트윈이 끝난 뒤 표시
             _dirty = true;
+
+            RoundFinished?.Invoke(result); // [임베드 이음매 ②]
         }
 
         private static string ReasonLabel(EndReason reason)

@@ -28,6 +28,8 @@ namespace Hwatu.View
         public Text[] CapturedHeaders;      // 광/열끗/띠/피 순
         public RectTransform[] CapturedGrids;
         public GameObject RoundOverPanel;
+        public Button NewRoundButton;       // 임베드 모드에서 숨김 (자체 재시작 UI)
+        public GameObject RoundOverButtons; // 임베드 모드에서 숨김 (자체 재시작 UI)
         public ScrollRect LogScroll;
         public GameObject GoStopModal;
         public Text GoStopBody;
@@ -95,7 +97,7 @@ namespace Hwatu.View
             string defaultTarget = new Hwatu.Core.RoundConfig().TargetScore.ToString();
             refs.TargetField = CreateInputField(topBar.transform, "TargetField", defaultTarget, new Vector2(90f, 40f));
             refs.TargetField.text = defaultTarget;
-            CreateButton(topBar.transform, "NewRoundButton", "새 판", new Vector2(120f, 44f), 24, onNewRound);
+            refs.NewRoundButton = CreateButton(topBar.transform, "NewRoundButton", "새 판", new Vector2(120f, 44f), 24, onNewRound);
             refs.TurnText = CreateText(topBar.transform, "TurnText", "턴 - / -", 24, Color.white, TextAnchor.MiddleLeft);
             SetPreferred(refs.TurnText.gameObject, 130f, 40f);
             refs.DeckText = CreateText(topBar.transform, "DeckText", "더미 -장", 24, Color.white, TextAnchor.MiddleLeft);
@@ -367,6 +369,7 @@ namespace Hwatu.View
             rowLayout.childForceExpandHeight = false;
             CreateButton(buttonRow.transform, "RetryButton", "같은 시드 재도전", new Vector2(250f, 56f), 24, onRetrySeed);
             CreateButton(buttonRow.transform, "NewSeedButton", "새 판", new Vector2(150f, 56f), 24, onNewSeed);
+            refs.RoundOverButtons = buttonRow;
 
             refs.RoundOverPanel.SetActive(false);
 

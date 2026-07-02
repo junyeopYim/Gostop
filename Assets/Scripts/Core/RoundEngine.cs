@@ -40,6 +40,24 @@ namespace Hwatu.Core
         private readonly List<Card> _deck = new List<Card>();
         private readonly List<Card> _captured = new List<Card>();
 
+        // [효과 계층 이음매] 정산 직전 배수 수정자 목록. 부적/보스/캐릭터 패시브
+        // (Hwatu.Run의 IEffect)가 등록하는 유일한 룰 개입 지점이며, 보스의 규칙 변형과
+        // 주간 지옥 컬러도 "음(-)의 부적"으로서 같은 훅을 쓸 예정이다.
+        // 수정자가 없으면 기존 동작과 완전히 동일하다 (기존 테스트 전체가 그 증명).
+        private readonly List<Func<int, int>> _multiplierModifiers = new List<Func<int, int>>();
+
+        /// <summary>정산 직전 배수 수정자 등록. 등록 순서대로 { baseMultiplier → 조정 } 질의를 받는다.</summary>
+        public void AddMultiplierModifier(Func<int, int> modifier)
+        {
+            if (modifier == null) throw new ArgumentNullException(nameof(modifier));
+            _multiplierModifiers.Add(modifier);
+        }
+
+        public void RemoveMultiplierModifier(Func<int, int> modifier)
+        {
+            _multiplierModifiers.Remove(modifier);
+        }
+
         // 턴 진행 중 임시 상태
         private Card _playedCard;
         private int _playMatchCount;
@@ -349,6 +367,9 @@ namespace Hwatu.Core
             CurrentBreakdown = ScoreCalculator.Calculate(_captured);
             int baseScore = CurrentBreakdown.Total;
             int multiplier = CurrentMultiplier;
+            // [효과 계층 이음매] 최종 배수 확정 전, 등록된 수정자들에게 1회 질의한다.
+            for (int i = 0; i < _multiplierModifiers.Count; i++)
+                multiplier = _multiplierModifiers[i](multiplier);
             int finalScore;
             bool success;
             switch (reason)
