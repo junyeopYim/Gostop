@@ -12,7 +12,7 @@
     "ash": "#4A443D"
   },
   "cards": [
-    { "id": "m01_gwang", "month": 1, "type": "gwang", "label": "광", "illust": "m01_gwang.svg", "layout": "standard", "frame": "frames/gold.svg" },
+    { "id": "m01_gwang", "month": 1, "type": "gwang", "label": "광", "illust": "m01_gwang.png", "layout": "standard", "frame": "frames/gold.svg" },
     { "id": "m01_hongdan", "month": 1, "type": "tti", "label": "홍단", "illust": "m01_hongdan.svg", "layout": "standard" },
     { "id": "m01_pi_a", "month": 1, "type": "pi", "label": "피", "illust": "m01_pi_a.svg", "layout": "standard" },
     { "id": "m01_pi_b", "month": 1, "type": "pi", "label": "피", "illust": "m01_pi_b.svg", "layout": "standard" },
@@ -37,7 +37,7 @@
     { "id": "m05_pi_a", "month": 5, "type": "pi", "label": "피", "illust": "m05_pi_a.svg", "layout": "standard" },
     { "id": "m05_pi_b", "month": 5, "type": "pi", "label": "피", "illust": "m05_pi_b.svg", "layout": "standard" },
 
-    { "id": "m06_yeol", "month": 6, "type": "yeol", "label": "열끗", "illust": "m06_yeol.svg", "layout": "standard" },
+    { "id": "m06_yeol", "month": 6, "type": "yeol", "label": "열끗", "illust": "m06_yeol.png", "layout": "standard" },
     { "id": "m06_cheongdan", "month": 6, "type": "tti", "label": "청단", "illust": "m06_cheongdan.svg", "layout": "standard" },
     { "id": "m06_pi_a", "month": 6, "type": "pi", "label": "피", "illust": "m06_pi_a.svg", "layout": "standard" },
     { "id": "m06_pi_b", "month": 6, "type": "pi", "label": "피", "illust": "m06_pi_b.svg", "layout": "standard" },
@@ -47,12 +47,12 @@
     { "id": "m07_pi_a", "month": 7, "type": "pi", "label": "피", "illust": "m07_pi_a.svg", "layout": "standard" },
     { "id": "m07_pi_b", "month": 7, "type": "pi", "label": "피", "illust": "m07_pi_b.svg", "layout": "standard" },
 
-    { "id": "m08_gwang", "month": 8, "type": "gwang", "label": "광", "illust": "m08_gwang.svg", "layout": "standard", "frame": "frames/gold.svg" },
+    { "id": "m08_gwang", "month": 8, "type": "gwang", "label": "광", "illust": "m08_gwang.png", "layout": "standard", "frame": "frames/gold.svg" },
     { "id": "m08_yeol", "month": 8, "type": "yeol", "label": "열끗", "illust": "m08_yeol.svg", "layout": "standard" },
     { "id": "m08_pi_a", "month": 8, "type": "pi", "label": "피", "illust": "m08_pi_a.svg", "layout": "standard" },
     { "id": "m08_pi_b", "month": 8, "type": "pi", "label": "피", "illust": "m08_pi_b.svg", "layout": "standard" },
 
-    { "id": "m09_yeol", "month": 9, "type": "yeol", "label": "열끗", "illust": "m09_yeol.svg", "layout": "standard" },
+    { "id": "m09_yeol", "month": 9, "type": "yeol", "label": "열끗", "illust": "m09_yeol.png", "layout": "standard" },
     { "id": "m09_cheongdan", "month": 9, "type": "tti", "label": "청단", "illust": "m09_cheongdan.svg", "layout": "standard" },
     { "id": "m09_pi_a", "month": 9, "type": "pi", "label": "피", "illust": "m09_pi_a.svg", "layout": "standard" },
     { "id": "m09_pi_b", "month": 9, "type": "pi", "label": "피", "illust": "m09_pi_b.svg", "layout": "standard" },
@@ -67,12 +67,12 @@
     { "id": "m11_pi_a", "month": 11, "type": "pi", "label": "피", "illust": "m11_pi_a.svg", "layout": "standard" },
     { "id": "m11_pi_b", "month": 11, "type": "pi", "label": "피", "illust": "m11_pi_b.svg", "layout": "standard" },
 
-    { "id": "m12_gwang", "month": 12, "type": "gwang", "label": "광", "illust": "m12_gwang.svg", "layout": "standard", "frame": "frames/gold.svg" },
+    { "id": "m12_gwang", "month": 12, "type": "gwang", "label": "광", "illust": "m12_gwang.png", "layout": "standard", "frame": "frames/gold.svg" },
     { "id": "m12_yeol", "month": 12, "type": "yeol", "label": "열끗", "illust": "m12_yeol.svg", "layout": "standard" },
     { "id": "m12_tti", "month": 12, "type": "tti", "label": "띠", "illust": "m12_tti.svg", "layout": "standard" },
     { "id": "m12_ssangpi", "month": 12, "type": "ssangpi", "label": "쌍피", "illust": "m12_ssangpi.svg", "layout": "standard" },
 
-    { "id": "bonus_ssangpi_a", "month": 0, "type": "ssangpi", "label": "쌍피", "illust": "bonus_ssangpi_a.svg", "layout": "standard" },
+    { "id": "bonus_ssangpi_a", "month": 0, "type": "ssangpi", "label": "쌍피", "illust": "bonus_ssangpi_a.png", "layout": "standard" },
     { "id": "bonus_ssangpi_b", "month": 0, "type": "ssangpi", "label": "쌍피", "illust": "bonus_ssangpi_b.svg", "layout": "standard" }
   ]
 }
