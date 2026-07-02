@@ -124,7 +124,7 @@
       "composition": "One crane and one pine branch, centered slightly low; keep the red sun small and leave upper-left and lower-right label areas quiet.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A white crane standing gracefully under a sparse pine branch, with a small muted red sun in the upper empty space.",
       "canShareIllustrationWith": [],
-      "status": "rendered_mvp_sample",
+      "status": "generated_preprocessed_rendered",
       "rawFilename": "m01_gwang.png",
       "processedFilename": "cardgen/illustrations/m01_gwang.png",
       "renderedFilename": "cardgen/out/cards/m01_gwang.png"
@@ -140,7 +140,10 @@
       "composition": "Pine branch is the main subject with one red cloth accent; avoid text, symbols, and any card-frame feeling.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A sparse pine branch and a red ribbon-like cloth motif without any text, floating on warm aged hanji paper.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m01_hongdan.png",
+      "processedFilename": "cardgen/illustrations/m01_hongdan.png",
+      "renderedFilename": "cardgen/out/cards/m01_hongdan.png"
     },
     {
       "id": "m01_pi_a",
@@ -155,7 +158,10 @@
       "canShareIllustrationWith": [
         "m01_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m01_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m01_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m01_pi_a.png"
     },
     {
       "id": "m01_pi_b",
@@ -170,7 +176,10 @@
       "canShareIllustrationWith": [
         "m01_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m01_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m01_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m01_pi_b.png"
     },
     {
       "id": "m02_yeol",
@@ -183,7 +192,10 @@
       "composition": "Branch arcs through the center with the bird as the single supporting motif; no background tree or scenery.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A plum blossom branch with one small bird perched lightly among a few blossoms, simple and sparse.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m02_yeol.png",
+      "processedFilename": "cardgen/illustrations/m02_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m02_yeol.png"
     },
     {
       "id": "m02_hongdan",
@@ -196,7 +208,10 @@
       "composition": "Keep the ribbon as a soft cloth shape, not a label; blossoms remain sparse with more than half empty paper.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A plum blossom branch and a red ribbon-like cloth motif, with no text or markings.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m02_hongdan.png",
+      "processedFilename": "cardgen/illustrations/m02_hongdan.png",
+      "renderedFilename": "cardgen/out/cards/m02_hongdan.png"
     },
     {
       "id": "m02_pi_a",
@@ -211,7 +226,10 @@
       "canShareIllustrationWith": [
         "m02_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m02_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m02_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m02_pi_a.png"
     },
     {
       "id": "m02_pi_b",
@@ -226,7 +244,10 @@
       "canShareIllustrationWith": [
         "m02_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m02_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m02_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m02_pi_b.png"
     },
     {
       "id": "m03_gwang",
@@ -239,7 +260,10 @@
       "composition": "Use one blossom branch and one soft red curtain-like accent; avoid busy festival scenery.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Cherry blossoms with a simple curtain-like muted red cloth motif, sparse and ceremonial, with no text.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m03_gwang.png",
+      "processedFilename": "cardgen/illustrations/m03_gwang.png",
+      "renderedFilename": "cardgen/out/cards/m03_gwang.png"
     },
     {
       "id": "m03_hongdan",
@@ -252,7 +276,10 @@
       "composition": "Ribbon motif is secondary and quiet; blossoms should be readable at small card scale.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A cherry blossom branch and a red ribbon-like cloth motif, no text, no seal, no symbols.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m03_hongdan.png",
+      "processedFilename": "cardgen/illustrations/m03_hongdan.png",
+      "renderedFilename": "cardgen/out/cards/m03_hongdan.png"
     },
     {
       "id": "m03_pi_a",
@@ -267,7 +294,10 @@
       "canShareIllustrationWith": [
         "m03_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m03_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m03_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m03_pi_a.png"
     },
     {
       "id": "m03_pi_b",
@@ -282,7 +312,10 @@
       "canShareIllustrationWith": [
         "m03_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m03_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m03_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m03_pi_b.png"
     },
     {
       "id": "m04_yeol",
@@ -295,7 +328,10 @@
       "composition": "One flowering stem and one bird only; keep foliage sparse and avoid a full tree or landscape.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A wisteria or bush clover stem with one small cuckoo-like bird, charming and understated.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m04_yeol.png",
+      "processedFilename": "cardgen/illustrations/m04_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m04_yeol.png"
     },
     {
       "id": "m04_chodan",
@@ -308,7 +344,10 @@
       "composition": "Flower remains the main subject; ribbon is one soft accent with quiet label-safe corners.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A purple flower stem and a blue-green ribbon-like cloth motif, with no text or markings.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m04_chodan.png",
+      "processedFilename": "cardgen/illustrations/m04_chodan.png",
+      "renderedFilename": "cardgen/out/cards/m04_chodan.png"
     },
     {
       "id": "m04_pi_a",
@@ -323,7 +362,10 @@
       "canShareIllustrationWith": [
         "m04_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m04_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m04_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m04_pi_a.png"
     },
     {
       "id": "m04_pi_b",
@@ -338,7 +380,10 @@
       "canShareIllustrationWith": [
         "m04_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m04_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m04_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m04_pi_b.png"
     },
     {
       "id": "m05_yeol",
@@ -351,7 +396,10 @@
       "composition": "The iris leaves are the main subject; bridge is a small supporting motif only, not a landscape.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Iris leaves and a small simple bridge motif, no scenery, no ground plane, sparse and handmade.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m05_yeol.png",
+      "processedFilename": "cardgen/illustrations/m05_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m05_yeol.png"
     },
     {
       "id": "m05_chodan",
@@ -364,7 +412,10 @@
       "composition": "Tall iris leaves arranged away from label-heavy corners; ribbon remains one soft secondary shape.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Iris leaves and a blue-green ribbon-like cloth motif, with no text or symbols.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m05_chodan.png",
+      "processedFilename": "cardgen/illustrations/m05_chodan.png",
+      "renderedFilename": "cardgen/out/cards/m05_chodan.png"
     },
     {
       "id": "m05_pi_a",
@@ -379,7 +430,10 @@
       "canShareIllustrationWith": [
         "m05_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m05_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m05_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m05_pi_a.png"
     },
     {
       "id": "m05_pi_b",
@@ -394,7 +448,10 @@
       "canShareIllustrationWith": [
         "m05_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m05_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m05_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m05_pi_b.png"
     },
     {
       "id": "m06_yeol",
@@ -407,7 +464,7 @@
       "composition": "Peony is moderately sized and central, butterfly is the only support motif; preserve broad empty paper around both.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A single red peony blossom with a tiny butterfly hovering above it, delicate leaves, large empty hanji paper around it.",
       "canShareIllustrationWith": [],
-      "status": "rendered_mvp_sample",
+      "status": "generated_preprocessed_rendered",
       "rawFilename": "m06_yeol.png",
       "processedFilename": "cardgen/illustrations/m06_yeol.png",
       "renderedFilename": "cardgen/out/cards/m06_yeol.png"
@@ -423,7 +480,10 @@
       "composition": "Peony and ribbon should feel related but uncluttered; avoid making the ribbon look like a label.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A peony blossom and a blue ribbon-like cloth motif, no text, no symbols, no seal.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m06_cheongdan.png",
+      "processedFilename": "cardgen/illustrations/m06_cheongdan.png",
+      "renderedFilename": "cardgen/out/cards/m06_cheongdan.png"
     },
     {
       "id": "m06_pi_a",
@@ -438,7 +498,10 @@
       "canShareIllustrationWith": [
         "m06_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m06_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m06_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m06_pi_a.png"
     },
     {
       "id": "m06_pi_b",
@@ -453,7 +516,10 @@
       "canShareIllustrationWith": [
         "m06_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m06_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m06_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m06_pi_b.png"
     },
     {
       "id": "m07_yeol",
@@ -466,7 +532,10 @@
       "composition": "Boar is the only animal and should stay small; bush clover remains sparse with no ground or scenery.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Bush clover with a small boar, charming and understated, with naive proportions and quiet humor.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m07_yeol.png",
+      "processedFilename": "cardgen/illustrations/m07_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m07_yeol.png"
     },
     {
       "id": "m07_chodan",
@@ -479,7 +548,10 @@
       "composition": "Ribbon is a soft accent beside sparse clover stems; leave at least half the frame as empty paper.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Bush clover and a blue-green ribbon-like cloth motif, no text or markings.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m07_chodan.png",
+      "processedFilename": "cardgen/illustrations/m07_chodan.png",
+      "renderedFilename": "cardgen/out/cards/m07_chodan.png"
     },
     {
       "id": "m07_pi_a",
@@ -494,7 +566,10 @@
       "canShareIllustrationWith": [
         "m07_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m07_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m07_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m07_pi_a.png"
     },
     {
       "id": "m07_pi_b",
@@ -509,7 +584,10 @@
       "canShareIllustrationWith": [
         "m07_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m07_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m07_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m07_pi_b.png"
     },
     {
       "id": "m08_gwang",
@@ -522,7 +600,7 @@
       "composition": "Moon is simple and round; pampas grass occupies a gentle lower sweep, leaving large upper empty paper.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A round full moon above a quiet sweep of pampas grass, very sparse and poetic, mostly empty warm paper.",
       "canShareIllustrationWith": [],
-      "status": "rendered_with_minor_label_overlap_note",
+      "status": "generated_preprocessed_rendered",
       "rawFilename": "m08_gwang.png",
       "processedFilename": "cardgen/illustrations/m08_gwang.png",
       "renderedFilename": "cardgen/out/cards/m08_gwang.png"
@@ -538,7 +616,10 @@
       "composition": "Geese are the main subject and should remain small; pampas grass is the only supporting motif.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Two small geese flying near a sparse sweep of pampas grass, quiet and airy on warm hanji.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m08_yeol.png",
+      "processedFilename": "cardgen/illustrations/m08_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m08_yeol.png"
     },
     {
       "id": "m08_pi_a",
@@ -553,7 +634,10 @@
       "canShareIllustrationWith": [
         "m08_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m08_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m08_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m08_pi_a.png"
     },
     {
       "id": "m08_pi_b",
@@ -568,7 +652,10 @@
       "canShareIllustrationWith": [
         "m08_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m08_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m08_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m08_pi_b.png"
     },
     {
       "id": "m09_yeol",
@@ -581,7 +668,7 @@
       "composition": "Chrysanthemum is the main subject and cup is a small supporting motif; keep the scene object-only, no table or floor.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A yellow chrysanthemum stem leaning beside a small traditional cup, simple and understated, generous empty paper.",
       "canShareIllustrationWith": [],
-      "status": "rendered_mvp_sample",
+      "status": "generated_preprocessed_rendered",
       "rawFilename": "m09_yeol.png",
       "processedFilename": "cardgen/illustrations/m09_yeol.png",
       "renderedFilename": "cardgen/out/cards/m09_yeol.png"
@@ -597,7 +684,10 @@
       "composition": "Flower and ribbon are sparse and balanced; avoid dense petals or decorative lettering.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A chrysanthemum stem and a blue ribbon-like cloth motif, no text, no symbols, no seal.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m09_cheongdan.png",
+      "processedFilename": "cardgen/illustrations/m09_cheongdan.png",
+      "renderedFilename": "cardgen/out/cards/m09_cheongdan.png"
     },
     {
       "id": "m09_pi_a",
@@ -612,7 +702,10 @@
       "canShareIllustrationWith": [
         "m09_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m09_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m09_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m09_pi_a.png"
     },
     {
       "id": "m09_pi_b",
@@ -627,7 +720,10 @@
       "canShareIllustrationWith": [
         "m09_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m09_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m09_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m09_pi_b.png"
     },
     {
       "id": "m10_yeol",
@@ -640,7 +736,10 @@
       "composition": "Deer is small and secondary to the maple branch; avoid forest, hills, or a full autumn scene.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A maple branch with a small deer, quiet, naive and charming, with no scenery or ground plane.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m10_yeol.png",
+      "processedFilename": "cardgen/illustrations/m10_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m10_yeol.png"
     },
     {
       "id": "m10_cheongdan",
@@ -653,7 +752,10 @@
       "composition": "Maple leaves are sparse and ribbon remains one quiet cloth accent; no decorative writing.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A maple branch and a blue ribbon-like cloth motif, no text, no markings, no symbols.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m10_cheongdan.png",
+      "processedFilename": "cardgen/illustrations/m10_cheongdan.png",
+      "renderedFilename": "cardgen/out/cards/m10_cheongdan.png"
     },
     {
       "id": "m10_pi_a",
@@ -668,7 +770,10 @@
       "canShareIllustrationWith": [
         "m10_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m10_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m10_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m10_pi_a.png"
     },
     {
       "id": "m10_pi_b",
@@ -683,7 +788,10 @@
       "canShareIllustrationWith": [
         "m10_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m10_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m10_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m10_pi_b.png"
     },
     {
       "id": "m11_gwang",
@@ -696,7 +804,10 @@
       "composition": "Phoenix-like bird is the only animal; paulownia leaves are broad but not dense, with no sky or landscape.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Paulownia leaves and a stylized phoenix-like bird, sparse, naive and gently humorous.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m11_gwang.png",
+      "processedFilename": "cardgen/illustrations/m11_gwang.png",
+      "renderedFilename": "cardgen/out/cards/m11_gwang.png"
     },
     {
       "id": "m11_ssangpi",
@@ -709,7 +820,10 @@
       "composition": "Leaf pair is the main subject; gold accent is tiny and painterly, never metallic or emblem-like.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A pair of paulownia leaves with one small warm gold accent, no text and no symbols.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m11_ssangpi.png",
+      "processedFilename": "cardgen/illustrations/m11_ssangpi.png",
+      "renderedFilename": "cardgen/out/cards/m11_ssangpi.png"
     },
     {
       "id": "m11_pi_a",
@@ -724,7 +838,10 @@
       "canShareIllustrationWith": [
         "m11_pi_b"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m11_pi_a.png",
+      "processedFilename": "cardgen/illustrations/m11_pi_a.png",
+      "renderedFilename": "cardgen/out/cards/m11_pi_a.png"
     },
     {
       "id": "m11_pi_b",
@@ -739,7 +856,10 @@
       "canShareIllustrationWith": [
         "m11_pi_a"
       ],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m11_pi_b.png",
+      "processedFilename": "cardgen/illustrations/m11_pi_b.png",
+      "renderedFilename": "cardgen/out/cards/m11_pi_b.png"
     },
     {
       "id": "m12_gwang",
@@ -752,7 +872,7 @@
       "composition": "Scholar figure is moderately sized, umbrella red but muted; frog is the only support motif and rain is sparse.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A skeletal Joseon scholar figure holding a red paper umbrella in light rain, with one small frog near the feet, charming rather than frightening.",
       "canShareIllustrationWith": [],
-      "status": "rendered_mvp_sample",
+      "status": "generated_preprocessed_rendered",
       "rawFilename": "m12_gwang.png",
       "processedFilename": "cardgen/illustrations/m12_gwang.png",
       "renderedFilename": "cardgen/out/cards/m12_gwang.png"
@@ -768,7 +888,10 @@
       "composition": "One bird or rain gesture plus one willow-like branch; no storm, no dark sky, no landscape.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small swallow or rain motif with a sparse willow-like branch, quiet and lightly brushed.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m12_yeol.png",
+      "processedFilename": "cardgen/illustrations/m12_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m12_yeol.png"
     },
     {
       "id": "m12_tti",
@@ -781,7 +904,10 @@
       "composition": "Rain marks should be sparse and delicate; ribbon is a soft cloth accent, not a written strip.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: Simple light rain and a ribbon-like cloth motif, no text, no numbers, no symbols.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m12_tti.png",
+      "processedFilename": "cardgen/illustrations/m12_tti.png",
+      "renderedFilename": "cardgen/out/cards/m12_tti.png"
     },
     {
       "id": "m12_ssangpi",
@@ -794,7 +920,10 @@
       "composition": "Frog and umbrella detail only; keep the motif playful, small, and away from label-heavy corners.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small frog beside a red paper umbrella detail, sparse on aged hanji, with no text.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "m12_ssangpi.png",
+      "processedFilename": "cardgen/illustrations/m12_ssangpi.png",
+      "renderedFilename": "cardgen/out/cards/m12_ssangpi.png"
     },
     {
       "id": "bonus_ssangpi_a",
@@ -807,7 +936,7 @@
       "composition": "Lucky pouch is the main subject and coins are the single support motif; avoid symbols, writing, and ornate detail.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small lucky pouch and two simple old coins arranged sparsely on aged hanji paper, playful and handmade, no text.",
       "canShareIllustrationWith": [],
-      "status": "rendered_mvp_sample",
+      "status": "generated_preprocessed_rendered",
       "rawFilename": "bonus_ssangpi_a.png",
       "processedFilename": "cardgen/illustrations/bonus_ssangpi_a.png",
       "renderedFilename": "cardgen/out/cards/bonus_ssangpi_a.png"
@@ -823,7 +952,10 @@
       "composition": "Charm knot is the main shape; folded paper is blank and quiet, never marked like an actual talisman.",
       "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small charm knot and a folded paper talisman shape, with no writing, no symbols, and no seal.",
       "canShareIllustrationWith": [],
-      "status": "planned"
+      "status": "generated_preprocessed_rendered",
+      "rawFilename": "bonus_ssangpi_b.png",
+      "processedFilename": "cardgen/illustrations/bonus_ssangpi_b.png",
+      "renderedFilename": "cardgen/out/cards/bonus_ssangpi_b.png"
     }
   ]
 }

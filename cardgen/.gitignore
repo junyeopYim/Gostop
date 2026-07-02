@@ -1,2 +1,5 @@
 node_modules/
 out/
+
+# Temporary generated illustration batches
+illustrations_raw/_batch_*/

@@ -5,36 +5,36 @@ Scope: cardgen art direction, card/UI manifests, batch prompt plans, current car
 
 ## Overall Status
 
-Current QA result: **MVP 6 generated, preprocessed, rendered, and approved for prototype use.**
+Current QA result: **Full 50-card deck generated, preprocessed, rendered, and approved for prototype use.**
 
-Reason: the six MVP style-anchor images were generated with Codex image generation, copied into the correct raw batch folders, preprocessed to `cardgen/illustrations/*.png`, connected in `cardgen/cards.json`, and rendered through `cardgen/render.mjs card <id>`.
+Reason: all 50 card images were generated with Codex image generation, copied into the correct raw batch folders, preprocessed to `cardgen/illustrations/*.png`, connected in `cardgen/cards.json`, rendered through `cardgen/render.mjs all`, and copied to `Assets/Art/Cards/Base` with `node render.mjs all --copy ../Assets/Art/Cards`.
 
-Only these six cards are currently approved for PNG connection: `m01_gwang`, `m06_yeol`, `m08_gwang`, `m09_yeol`, `m12_gwang`, and `bonus_ssangpi_a`. Do not connect the remaining cards to PNGs until their raw and processed images exist and pass the same QA gate.
+All `cards.json` entries now point to existing PNG illustrations. This is approved for the current prototype/demo art pass. A later final art pass should still revisit minor label-overlap and paper-tone consistency notes.
 
 ## Checked Files
 
 | Area | File or folder | Result | Notes |
 | --- | --- | --- | --- |
 | Art direction | `docs/art_direction.md` | Pass | Contains the shared style contract, forbidden elements, MVP sample gate, preprocessing/render flow, and `cards.json` update rules. |
-| Card manifest | `cardgen/art_manifest.json` | Pass | Valid JSON. Contains 50 card entries. IDs match `cardgen/cards.json` with no missing or extra IDs. MVP 6 statuses are updated from planned. |
+| Card manifest | `cardgen/art_manifest.json` | Pass | Valid JSON. Contains 50 card entries. IDs match `cardgen/cards.json` with no missing or extra IDs. All cards are marked generated/preprocessed/rendered. |
 | UI manifest | `cardgen/ui_art_manifest.json` | Pass for planning | Valid JSON. Contains 8 UI image items. `cardgen/ui_raw/` and `cardgen/out/ui/` do not exist yet, so UI image QA is pending. |
-| Batch plan | `cardgen/illustrations_raw/_batch_01_03/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw MVP image `m01_gwang.png` is present in this batch. |
-| Batch plan | `cardgen/illustrations_raw/_batch_04_06/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw MVP image `m06_yeol.png` is present in this batch. |
-| Batch plan | `cardgen/illustrations_raw/_batch_07_09/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw MVP images `m08_gwang.png` and `m09_yeol.png` are present in this batch. |
-| Batch plan | `cardgen/illustrations_raw/_batch_10_12_bonus/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw MVP images `m12_gwang.png` and `bonus_ssangpi_a.png` are present in this batch. |
-| Card data | `cardgen/cards.json` | Pass for MVP 6 | Contains 50 cards. `canvas` and `artZone` are both 300x450. The six approved MVP cards now point to PNGs; the remaining cards still point to SVG names. |
-| Processed illustrations | `cardgen/illustrations/` | Pass for MVP 6 | Contains the six processed MVP PNGs at 300x450 plus existing SVGs. |
-| Raw illustrations | `cardgen/illustrations_raw/` | Pass for MVP 6 | Contains six 1024x1536 raw PNGs in the assigned batch folders. |
-| Render output | `cardgen/out/cards/` | Pass for MVP 6 | The six MVP card renders were regenerated successfully after Playwright Chromium installation. Remaining card renders are not newly approved art. |
+| Batch plan | `cardgen/illustrations_raw/_batch_01_03/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw images for months 1-3 are present in this batch. |
+| Batch plan | `cardgen/illustrations_raw/_batch_04_06/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw images for months 4-6 are present in this batch. |
+| Batch plan | `cardgen/illustrations_raw/_batch_07_09/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw images for months 7-9 are present in this batch. |
+| Batch plan | `cardgen/illustrations_raw/_batch_10_12_bonus/PROMPT_PLAN.md` | Pass | Present. Includes prompt plan. Raw images for months 10-12 and bonus cards are present in this batch. |
+| Card data | `cardgen/cards.json` | Pass | Contains 50 cards. `canvas` and `artZone` are both 300x450. All `illust` fields point to existing PNG files. |
+| Processed illustrations | `cardgen/illustrations/` | Pass | Contains 50 processed PNGs at 300x450 plus existing SVGs. |
+| Raw illustrations | `cardgen/illustrations_raw/` | Pass | Contains 50 raw PNGs in the assigned batch folders. |
+| Render output | `cardgen/out/cards/` | Pass | Contains 50 rendered card PNGs at 300x450. |
 
 ## Current Image Inventory
 
 | Category | Count | QA status |
 | --- | ---: | --- |
-| Raw AI raster images in `cardgen/illustrations_raw/` | 6 | MVP samples generated and copied to batch folders |
-| Processed PNG images in `cardgen/illustrations/` | 6 | MVP samples preprocessed to 300x450 |
+| Raw AI raster images in `cardgen/illustrations_raw/` | 50 | Full deck generated and copied to batch folders |
+| Processed PNG images in `cardgen/illustrations/` | 50 | Full deck preprocessed to 300x450 |
 | Existing SVG illustrations in `cardgen/illustrations/` | 4 | Existing placeholder/source art only; not part of the new PNG approval gate |
-| Rendered card PNGs in `cardgen/out/cards/` | 50 | Six MVP renders are newly approved; remaining renders are not new art approval evidence |
+| Rendered card PNGs in `cardgen/out/cards/` | 50 | Full deck rendered and approved for prototype use |
 | UI raw images in `cardgen/ui_raw/` | 0 | Not available for QA |
 | UI processed/output images in `cardgen/out/ui/` | 0 | Not available for QA |
 
