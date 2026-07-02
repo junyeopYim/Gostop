@@ -1,14 +1,14 @@
 <svg viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
-  <!-- 광 베이스 프레임: 한지(담채) 바탕 위 금색 이중선 테두리.
+  <!-- 광 베이스 프레임: 덱 공통 주사 적색 외곽 + 금색 안쪽 장식.
        테두리 외 영역은 완전 투명 — 베이스 프레임이자 런타임 개조 오버레이로 이중 운용 -->
-  <rect x="7" y="7" width="286" height="436" rx="12" fill="none" stroke="var(--gold)" stroke-width="5" />
-  <rect x="16" y="16" width="268" height="418" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.5" />
+  <rect x="6" y="6" width="288" height="438" rx="12" fill="none" stroke="#B92B24" stroke-width="11" />
+  <rect x="17" y="17" width="266" height="416" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.75" />
   <!-- 네 모서리 금 장식: 안쪽 선과 이어지는 짧은 능선 + 점 -->
-  <g stroke="var(--gold)" stroke-width="1.5" fill="none" stroke-linecap="round">
-    <path d="M 16 44 V 24 Q 16 16 24 16 H 44" />
-    <path d="M 256 16 H 276 Q 284 16 284 24 V 44" />
-    <path d="M 284 406 V 426 Q 284 434 276 434 H 256" />
-    <path d="M 44 434 H 24 Q 16 434 16 426 V 406" />
+  <g stroke="var(--gold)" stroke-width="1.75" fill="none" stroke-linecap="round">
+    <path d="M 17 45 V 26 Q 17 17 26 17 H 45" />
+    <path d="M 255 17 H 274 Q 283 17 283 26 V 45" />
+    <path d="M 283 405 V 424 Q 283 433 274 433 H 255" />
+    <path d="M 45 433 H 26 Q 17 433 17 424 V 405" />
   </g>
   <g fill="var(--gold)">
     <circle cx="27" cy="27" r="2.5" />

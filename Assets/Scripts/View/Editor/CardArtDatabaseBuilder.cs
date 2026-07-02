@@ -27,6 +27,7 @@ namespace Hwatu.View.Editor
 
             db.BaseEntries = CollectSprites(BaseDir);       // 파일명 = 카드 id
             db.OverlayEntries = CollectSprites(OverlayDir); // 파일명 = 오버레이 이름 (frame_*, badge_*)
+            db.ClearLookupCaches();
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
             Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장 → {AssetPath}");

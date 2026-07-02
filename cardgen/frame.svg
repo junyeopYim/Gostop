@@ -1,17 +1,18 @@
 <svg viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
-  <!-- 기본 테두리: 먹색 라운드 사각 + 금색 모서리 장식 -->
-  <rect x="6" y="6" width="288" height="438" rx="12" fill="none" stroke="var(--ink)" stroke-width="6" />
-  <!-- 모서리 장식 (금) -->
+  <!-- 기본 테두리: 일본식 검정 대신 주사 적색의 두꺼운 외곽선. -->
+  <rect x="6" y="6" width="288" height="438" rx="12" fill="none" stroke="#B92B24" stroke-width="11" />
+  <rect x="17" y="17" width="266" height="416" rx="8" fill="none" stroke="var(--gold)" stroke-width="1.5" />
+  <!-- 모서리 장식: 붉은 외곽 안쪽에 작은 금색 포인트만 둔다. -->
   <g fill="var(--gold)">
-    <circle cx="21" cy="21" r="4" />
-    <circle cx="279" cy="21" r="4" />
-    <circle cx="21" cy="429" r="4" />
-    <circle cx="279" cy="429" r="4" />
+    <circle cx="27" cy="27" r="2.5" />
+    <circle cx="273" cy="27" r="2.5" />
+    <circle cx="27" cy="423" r="2.5" />
+    <circle cx="273" cy="423" r="2.5" />
   </g>
-  <g stroke="var(--gold)" stroke-width="2" fill="none" stroke-linecap="round">
-    <path d="M 13 33 V 21 Q 13 13 21 13 H 33" />
-    <path d="M 267 13 H 279 Q 287 13 287 21 V 33" />
-    <path d="M 287 417 V 429 Q 287 437 279 437 H 267" />
-    <path d="M 33 437 H 21 Q 13 437 13 429 V 417" />
+  <g stroke="var(--gold)" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <path d="M 17 44 V 26 Q 17 17 26 17 H 44" />
+    <path d="M 256 17 H 274 Q 283 17 283 26 V 44" />
+    <path d="M 283 406 V 424 Q 283 433 274 433 H 256" />
+    <path d="M 44 433 H 26 Q 17 433 17 424 V 406" />
   </g>
 </svg>

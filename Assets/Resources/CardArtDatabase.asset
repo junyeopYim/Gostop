@@ -13,14 +13,106 @@ MonoBehaviour:
   m_Name: CardArtDatabase
   m_EditorClassIdentifier: HwatuView::Hwatu.View.CardArtDatabase
   BaseEntries:
+  - Key: bonus_ssangpi_a
+    Sprite: {fileID: 21300000, guid: abc7d9cfaca41ad4995293517b5fc51e, type: 3}
+  - Key: bonus_ssangpi_b
+    Sprite: {fileID: 21300000, guid: ac1ea3dfd1f21f44290ee1658b38cf8a, type: 3}
+  - Key: m01_gwang
+    Sprite: {fileID: 21300000, guid: cfb5e4a559eee764bb48507f6b643569, type: 3}
+  - Key: m01_hongdan
+    Sprite: {fileID: 21300000, guid: 508ef4feb28b56245b5b84f0ba13e02a, type: 3}
+  - Key: m01_pi_a
+    Sprite: {fileID: 21300000, guid: ed6aa9bdef03d3b478b6c0232e65060d, type: 3}
+  - Key: m01_pi_b
+    Sprite: {fileID: 21300000, guid: 27994eff170b32c47a68b1d3a27a8fec, type: 3}
+  - Key: m02_hongdan
+    Sprite: {fileID: 21300000, guid: 8180265235459bf45be34a4b521e86d4, type: 3}
+  - Key: m02_pi_a
+    Sprite: {fileID: 21300000, guid: f18d69b9b9471dd43a214d6125db2dc3, type: 3}
+  - Key: m02_pi_b
+    Sprite: {fileID: 21300000, guid: ea9982b55b04ca547b73006ee24be52e, type: 3}
   - Key: m02_yeol
     Sprite: {fileID: 21300000, guid: 0cc60c663c5f267468e3d2191697de8a, type: 3}
+  - Key: m03_gwang
+    Sprite: {fileID: 21300000, guid: 049313107ac0db340b4021182b269ecb, type: 3}
   - Key: m03_hongdan
     Sprite: {fileID: 21300000, guid: 31162f822d6961c47987f932780a8b66, type: 3}
+  - Key: m03_pi_a
+    Sprite: {fileID: 21300000, guid: 3085d811dacc56348a42f3c7a420ad4a, type: 3}
+  - Key: m03_pi_b
+    Sprite: {fileID: 21300000, guid: 6cc2ff0a329d88145bf73a2c87b23e07, type: 3}
+  - Key: m04_chodan
+    Sprite: {fileID: 21300000, guid: 7503cb70232af384bbfea4ceb7b1d72d, type: 3}
+  - Key: m04_pi_a
+    Sprite: {fileID: 21300000, guid: 55c883180558d2440aabaef0dc4edf57, type: 3}
+  - Key: m04_pi_b
+    Sprite: {fileID: 21300000, guid: 5f96740ced738f245ab621ee3ba203d6, type: 3}
+  - Key: m04_yeol
+    Sprite: {fileID: 21300000, guid: ed4dea02bb50dff4b85029fae8006b8a, type: 3}
+  - Key: m05_chodan
+    Sprite: {fileID: 21300000, guid: 9134e962ad25af342b86824bbf810623, type: 3}
+  - Key: m05_pi_a
+    Sprite: {fileID: 21300000, guid: d87bb880b4125cd49aa63244bd968994, type: 3}
+  - Key: m05_pi_b
+    Sprite: {fileID: 21300000, guid: 54c8ab23f8822184f8dce39d17cf5a2d, type: 3}
+  - Key: m05_yeol
+    Sprite: {fileID: 21300000, guid: 55090c920912edb43a1808c358e53411, type: 3}
+  - Key: m06_cheongdan
+    Sprite: {fileID: 21300000, guid: bf3131c08b240ee4db6bcf2a33df66d8, type: 3}
+  - Key: m06_pi_a
+    Sprite: {fileID: 21300000, guid: f9e75cb71f8237c4982b4d5b186c0cd1, type: 3}
+  - Key: m06_pi_b
+    Sprite: {fileID: 21300000, guid: 8da2442a159235342bca615ca772e376, type: 3}
+  - Key: m06_yeol
+    Sprite: {fileID: 21300000, guid: 105871ac43b38cc41bd2199e7470d33b, type: 3}
+  - Key: m07_chodan
+    Sprite: {fileID: 21300000, guid: ab66b2a2b76498446808184f6262986e, type: 3}
+  - Key: m07_pi_a
+    Sprite: {fileID: 21300000, guid: 9bc6dabbc40649144b4afa56eeb10d6e, type: 3}
+  - Key: m07_pi_b
+    Sprite: {fileID: 21300000, guid: 504fe5808ddec8746b0168510490154e, type: 3}
+  - Key: m07_yeol
+    Sprite: {fileID: 21300000, guid: 22fa5f4d0234e8a428004a9b2fa436af, type: 3}
   - Key: m08_gwang
     Sprite: {fileID: 21300000, guid: f8054a8b162be654a8e9daa0c58af022, type: 3}
+  - Key: m08_pi_a
+    Sprite: {fileID: 21300000, guid: cd0ea85aa323cc74e9fb585def8fd8eb, type: 3}
+  - Key: m08_pi_b
+    Sprite: {fileID: 21300000, guid: 113c01e2e325fba41904a865197687c4, type: 3}
+  - Key: m08_yeol
+    Sprite: {fileID: 21300000, guid: 6b934919dc64e4848b2aa66ea2b9466a, type: 3}
+  - Key: m09_cheongdan
+    Sprite: {fileID: 21300000, guid: 46616e17daa836341a42c6433fca53db, type: 3}
+  - Key: m09_pi_a
+    Sprite: {fileID: 21300000, guid: 1509e0985ec771c47afa69524c582a13, type: 3}
+  - Key: m09_pi_b
+    Sprite: {fileID: 21300000, guid: 40fad4aad2c0532478c11b3909f73f3a, type: 3}
+  - Key: m09_yeol
+    Sprite: {fileID: 21300000, guid: 76f012592e234904a801af21cf67ebaf, type: 3}
+  - Key: m10_cheongdan
+    Sprite: {fileID: 21300000, guid: d0cbfd9b03f82414e9e7ab1b065a0603, type: 3}
+  - Key: m10_pi_a
+    Sprite: {fileID: 21300000, guid: 8d42fdc68bee12044a27d33962bec127, type: 3}
+  - Key: m10_pi_b
+    Sprite: {fileID: 21300000, guid: 8af591cada24c734480b57608dc3ab4b, type: 3}
+  - Key: m10_yeol
+    Sprite: {fileID: 21300000, guid: 475680b9ea0c50b4c8bc9f5ff23089d0, type: 3}
+  - Key: m11_gwang
+    Sprite: {fileID: 21300000, guid: c68e52784d87e7443b0913697e28ba6a, type: 3}
+  - Key: m11_pi_a
+    Sprite: {fileID: 21300000, guid: 019167f84ffce40489962e63aaa960a9, type: 3}
+  - Key: m11_pi_b
+    Sprite: {fileID: 21300000, guid: 8f5a25a74e671904f9a3a61a5190c5d1, type: 3}
   - Key: m11_ssangpi
     Sprite: {fileID: 21300000, guid: 9ada72c123e4d7f48830f09edc08d26e, type: 3}
+  - Key: m12_gwang
+    Sprite: {fileID: 21300000, guid: b349aefa05a3e2c42a88517cdf168210, type: 3}
+  - Key: m12_ssangpi
+    Sprite: {fileID: 21300000, guid: 700c8fe5f084fbc48b003905f391cf6a, type: 3}
+  - Key: m12_tti
+    Sprite: {fileID: 21300000, guid: 81aab0de70da60f4f973d867b3b7c35e, type: 3}
+  - Key: m12_yeol
+    Sprite: {fileID: 21300000, guid: 7ab6f2279084a564fabaf3d358bc4f8e, type: 3}
   OverlayEntries:
   - Key: badge_seal_example
     Sprite: {fileID: 21300000, guid: d438f43bf02e42942bf54db494c7227c, type: 3}

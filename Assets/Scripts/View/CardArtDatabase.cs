@@ -47,6 +47,12 @@ namespace Hwatu.View
         public bool TryGetOverlay(string overlayName, out Sprite sprite)
             => TryGet(ref _overlayLookup, OverlayEntries, overlayName, out sprite);
 
+        public void ClearLookupCaches()
+        {
+            _baseLookup = null;
+            _overlayLookup = null;
+        }
+
         private static bool TryGet(ref Dictionary<string, Sprite> cache, List<Entry> entries,
                                    string key, out Sprite sprite)
         {
