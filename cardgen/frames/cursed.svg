@@ -1,0 +1,14 @@
+<svg viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- 저주 변형: 주사(朱砂) 적색 거친 테두리 + 혼불 청록 포인트 -->
+  <rect x="6" y="6" width="288" height="438" rx="12" fill="none"
+        stroke="var(--vermilion)" stroke-width="6" stroke-dasharray="26 7 13 5" />
+  <rect x="13" y="13" width="274" height="424" rx="9" fill="none"
+        stroke="var(--vermilion)" stroke-width="1.5" stroke-dasharray="4 9" />
+  <!-- 혼불: 네 모서리의 도깨비불 -->
+  <g fill="var(--spirit)">
+    <path d="M 24 34 Q 17 26 22 17 Q 24 23 28 24 Q 26 15 32 12 Q 30 20 35 26 Q 38 32 31 36 Q 26 38 24 34 Z" />
+    <path d="M 276 34 Q 283 26 278 17 Q 276 23 272 24 Q 274 15 268 12 Q 270 20 265 26 Q 262 32 269 36 Q 274 38 276 34 Z" />
+    <path d="M 24 416 Q 17 424 22 433 Q 24 427 28 426 Q 26 435 32 438 Q 30 430 35 424 Q 38 418 31 414 Q 26 412 24 416 Z" />
+    <path d="M 276 416 Q 283 424 278 433 Q 276 427 272 426 Q 274 435 268 438 Q 270 430 265 424 Q 262 418 269 414 Q 274 412 276 416 Z" />
+  </g>
+</svg>

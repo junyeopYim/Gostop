@@ -1,0 +1,13 @@
+<svg viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- 좌하단 낙관(도장) 배지 예시. 도장 외 영역은 완전 투명 -->
+  <g transform="translate(26 384) rotate(-6 20 20)">
+    <rect x="0" y="0" width="40" height="40" rx="6" fill="var(--vermilion)" />
+    <rect x="4" y="4" width="32" height="32" rx="4" fill="none" stroke="var(--paper)" stroke-width="2" />
+    <!-- 화(花) 느낌의 단순 인장 획 -->
+    <g stroke="var(--paper)" stroke-width="3" stroke-linecap="round" fill="none">
+      <path d="M 12 14 H 28" />
+      <path d="M 20 9 V 31" />
+      <path d="M 13 24 Q 20 31 27 24" />
+    </g>
+  </g>
+</svg>

@@ -42,6 +42,12 @@
 # Visual Studio cache directory
 .vs/
 
+# Node/package-manager artifacts from local tooling
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Gradle cache directory
 .gradle/
 
@@ -83,6 +89,9 @@ mono_crash.*
 
 # Crashlytics generated file
 crashlytics-build.properties
+
+# Local package manifest backups
+/Packages/*.bak-*
 
 # TestRunner generated files
 InitTestScene*.unity*

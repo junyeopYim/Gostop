@@ -1,0 +1,35 @@
+<svg viewBox="0 0 268 418" xmlns="http://www.w3.org/2000/svg">
+  <!-- 11월 쌍피: 오동잎 두 장과 열매 -->
+  <!-- 큰 오동잎 -->
+  <g transform="translate(134 176)">
+    <path d="M 0 -110 Q 78 -92 96 -20 Q 104 46 44 84 Q 0 108 -44 84 Q -104 46 -96 -20 Q -78 -92 0 -110 Z"
+          fill="var(--blanket)" />
+    <g stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round">
+      <path d="M 0 -96 V 92" />
+      <path d="M 0 -30 Q -42 -46 -66 -34" />
+      <path d="M 0 -30 Q 42 -46 66 -34" />
+      <path d="M 0 24 Q -36 16 -58 34" />
+      <path d="M 0 24 Q 36 16 58 34" />
+    </g>
+  </g>
+  <!-- 작은 오동잎 (쌍) -->
+  <g transform="translate(74 320) rotate(-14) scale(0.52)">
+    <path d="M 0 -110 Q 78 -92 96 -20 Q 104 46 44 84 Q 0 108 -44 84 Q -104 46 -96 -20 Q -78 -92 0 -110 Z"
+          fill="var(--spirit)" />
+    <g stroke="var(--ink)" stroke-width="6" fill="none" stroke-linecap="round">
+      <path d="M 0 -96 V 92" />
+      <path d="M 0 -30 Q -42 -46 -66 -34" />
+      <path d="M 0 -30 Q 42 -46 66 -34" />
+    </g>
+  </g>
+  <!-- 오동 열매 -->
+  <g stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M 196 296 Q 210 320 204 348" />
+    <path d="M 204 348 q -10 14 -22 18" />
+  </g>
+  <g fill="var(--gold)">
+    <circle cx="206" cy="330" r="9" />
+    <circle cx="190" cy="352" r="8" />
+    <circle cx="212" cy="362" r="7" />
+  </g>
+</svg>

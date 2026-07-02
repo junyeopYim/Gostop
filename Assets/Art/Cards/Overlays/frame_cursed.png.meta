@@ -1,0 +1,1630 @@
+fileFormatVersion: 2
+guid: cc5ff8edba380df4eb385858775aac6d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3914765647966908667
+    second: frame_cursed_0
+  - first:
+      213: 4823268164502295083
+    second: frame_cursed_1
+  - first:
+      213: -5617453233521766150
+    second: frame_cursed_2
+  - first:
+      213: 6873205139063827063
+    second: frame_cursed_3
+  - first:
+      213: 1070632688423011042
+    second: frame_cursed_4
+  - first:
+      213: 1592667491667230064
+    second: frame_cursed_5
+  - first:
+      213: 4591626284633085531
+    second: frame_cursed_6
+  - first:
+      213: 8267086948252363125
+    second: frame_cursed_7
+  - first:
+      213: -833466935606384563
+    second: frame_cursed_8
+  - first:
+      213: -6025832611535999234
+    second: frame_cursed_9
+  - first:
+      213: -630926976356356332
+    second: frame_cursed_10
+  - first:
+      213: 2434236905779505331
+    second: frame_cursed_11
+  - first:
+      213: -6775994335815279642
+    second: frame_cursed_12
+  - first:
+      213: 2219316354884215924
+    second: frame_cursed_13
+  - first:
+      213: -7282791526834800278
+    second: frame_cursed_14
+  - first:
+      213: 4452364633844964950
+    second: frame_cursed_15
+  - first:
+      213: 3626141080376208126
+    second: frame_cursed_16
+  - first:
+      213: 1864245390951228373
+    second: frame_cursed_17
+  - first:
+      213: -8162441708172984057
+    second: frame_cursed_18
+  - first:
+      213: -9137728836170616199
+    second: frame_cursed_19
+  - first:
+      213: 2937006785199723756
+    second: frame_cursed_20
+  - first:
+      213: -1868712263734742855
+    second: frame_cursed_21
+  - first:
+      213: 13667884249942113
+    second: frame_cursed_22
+  - first:
+      213: -307979527558296307
+    second: frame_cursed_23
+  - first:
+      213: -8938584335524784180
+    second: frame_cursed_24
+  - first:
+      213: 56459234158119286
+    second: frame_cursed_25
+  - first:
+      213: 2535250384196967368
+    second: frame_cursed_26
+  - first:
+      213: 5307069797160184871
+    second: frame_cursed_27
+  - first:
+      213: -1616757432375545255
+    second: frame_cursed_28
+  - first:
+      213: -539443399608290511
+    second: frame_cursed_29
+  - first:
+      213: 6719618202868299171
+    second: frame_cursed_30
+  - first:
+      213: 2305075193350063333
+    second: frame_cursed_31
+  - first:
+      213: -1734425074631319844
+    second: frame_cursed_32
+  - first:
+      213: 506183225615896598
+    second: frame_cursed_33
+  - first:
+      213: 3439286019799059710
+    second: frame_cursed_34
+  - first:
+      213: 3672620063098616517
+    second: frame_cursed_35
+  - first:
+      213: -3308845056774617496
+    second: frame_cursed_36
+  - first:
+      213: -3334354249109261845
+    second: frame_cursed_37
+  - first:
+      213: 3907142131346706164
+    second: frame_cursed_38
+  - first:
+      213: -1474472150710726822
+    second: frame_cursed_39
+  - first:
+      213: -1527980789619352426
+    second: frame_cursed_40
+  - first:
+      213: 534313971467208710
+    second: frame_cursed_41
+  - first:
+      213: 4411664458453643064
+    second: frame_cursed_42
+  - first:
+      213: -304383759475860551
+    second: frame_cursed_43
+  - first:
+      213: 1910488832885921825
+    second: frame_cursed_44
+  - first:
+      213: -8283676568363622669
+    second: frame_cursed_45
+  - first:
+      213: 5785288993882343406
+    second: frame_cursed_46
+  - first:
+      213: -8830240408430017295
+    second: frame_cursed_47
+  - first:
+      213: -1870936338505168811
+    second: frame_cursed_48
+  - first:
+      213: -4893398638194687609
+    second: frame_cursed_49
+  - first:
+      213: -5465083813109687147
+    second: frame_cursed_50
+  - first:
+      213: 5656359740562877200
+    second: frame_cursed_51
+  - first:
+      213: -5849620351611347183
+    second: frame_cursed_52
+  - first:
+      213: 7747282794475046464
+    second: frame_cursed_53
+  - first:
+      213: 41247287217259494
+    second: frame_cursed_54
+  - first:
+      213: 1157259010085469606
+    second: frame_cursed_55
+  - first:
+      213: -733673646712992086
+    second: frame_cursed_56
+  - first:
+      213: 5497451532550437684
+    second: frame_cursed_57
+  - first:
+      213: -6177722243818519150
+    second: frame_cursed_58
+  - first:
+      213: 5532604770869832531
+    second: frame_cursed_59
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: frame_cursed_0
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 425
+        width: 14
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf038f19d9a045630800000000000000
+      internalID: 3914765647966908667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_1
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 439
+        width: 32
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b221c9147d0bfe240800000000000000
+      internalID: 4823268164502295083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_2
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 412
+        width: 22
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af0d091fb0cca02b0800000000000000
+      internalID: -5617453233521766150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_3
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 435
+        width: 19
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77ae94e78a7826f50800000000000000
+      internalID: 6873205139063827063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_4
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 435
+        width: 28
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e20066f1c6abde00800000000000000
+      internalID: 1070632688423011042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_5
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 435
+        width: 19
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07d332635aa4a1610800000000000000
+      internalID: 1592667491667230064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_6
+      rect:
+        serializedVersion: 2
+        x: 119
+        y: 435
+        width: 28
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b56d6e447cbb8bf30800000000000000
+      internalID: 4591626284633085531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_7
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 435
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 579a9dd47c79ab270800000000000000
+      internalID: 8267086948252363125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_8
+      rect:
+        serializedVersion: 2
+        x: 164
+        y: 435
+        width: 34
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d48e52bec3eee64f0800000000000000
+      internalID: -833466935606384563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_9
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 435
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efeae618a21ff5ca0800000000000000
+      internalID: -6025832611535999234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_10
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 435
+        width: 33
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41f611ff14f7e37f0800000000000000
+      internalID: -630926976356356332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_11
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 435
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b82224919528c120800000000000000
+      internalID: 2434236905779505331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_12
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 412
+        width: 18
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ebdba56d05d6f1a0800000000000000
+      internalID: -6775994335815279642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_13
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 432
+        width: 26
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 474a61167789cce10800000000000000
+      internalID: 2219316354884215924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_14
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 395
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6979c531b35eea90800000000000000
+      internalID: -7282791526834800278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_15
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 407
+        width: 13
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65e57da7b0af9cd30800000000000000
+      internalID: 4452364633844964950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_16
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 381
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efa6649b914a25230800000000000000
+      internalID: 3626141080376208126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_17
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 373
+        width: 13
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d3aecd4e412fd910800000000000000
+      internalID: 1864245390951228373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_18
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 344
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 701448c438e29be80800000000000000
+      internalID: -8162441708172984057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_19
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 355
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 972f43a8904403180800000000000000
+      internalID: -9137728836170616199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_20
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 321
+        width: 13
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce4ddb63c1852c820800000000000000
+      internalID: 2937006785199723756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_21
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 329
+        width: 13
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b0bca4d8100116e0800000000000000
+      internalID: -1868712263734742855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_22
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 293
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1688c894ede803000800000000000000
+      internalID: 13667884249942113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_23
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 310
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0d8bcd5046d9bbf0800000000000000
+      internalID: -307979527558296307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_24
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 269
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc79c2ec7e4c3f380800000000000000
+      internalID: -8938584335524784180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_25
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 277
+        width: 13
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6790944df5598c000800000000000000
+      internalID: 56459234158119286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_26
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 242
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cb9bb6cac40f2320800000000000000
+      internalID: 2535250384196967368
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_27
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 259
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72cefe9ccdf76a940800000000000000
+      internalID: 5307069797160184871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_28
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 217
+        width: 13
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95278436eaf1099e0800000000000000
+      internalID: -1616757432375545255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_29
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 225
+        width: 13
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1333bed06138388f0800000000000000
+      internalID: -539443399608290511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_30
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 191
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a5b6384721e04d50800000000000000
+      internalID: 6719618202868299171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_31
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 208
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e40230fca54dff10800000000000000
+      internalID: 2305075193350063333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_32
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 173
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cded11185951ee7e0800000000000000
+      internalID: -1734425074631319844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_33
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 173
+        width: 13
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 610d81a36f2560700800000000000000
+      internalID: 506183225615896598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_34
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 157
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efc0713b96ccabf20800000000000000
+      internalID: 3439286019799059710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_35
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 139
+        width: 13
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ca37ff2d74c7f230800000000000000
+      internalID: 3672620063098616517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_36
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 121
+        width: 13
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 866442ea3fe9412d0800000000000000
+      internalID: -3308845056774617496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_37
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 122
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be137820a7ef9b1d0800000000000000
+      internalID: -3334354249109261845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_38
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 106
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fe02e94115f83630800000000000000
+      internalID: 3907142131346706164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_39
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 87
+        width: 13
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5f4ea9146f998be0800000000000000
+      internalID: -1474472150710726822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_40
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 71
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69c1e1341958bcae0800000000000000
+      internalID: -1527980789619352426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_41
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 69
+        width: 13
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 608c4d3e9b34a6700800000000000000
+      internalID: 534313971467208710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_42
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 35
+        width: 13
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83f68527371693d30800000000000000
+      internalID: 4411664458453643064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_43
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 55
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bb1b0d559c96cbf0800000000000000
+      internalID: -304383759475860551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_44
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 20
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1281487a87b638a10800000000000000
+      internalID: 1910488832885921825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_45
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 11
+        width: 18
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fe9574cc087a0d80800000000000000
+      internalID: -8283676568363622669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_46
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 11
+        width: 20
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee7855b20b9794050800000000000000
+      internalID: 5785288993882343406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_47
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 24
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f48a36122fa47580800000000000000
+      internalID: -8830240408430017295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_48
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 2
+        width: 28
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 558870210591906e0800000000000000
+      internalID: -1870936338505168811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_49
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 2
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 781860a6dd7271cb0800000000000000
+      internalID: -4893398638194687609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_50
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 2
+        width: 29
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59c1cdb2a3f1824b0800000000000000
+      internalID: -5465083813109687147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_51
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 2
+        width: 20
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01b2212273d6f7e40800000000000000
+      internalID: 5656359740562877200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_52
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 2
+        width: 29
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11f5f476849f1dea0800000000000000
+      internalID: -5849620351611347183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_53
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 2
+        width: 20
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0464e2b97a0e38b60800000000000000
+      internalID: 7747282794475046464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_54
+      rect:
+        serializedVersion: 2
+        x: 154
+        y: 2
+        width: 29
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e3888e603a829000800000000000000
+      internalID: 41247287217259494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_55
+      rect:
+        serializedVersion: 2
+        x: 183
+        y: 2
+        width: 20
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6adb34130f86f0010800000000000000
+      internalID: 1157259010085469606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_56
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 2
+        width: 29
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aae4b9a94b771d5f0800000000000000
+      internalID: -733673646712992086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_57
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 2
+        width: 20
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43b7897ca0fda4c40800000000000000
+      internalID: 5497451532550437684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_58
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 2
+        width: 29
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2950b28a952544aa0800000000000000
+      internalID: -6177722243818519150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: frame_cursed_59
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 4
+        width: 14
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35be352e9b2c7cc40800000000000000
+      internalID: 5532604770869832531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

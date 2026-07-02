@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 574c0b6754b1faa4a9ab768eaa45a636, type: 3}
+  m_Name: CardArtDatabase
+  m_EditorClassIdentifier: HwatuView::Hwatu.View.CardArtDatabase
+  BaseEntries:
+  - Key: m02_yeol
+    Sprite: {fileID: 21300000, guid: 0cc60c663c5f267468e3d2191697de8a, type: 3}
+  - Key: m03_hongdan
+    Sprite: {fileID: 21300000, guid: 31162f822d6961c47987f932780a8b66, type: 3}
+  - Key: m08_gwang
+    Sprite: {fileID: 21300000, guid: f8054a8b162be654a8e9daa0c58af022, type: 3}
+  - Key: m11_ssangpi
+    Sprite: {fileID: 21300000, guid: 9ada72c123e4d7f48830f09edc08d26e, type: 3}
+  OverlayEntries:
+  - Key: badge_seal_example
+    Sprite: {fileID: 21300000, guid: d438f43bf02e42942bf54db494c7227c, type: 3}
+  - Key: frame_cursed
+    Sprite: {fileID: 21300000, guid: cc5ff8edba380df4eb385858775aac6d, type: 3}
+  - Key: frame_gold
+    Sprite: {fileID: 21300000, guid: 93b7243aa29e1d740ae800c8793f74eb, type: 3}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>cardgen — 화투 카드 템플릿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Brush+Script&display=swap" rel="stylesheet" />
+  <style>
+    /* 색은 전부 cards.json palette에서 주입되는 CSS 변수만 사용한다.
+       (--ink, --blanket, --paper, --spirit, --vermilion, --indigo, --gold, --ash) */
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Nanum Brush Script", "Malgun Gothic", sans-serif;
+      background: var(--ash);
+    }
+    /* 단일 카드 / 오버레이 캡처 모드: 페이지 배경 투명 */
+    body.single-mode, body.overlay-mode { background: transparent; }
+
+    /* ── 격자 프리뷰 ─────────────────────────────── */
+    #stage.grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      padding: 28px;
+      align-items: flex-start;
+    }
+    .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .caption {
+      color: var(--paper);
+      font-family: "Malgun Gothic", monospace, sans-serif;
+      font-size: 14px;
+    }
+
+    /* ── 카드 ────────────────────────────────────── */
+    .card {
+      position: relative;
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--paper);
+      flex: none;
+    }
+
+    .art {
+      position: absolute;
+      left: var(--art-x);
+      top: var(--art-y);
+      width: var(--art-w);
+      height: var(--art-h);
+      overflow: hidden;
+    }
+    .art > svg { display: block; width: 100%; height: 100%; }
+    .art > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+    /* 레이아웃 변형: 이름 → 클래스 매핑은 스크립트의 LAYOUT_CLASS에서 한다 */
+    .layout-standard .art { background: var(--paper); }
+    .layout-dark_panel .art { background: var(--ink); border-radius: 8px; }
+
+    .frame { position: absolute; inset: 0; pointer-events: none; }
+    .frame > svg { display: block; width: 100%; height: 100%; }
+
+    /* ── 라벨 ────────────────────────────────────── */
+    .month, .label {
+      position: absolute;
+      line-height: 1;
+      padding: 6px 10px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .month {
+      top: 22px;
+      left: 22px;
+      font-size: 38px;
+      color: var(--ink);
+      background: color-mix(in srgb, var(--paper) 80%, transparent);
+    }
+    .label {
+      right: 22px;
+      bottom: 22px;
+      font-size: 46px;
+      color: var(--ink);
+      background: color-mix(in srgb, var(--paper) 80%, transparent);
+    }
+    .layout-dark_panel .month {
+      color: var(--paper);
+      background: color-mix(in srgb, var(--ink) 65%, transparent);
+    }
+    .layout-dark_panel .label {
+      color: var(--gold);
+      background: color-mix(in srgb, var(--ink) 65%, transparent);
+    }
+
+    /* ── 일러스트 플레이스홀더 ────────────────────── */
+    .placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+    .placeholder .ph-month {
+      font-size: 110px;
+      color: color-mix(in srgb, var(--ink) 55%, transparent);
+    }
+    .layout-dark_panel .placeholder .ph-month {
+      color: color-mix(in srgb, var(--paper) 55%, transparent);
+    }
+    .placeholder .ph-block {
+      width: 64%;
+      height: 56px;
+      border-radius: 8px;
+    }
+    .placeholder .ph-id {
+      font-family: "Malgun Gothic", monospace, sans-serif;
+      font-size: 15px;
+      color: color-mix(in srgb, var(--ink) 60%, transparent);
+    }
+    .layout-dark_panel .placeholder .ph-id {
+      color: color-mix(in srgb, var(--paper) 60%, transparent);
+    }
+
+    /* ── 오버레이 캡처 컨테이너 ───────────────────── */
+    .overlay-box {
+      position: relative;
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      background: transparent;
+    }
+    .overlay-box > svg { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <main id="stage"></main>
+  <script type="module">
+    // 레이아웃 이름 → CSS 클래스 매핑. 새 레이아웃은 여기와 CSS에 한 줄씩 추가.
+    const LAYOUT_CLASS = {
+      standard: "layout-standard",
+      dark_panel: "layout-dark_panel",
+    };
+
+    // 플레이스홀더의 타입 색 블록: type → palette 변수
+    const TYPE_COLOR_VAR = {
+      gwang: "--gold",
+      yeol: "--indigo",
+      tti: "--vermilion",
+      pi: "--ash",
+      ssangpi: "--spirit",
+    };
+
+    const stage = document.getElementById("stage");
+    const svgCache = new Map();
+
+    async function fetchText(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+      return res.text();
+    }
+
+    // SVG 텍스트 → DOM 노드 (문서 인라인 삽입용. <img>로 넣으면 CSS 변수가 안 먹는다)
+    function parseSvg(text) {
+      const doc = new DOMParser().parseFromString(text, "image/svg+xml");
+      const svg = doc.documentElement;
+      if (svg.nodeName.toLowerCase() !== "svg") throw new Error("not an svg");
+      return document.importNode(svg, true);
+    }
+
+    async function inlineSvgCached(url) {
+      if (!svgCache.has(url)) svgCache.set(url, await fetchText(url));
+      return parseSvg(svgCache.get(url));
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function buildPlaceholder(card) {
+      const ph = el("div", "placeholder");
+      ph.append(el("div", "ph-month", card.month > 0 ? String(card.month) : card.label));
+      const block = el("div", "ph-block");
+      block.style.background = `var(${TYPE_COLOR_VAR[card.type] || "--ash"})`;
+      ph.append(block);
+      ph.append(el("div", "ph-id", card.id));
+      return ph;
+    }
+
+    async function buildArt(card) {
+      const art = el("div", "art");
+      const url = `illustrations/${card.illust}`;
+      try {
+        if (card.illust.toLowerCase().endsWith(".svg")) {
+          art.append(await inlineSvgCached(url));
+        } else {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+          const blob = await res.blob();
+          const img = new Image();
+          img.src = URL.createObjectURL(blob);
+          await img.decode();
+          art.append(img);
+        }
+      } catch {
+        art.append(buildPlaceholder(card)); // 일러스트 없음 → 플레이스홀더
+      }
+      return art;
+    }
+
+    async function buildCard(card) {
+      const root = el("div", `card ${LAYOUT_CLASS[card.layout] || LAYOUT_CLASS.standard}`);
+      root.id = `card-${card.id}`;
+
+      root.append(await buildArt(card));
+
+      const frame = el("div", "frame");
+      frame.append(await inlineSvgCached("frame.svg"));
+      root.append(frame);
+
+      if (card.month > 0) root.append(el("div", "month", `${card.month}월`));
+      root.append(el("div", "label", card.label));
+      return root;
+    }
+
+    async function buildOverlay(name) {
+      const box = el("div", "overlay-box");
+      box.id = `overlay-${name}`;
+      let svg = null;
+      for (const dir of ["frames", "badges"]) {
+        try {
+          svg = await inlineSvgCached(`${dir}/${name}.svg`);
+          break;
+        } catch { /* 다음 폴더 시도 */ }
+      }
+      if (!svg) throw new Error(`overlay not found: ${name}`);
+      box.append(svg);
+      return box;
+    }
+
+    async function main() {
+      const data = await (await fetch("cards.json")).json();
+
+      const rootStyle = document.documentElement.style;
+      for (const [name, value] of Object.entries(data.palette)) {
+        rootStyle.setProperty(`--${name}`, value);
+      }
+      rootStyle.setProperty("--canvas-w", `${data.canvas.width}px`);
+      rootStyle.setProperty("--canvas-h", `${data.canvas.height}px`);
+      rootStyle.setProperty("--art-x", `${data.artZone.x}px`);
+      rootStyle.setProperty("--art-y", `${data.artZone.y}px`);
+      rootStyle.setProperty("--art-w", `${data.artZone.width}px`);
+      rootStyle.setProperty("--art-h", `${data.artZone.height}px`);
+
+      const params = new URLSearchParams(location.search);
+      const cardId = params.get("card");
+      const overlayName = params.get("overlay");
+
+      if (overlayName) {
+        document.body.classList.add("overlay-mode");
+        stage.append(await buildOverlay(overlayName));
+      } else if (cardId) {
+        document.body.classList.add("single-mode");
+        const card = data.cards.find((c) => c.id === cardId);
+        if (!card) throw new Error(`unknown card id: ${cardId}`);
+        stage.append(await buildCard(card));
+      } else {
+        stage.classList.add("grid");
+        for (const card of data.cards) {
+          const cell = el("div", "cell");
+          cell.append(await buildCard(card));
+          cell.append(el("div", "caption", card.id));
+          stage.append(cell);
+        }
+      }
+
+      // 폰트까지 끝나야 렌더러가 캡처한다 (오프라인이면 시스템 폰트 폴백)
+      try {
+        await document.fonts.load('40px "Nanum Brush Script"', "광열끗홍단청초띠피쌍월0123456789");
+      } catch { /* 폰트 로드 실패 수용 */ }
+      await document.fonts.ready;
+
+      document.body.dataset.ready = "1";
+    }
+
+    main().catch((err) => {
+      const msg = el("pre", "", `cardgen template error:\n${err.stack || err}`);
+      msg.style.color = "var(--vermilion)";
+      stage.append(msg);
+      document.body.dataset.error = "1";
+    });
+  </script>
+</body>
+</html>

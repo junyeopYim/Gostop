@@ -1,0 +1,18 @@
+{
+    "name": "HwatuView.Editor",
+    "rootNamespace": "Hwatu.View.Editor",
+    "references": [
+        "HwatuView"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

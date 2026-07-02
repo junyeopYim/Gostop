@@ -1,0 +1,16 @@
+{
+  "name": "cardgen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "화투 로그라이크 카드 아트 파이프라인: 템플릿 렌더 + 일러스트 전처리",
+  "scripts": {
+    "preview": "node render.mjs preview",
+    "render": "node render.mjs all",
+    "prep": "node prep-illust.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.53.0",
+    "sharp": "^0.34.2"
+  }
+}

@@ -1,0 +1,22 @@
+<svg viewBox="0 0 268 418" xmlns="http://www.w3.org/2000/svg">
+  <!-- 8월 광: 공산명월 — 달과 산. 밤하늘은 dark_panel 레이아웃의 먹색이 비친다 -->
+  <circle cx="134" cy="128" r="82" fill="var(--paper)" />
+  <circle cx="134" cy="128" r="82" fill="none" stroke="var(--gold)" stroke-width="5" />
+  <circle cx="110" cy="110" r="10" fill="var(--gold)" opacity="0.5" />
+  <circle cx="158" cy="150" r="6" fill="var(--gold)" opacity="0.5" />
+  <!-- 기러기 세 마리 -->
+  <g stroke="var(--ash)" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M 96 236 Q 106 226 116 236 Q 126 226 136 236" />
+    <path d="M 140 258 Q 150 248 160 258 Q 170 248 180 258" />
+    <path d="M 68 268 Q 78 258 88 268 Q 98 258 108 268" />
+  </g>
+  <!-- 산 능선 두 겹 -->
+  <path d="M -4 320 L 62 232 L 118 306 L 178 224 L 272 336 L 272 422 L -4 422 Z" fill="var(--ash)" />
+  <path d="M -4 356 L 54 296 L 132 372 L 206 302 L 272 366 L 272 422 L -4 422 Z" fill="var(--blanket)" />
+  <!-- 능선 위 억새 포인트 -->
+  <g stroke="var(--gold)" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M 40 348 q 4 -18 -2 -30" />
+    <path d="M 52 344 q 6 -16 2 -28" />
+    <path d="M 224 352 q -4 -18 2 -30" />
+  </g>
+</svg>

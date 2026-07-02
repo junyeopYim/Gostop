@@ -1,0 +1,17 @@
+<svg viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- 기본 테두리: 먹색 라운드 사각 + 금색 모서리 장식 -->
+  <rect x="6" y="6" width="288" height="438" rx="12" fill="none" stroke="var(--ink)" stroke-width="6" />
+  <!-- 모서리 장식 (금) -->
+  <g fill="var(--gold)">
+    <circle cx="21" cy="21" r="4" />
+    <circle cx="279" cy="21" r="4" />
+    <circle cx="21" cy="429" r="4" />
+    <circle cx="279" cy="429" r="4" />
+  </g>
+  <g stroke="var(--gold)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M 13 33 V 21 Q 13 13 21 13 H 33" />
+    <path d="M 267 13 H 279 Q 287 13 287 21 V 33" />
+    <path d="M 287 417 V 429 Q 287 437 279 437 H 267" />
+    <path d="M 33 437 H 21 Q 13 437 13 429 V 417" />
+  </g>
+</svg>
