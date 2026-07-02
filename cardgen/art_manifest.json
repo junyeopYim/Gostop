@@ -1,0 +1,829 @@
+{
+  "version": "2026-07-02.1",
+  "stylePrompt": "Traditional Korean minhwa folk painting in the manner of a sparse, naive\nJoseon album leaf — simple, understated and charming.\nHand-painted ink outlines of naturally varying weight; a few confident,\neconomical brush strokes rather than dense rendering.\nSoft matte mineral-pigment washes with gentle layered gradation inside\npetals, feathers and fur — never flat digital fills.\nColor mood: softly faded antique tones — muted vermilion-rose, deep\nindigo-teal greens, warm ochre gold, ink black — quiet, harmonious,\nslightly sun-faded, never saturated or bright.\nComposition: ONE main subject, moderately sized, plus at most one small\nsupporting motif; at least half of the frame is empty paper.\nNo background scenery, no landscape, no ground plane, no filler foliage.\nBackground: warm aged cream hanji paper with subtle grain, edge to edge —\nthe same warm paper tone in every image. Portrait 2:3.\nSlightly naive, endearing proportions with a hint of humor.\nNo text, letters, numbers, seals, borders or watermarks.\nAvoid: busy compositions, dark backgrounds, night scenes, flat vector\ngraphics, uniform bold outlines, oversaturated colors.\n\n{Subject}",
+  "outputRoots": {
+    "raw": "cardgen/illustrations_raw/",
+    "processed": "cardgen/illustrations/",
+    "renderedCards": "cardgen/out/cards/",
+    "renderedOverlays": "cardgen/out/overlays/"
+  },
+  "mvpSampleIds": [
+    "m01_gwang",
+    "m06_yeol",
+    "m08_gwang",
+    "m09_yeol",
+    "m12_gwang",
+    "bonus_ssangpi_a"
+  ],
+  "batches": [
+    {
+      "id": "batch_01_03",
+      "months": [
+        1,
+        2,
+        3
+      ],
+      "rawDir": "cardgen/illustrations_raw/_batch_01_03/",
+      "cardIds": [
+        "m01_gwang",
+        "m01_hongdan",
+        "m01_pi_a",
+        "m01_pi_b",
+        "m02_yeol",
+        "m02_hongdan",
+        "m02_pi_a",
+        "m02_pi_b",
+        "m03_gwang",
+        "m03_hongdan",
+        "m03_pi_a",
+        "m03_pi_b"
+      ]
+    },
+    {
+      "id": "batch_04_06",
+      "months": [
+        4,
+        5,
+        6
+      ],
+      "rawDir": "cardgen/illustrations_raw/_batch_04_06/",
+      "cardIds": [
+        "m04_yeol",
+        "m04_chodan",
+        "m04_pi_a",
+        "m04_pi_b",
+        "m05_yeol",
+        "m05_chodan",
+        "m05_pi_a",
+        "m05_pi_b",
+        "m06_yeol",
+        "m06_cheongdan",
+        "m06_pi_a",
+        "m06_pi_b"
+      ]
+    },
+    {
+      "id": "batch_07_09",
+      "months": [
+        7,
+        8,
+        9
+      ],
+      "rawDir": "cardgen/illustrations_raw/_batch_07_09/",
+      "cardIds": [
+        "m07_yeol",
+        "m07_chodan",
+        "m07_pi_a",
+        "m07_pi_b",
+        "m08_gwang",
+        "m08_yeol",
+        "m08_pi_a",
+        "m08_pi_b",
+        "m09_yeol",
+        "m09_cheongdan",
+        "m09_pi_a",
+        "m09_pi_b"
+      ]
+    },
+    {
+      "id": "batch_10_12_bonus",
+      "months": [
+        10,
+        11,
+        12,
+        0
+      ],
+      "rawDir": "cardgen/illustrations_raw/_batch_10_12_bonus/",
+      "cardIds": [
+        "m10_yeol",
+        "m10_cheongdan",
+        "m10_pi_a",
+        "m10_pi_b",
+        "m11_gwang",
+        "m11_ssangpi",
+        "m11_pi_a",
+        "m11_pi_b",
+        "m12_gwang",
+        "m12_yeol",
+        "m12_tti",
+        "m12_ssangpi",
+        "bonus_ssangpi_a",
+        "bonus_ssangpi_b"
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "id": "m01_gwang",
+      "month": 1,
+      "type": "gwang",
+      "outputFilename": "m01_gwang.png",
+      "batch": "batch_01_03",
+      "priority": 1,
+      "subject": "A white crane standing gracefully under a sparse pine branch, with a small muted red sun in the upper empty space.",
+      "composition": "One crane and one pine branch, centered slightly low; keep the red sun small and leave upper-left and lower-right label areas quiet.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A white crane standing gracefully under a sparse pine branch, with a small muted red sun in the upper empty space.",
+      "canShareIllustrationWith": [],
+      "status": "rendered_mvp_sample",
+      "rawFilename": "m01_gwang.png",
+      "processedFilename": "cardgen/illustrations/m01_gwang.png",
+      "renderedFilename": "cardgen/out/cards/m01_gwang.png"
+    },
+    {
+      "id": "m01_hongdan",
+      "month": 1,
+      "type": "tti",
+      "outputFilename": "m01_hongdan.png",
+      "batch": "batch_01_03",
+      "priority": 2,
+      "subject": "A sparse pine branch and a red ribbon-like cloth motif without any text, floating on warm aged hanji paper.",
+      "composition": "Pine branch is the main subject with one red cloth accent; avoid text, symbols, and any card-frame feeling.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A sparse pine branch and a red ribbon-like cloth motif without any text, floating on warm aged hanji paper.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m01_pi_a",
+      "month": 1,
+      "type": "pi",
+      "outputFilename": "m01_pi_a.png",
+      "batch": "batch_01_03",
+      "priority": 3,
+      "subject": "A small cluster of pine needles with one tiny muted red blossom accent, sparse and handmade.",
+      "composition": "Small pine detail in the middle third with generous empty hanji around it; suitable as a shared January pi image.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small cluster of pine needles with one tiny muted red blossom accent, sparse and handmade.",
+      "canShareIllustrationWith": [
+        "m01_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m01_pi_b",
+      "month": 1,
+      "type": "pi",
+      "outputFilename": "m01_pi_b.png",
+      "batch": "batch_01_03",
+      "priority": 3,
+      "subject": "A small cluster of pine needles with one tiny muted red blossom accent, sparse and handmade.",
+      "composition": "Mirror or lightly vary the January pi motif while preserving the same paper tone and brush density.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small cluster of pine needles with one tiny muted red blossom accent, sparse and handmade.",
+      "canShareIllustrationWith": [
+        "m01_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m02_yeol",
+      "month": 2,
+      "type": "yeol",
+      "outputFilename": "m02_yeol.png",
+      "batch": "batch_01_03",
+      "priority": 2,
+      "subject": "A plum blossom branch with one small bird perched lightly among a few blossoms, simple and sparse.",
+      "composition": "Branch arcs through the center with the bird as the single supporting motif; no background tree or scenery.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A plum blossom branch with one small bird perched lightly among a few blossoms, simple and sparse.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m02_hongdan",
+      "month": 2,
+      "type": "tti",
+      "outputFilename": "m02_hongdan.png",
+      "batch": "batch_01_03",
+      "priority": 2,
+      "subject": "A plum blossom branch and a red ribbon-like cloth motif, with no text or markings.",
+      "composition": "Keep the ribbon as a soft cloth shape, not a label; blossoms remain sparse with more than half empty paper.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A plum blossom branch and a red ribbon-like cloth motif, with no text or markings.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m02_pi_a",
+      "month": 2,
+      "type": "pi",
+      "outputFilename": "m02_pi_a.png",
+      "batch": "batch_01_03",
+      "priority": 3,
+      "subject": "A few plum blossoms on a slender ink branch, understated and surrounded by empty aged hanji.",
+      "composition": "Small blossom cluster with no bird and no ribbon; useful as a shared February pi motif.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few plum blossoms on a slender ink branch, understated and surrounded by empty aged hanji.",
+      "canShareIllustrationWith": [
+        "m02_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m02_pi_b",
+      "month": 2,
+      "type": "pi",
+      "outputFilename": "m02_pi_b.png",
+      "batch": "batch_01_03",
+      "priority": 3,
+      "subject": "A few plum blossoms on a slender ink branch, understated and surrounded by empty aged hanji.",
+      "composition": "Lightly vary the February blossom placement while matching the shared pi motif and paper color.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few plum blossoms on a slender ink branch, understated and surrounded by empty aged hanji.",
+      "canShareIllustrationWith": [
+        "m02_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m03_gwang",
+      "month": 3,
+      "type": "gwang",
+      "outputFilename": "m03_gwang.png",
+      "batch": "batch_01_03",
+      "priority": 2,
+      "subject": "Cherry blossoms with a simple curtain-like muted red cloth motif, sparse and ceremonial, with no text.",
+      "composition": "Use one blossom branch and one soft red curtain-like accent; avoid busy festival scenery.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Cherry blossoms with a simple curtain-like muted red cloth motif, sparse and ceremonial, with no text.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m03_hongdan",
+      "month": 3,
+      "type": "tti",
+      "outputFilename": "m03_hongdan.png",
+      "batch": "batch_01_03",
+      "priority": 2,
+      "subject": "A cherry blossom branch and a red ribbon-like cloth motif, no text, no seal, no symbols.",
+      "composition": "Ribbon motif is secondary and quiet; blossoms should be readable at small card scale.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A cherry blossom branch and a red ribbon-like cloth motif, no text, no seal, no symbols.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m03_pi_a",
+      "month": 3,
+      "type": "pi",
+      "outputFilename": "m03_pi_a.png",
+      "batch": "batch_01_03",
+      "priority": 3,
+      "subject": "A few cherry blossom petals and one tiny branch tip, sparse on warm aged hanji paper.",
+      "composition": "Tiny blossom-petal arrangement with no curtain or ribbon; suitable as a shared March pi image.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few cherry blossom petals and one tiny branch tip, sparse on warm aged hanji paper.",
+      "canShareIllustrationWith": [
+        "m03_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m03_pi_b",
+      "month": 3,
+      "type": "pi",
+      "outputFilename": "m03_pi_b.png",
+      "batch": "batch_01_03",
+      "priority": 3,
+      "subject": "A few cherry blossom petals and one tiny branch tip, sparse on warm aged hanji paper.",
+      "composition": "Light variation of the shared March petal motif, preserving the same scale and empty-paper ratio.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few cherry blossom petals and one tiny branch tip, sparse on warm aged hanji paper.",
+      "canShareIllustrationWith": [
+        "m03_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m04_yeol",
+      "month": 4,
+      "type": "yeol",
+      "outputFilename": "m04_yeol.png",
+      "batch": "batch_04_06",
+      "priority": 2,
+      "subject": "A wisteria or bush clover stem with one small cuckoo-like bird, charming and understated.",
+      "composition": "One flowering stem and one bird only; keep foliage sparse and avoid a full tree or landscape.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A wisteria or bush clover stem with one small cuckoo-like bird, charming and understated.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m04_chodan",
+      "month": 4,
+      "type": "tti",
+      "outputFilename": "m04_chodan.png",
+      "batch": "batch_04_06",
+      "priority": 2,
+      "subject": "A purple flower stem and a blue-green ribbon-like cloth motif, with no text or markings.",
+      "composition": "Flower remains the main subject; ribbon is one soft accent with quiet label-safe corners.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A purple flower stem and a blue-green ribbon-like cloth motif, with no text or markings.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m04_pi_a",
+      "month": 4,
+      "type": "pi",
+      "outputFilename": "m04_pi_a.png",
+      "batch": "batch_04_06",
+      "priority": 3,
+      "subject": "Sparse purple flower stems with a few soft leaves, simple and airy on aged hanji.",
+      "composition": "Small floral stem grouping with no bird and no ribbon; can serve as the shared April pi motif.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Sparse purple flower stems with a few soft leaves, simple and airy on aged hanji.",
+      "canShareIllustrationWith": [
+        "m04_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m04_pi_b",
+      "month": 4,
+      "type": "pi",
+      "outputFilename": "m04_pi_b.png",
+      "batch": "batch_04_06",
+      "priority": 3,
+      "subject": "Sparse purple flower stems with a few soft leaves, simple and airy on aged hanji.",
+      "composition": "Lightly varied April pi stem placement, matching the shared motif and avoiding dense foliage.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Sparse purple flower stems with a few soft leaves, simple and airy on aged hanji.",
+      "canShareIllustrationWith": [
+        "m04_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m05_yeol",
+      "month": 5,
+      "type": "yeol",
+      "outputFilename": "m05_yeol.png",
+      "batch": "batch_04_06",
+      "priority": 2,
+      "subject": "Iris leaves and a small simple bridge motif, no scenery, no ground plane, sparse and handmade.",
+      "composition": "The iris leaves are the main subject; bridge is a small supporting motif only, not a landscape.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Iris leaves and a small simple bridge motif, no scenery, no ground plane, sparse and handmade.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m05_chodan",
+      "month": 5,
+      "type": "tti",
+      "outputFilename": "m05_chodan.png",
+      "batch": "batch_04_06",
+      "priority": 2,
+      "subject": "Iris leaves and a blue-green ribbon-like cloth motif, with no text or symbols.",
+      "composition": "Tall iris leaves arranged away from label-heavy corners; ribbon remains one soft secondary shape.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Iris leaves and a blue-green ribbon-like cloth motif, with no text or symbols.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m05_pi_a",
+      "month": 5,
+      "type": "pi",
+      "outputFilename": "m05_pi_a.png",
+      "batch": "batch_04_06",
+      "priority": 3,
+      "subject": "A small fan of iris leaves with one muted purple iris petal accent, sparse on aged hanji.",
+      "composition": "No bridge and no ribbon; compact leaf shape suitable as a shared May pi image.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small fan of iris leaves with one muted purple iris petal accent, sparse on aged hanji.",
+      "canShareIllustrationWith": [
+        "m05_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m05_pi_b",
+      "month": 5,
+      "type": "pi",
+      "outputFilename": "m05_pi_b.png",
+      "batch": "batch_04_06",
+      "priority": 3,
+      "subject": "A small fan of iris leaves with one muted purple iris petal accent, sparse on aged hanji.",
+      "composition": "Lightly vary the May iris leaf angle while preserving small scale and label-safe empty paper.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small fan of iris leaves with one muted purple iris petal accent, sparse on aged hanji.",
+      "canShareIllustrationWith": [
+        "m05_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m06_yeol",
+      "month": 6,
+      "type": "yeol",
+      "outputFilename": "m06_yeol.png",
+      "batch": "batch_04_06",
+      "priority": 1,
+      "subject": "A single red peony blossom with a tiny butterfly hovering above it, delicate leaves, large empty hanji paper around it.",
+      "composition": "Peony is moderately sized and central, butterfly is the only support motif; preserve broad empty paper around both.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A single red peony blossom with a tiny butterfly hovering above it, delicate leaves, large empty hanji paper around it.",
+      "canShareIllustrationWith": [],
+      "status": "rendered_mvp_sample",
+      "rawFilename": "m06_yeol.png",
+      "processedFilename": "cardgen/illustrations/m06_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m06_yeol.png"
+    },
+    {
+      "id": "m06_cheongdan",
+      "month": 6,
+      "type": "tti",
+      "outputFilename": "m06_cheongdan.png",
+      "batch": "batch_04_06",
+      "priority": 2,
+      "subject": "A peony blossom and a blue ribbon-like cloth motif, no text, no symbols, no seal.",
+      "composition": "Peony and ribbon should feel related but uncluttered; avoid making the ribbon look like a label.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A peony blossom and a blue ribbon-like cloth motif, no text, no symbols, no seal.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m06_pi_a",
+      "month": 6,
+      "type": "pi",
+      "outputFilename": "m06_pi_a.png",
+      "batch": "batch_04_06",
+      "priority": 3,
+      "subject": "A few peony leaves and soft red petals, sparse and gently washed on aged hanji paper.",
+      "composition": "Small peony fragment without butterfly or ribbon; shared June pi motif with empty label corners.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few peony leaves and soft red petals, sparse and gently washed on aged hanji paper.",
+      "canShareIllustrationWith": [
+        "m06_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m06_pi_b",
+      "month": 6,
+      "type": "pi",
+      "outputFilename": "m06_pi_b.png",
+      "batch": "batch_04_06",
+      "priority": 3,
+      "subject": "A few peony leaves and soft red petals, sparse and gently washed on aged hanji paper.",
+      "composition": "Light variation of the June peony fragment, keeping the same color temperature and brush density.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few peony leaves and soft red petals, sparse and gently washed on aged hanji paper.",
+      "canShareIllustrationWith": [
+        "m06_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m07_yeol",
+      "month": 7,
+      "type": "yeol",
+      "outputFilename": "m07_yeol.png",
+      "batch": "batch_07_09",
+      "priority": 2,
+      "subject": "Bush clover with a small boar, charming and understated, with naive proportions and quiet humor.",
+      "composition": "Boar is the only animal and should stay small; bush clover remains sparse with no ground or scenery.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Bush clover with a small boar, charming and understated, with naive proportions and quiet humor.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m07_chodan",
+      "month": 7,
+      "type": "tti",
+      "outputFilename": "m07_chodan.png",
+      "batch": "batch_07_09",
+      "priority": 2,
+      "subject": "Bush clover and a blue-green ribbon-like cloth motif, no text or markings.",
+      "composition": "Ribbon is a soft accent beside sparse clover stems; leave at least half the frame as empty paper.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Bush clover and a blue-green ribbon-like cloth motif, no text or markings.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m07_pi_a",
+      "month": 7,
+      "type": "pi",
+      "outputFilename": "m07_pi_a.png",
+      "batch": "batch_07_09",
+      "priority": 3,
+      "subject": "A few bush clover stems with tiny muted blossoms, airy and handmade on warm aged hanji.",
+      "composition": "No boar and no ribbon; compact clover detail suitable as a shared July pi motif.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few bush clover stems with tiny muted blossoms, airy and handmade on warm aged hanji.",
+      "canShareIllustrationWith": [
+        "m07_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m07_pi_b",
+      "month": 7,
+      "type": "pi",
+      "outputFilename": "m07_pi_b.png",
+      "batch": "batch_07_09",
+      "priority": 3,
+      "subject": "A few bush clover stems with tiny muted blossoms, airy and handmade on warm aged hanji.",
+      "composition": "Lightly vary the shared July clover stem arrangement while keeping broad empty margins.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few bush clover stems with tiny muted blossoms, airy and handmade on warm aged hanji.",
+      "canShareIllustrationWith": [
+        "m07_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m08_gwang",
+      "month": 8,
+      "type": "gwang",
+      "outputFilename": "m08_gwang.png",
+      "batch": "batch_07_09",
+      "priority": 1,
+      "subject": "A round full moon above a quiet sweep of pampas grass, very sparse and poetic, mostly empty warm paper.",
+      "composition": "Moon is simple and round; pampas grass occupies a gentle lower sweep, leaving large upper empty paper.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A round full moon above a quiet sweep of pampas grass, very sparse and poetic, mostly empty warm paper.",
+      "canShareIllustrationWith": [],
+      "status": "rendered_with_minor_label_overlap_note",
+      "rawFilename": "m08_gwang.png",
+      "processedFilename": "cardgen/illustrations/m08_gwang.png",
+      "renderedFilename": "cardgen/out/cards/m08_gwang.png"
+    },
+    {
+      "id": "m08_yeol",
+      "month": 8,
+      "type": "yeol",
+      "outputFilename": "m08_yeol.png",
+      "batch": "batch_07_09",
+      "priority": 2,
+      "subject": "Two small geese flying near a sparse sweep of pampas grass, quiet and airy on warm hanji.",
+      "composition": "Geese are the main subject and should remain small; pampas grass is the only supporting motif.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Two small geese flying near a sparse sweep of pampas grass, quiet and airy on warm hanji.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m08_pi_a",
+      "month": 8,
+      "type": "pi",
+      "outputFilename": "m08_pi_a.png",
+      "batch": "batch_07_09",
+      "priority": 3,
+      "subject": "A sparse cluster of pampas grass plumes, softly washed and mostly surrounded by empty hanji.",
+      "composition": "Grass only, no moon and no birds; shared August pi motif with low detail density.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A sparse cluster of pampas grass plumes, softly washed and mostly surrounded by empty hanji.",
+      "canShareIllustrationWith": [
+        "m08_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m08_pi_b",
+      "month": 8,
+      "type": "pi",
+      "outputFilename": "m08_pi_b.png",
+      "batch": "batch_07_09",
+      "priority": 3,
+      "subject": "A sparse cluster of pampas grass plumes, softly washed and mostly surrounded by empty hanji.",
+      "composition": "Lightly vary the August pampas plumes while preserving quiet scale and empty paper.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A sparse cluster of pampas grass plumes, softly washed and mostly surrounded by empty hanji.",
+      "canShareIllustrationWith": [
+        "m08_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m09_yeol",
+      "month": 9,
+      "type": "yeol",
+      "outputFilename": "m09_yeol.png",
+      "batch": "batch_07_09",
+      "priority": 1,
+      "subject": "A yellow chrysanthemum stem leaning beside a small traditional cup, simple and understated, generous empty paper.",
+      "composition": "Chrysanthemum is the main subject and cup is a small supporting motif; keep the scene object-only, no table or floor.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A yellow chrysanthemum stem leaning beside a small traditional cup, simple and understated, generous empty paper.",
+      "canShareIllustrationWith": [],
+      "status": "rendered_mvp_sample",
+      "rawFilename": "m09_yeol.png",
+      "processedFilename": "cardgen/illustrations/m09_yeol.png",
+      "renderedFilename": "cardgen/out/cards/m09_yeol.png"
+    },
+    {
+      "id": "m09_cheongdan",
+      "month": 9,
+      "type": "tti",
+      "outputFilename": "m09_cheongdan.png",
+      "batch": "batch_07_09",
+      "priority": 2,
+      "subject": "A chrysanthemum stem and a blue ribbon-like cloth motif, no text, no symbols, no seal.",
+      "composition": "Flower and ribbon are sparse and balanced; avoid dense petals or decorative lettering.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A chrysanthemum stem and a blue ribbon-like cloth motif, no text, no symbols, no seal.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m09_pi_a",
+      "month": 9,
+      "type": "pi",
+      "outputFilename": "m09_pi_a.png",
+      "batch": "batch_07_09",
+      "priority": 3,
+      "subject": "A few chrysanthemum petals and leaves, softly faded yellow and green on warm aged hanji.",
+      "composition": "Small flower fragment with no cup and no ribbon; suitable shared September pi motif.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few chrysanthemum petals and leaves, softly faded yellow and green on warm aged hanji.",
+      "canShareIllustrationWith": [
+        "m09_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m09_pi_b",
+      "month": 9,
+      "type": "pi",
+      "outputFilename": "m09_pi_b.png",
+      "batch": "batch_07_09",
+      "priority": 3,
+      "subject": "A few chrysanthemum petals and leaves, softly faded yellow and green on warm aged hanji.",
+      "composition": "Light variation of the September chrysanthemum fragment with the same muted palette.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few chrysanthemum petals and leaves, softly faded yellow and green on warm aged hanji.",
+      "canShareIllustrationWith": [
+        "m09_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m10_yeol",
+      "month": 10,
+      "type": "yeol",
+      "outputFilename": "m10_yeol.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "A maple branch with a small deer, quiet, naive and charming, with no scenery or ground plane.",
+      "composition": "Deer is small and secondary to the maple branch; avoid forest, hills, or a full autumn scene.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A maple branch with a small deer, quiet, naive and charming, with no scenery or ground plane.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m10_cheongdan",
+      "month": 10,
+      "type": "tti",
+      "outputFilename": "m10_cheongdan.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "A maple branch and a blue ribbon-like cloth motif, no text, no markings, no symbols.",
+      "composition": "Maple leaves are sparse and ribbon remains one quiet cloth accent; no decorative writing.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A maple branch and a blue ribbon-like cloth motif, no text, no markings, no symbols.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m10_pi_a",
+      "month": 10,
+      "type": "pi",
+      "outputFilename": "m10_pi_a.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 3,
+      "subject": "A few muted maple leaves on a slender branch tip, sparse on warm aged hanji.",
+      "composition": "Leaves only, no deer and no ribbon; shared October pi motif with simple silhouette.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few muted maple leaves on a slender branch tip, sparse on warm aged hanji.",
+      "canShareIllustrationWith": [
+        "m10_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m10_pi_b",
+      "month": 10,
+      "type": "pi",
+      "outputFilename": "m10_pi_b.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 3,
+      "subject": "A few muted maple leaves on a slender branch tip, sparse on warm aged hanji.",
+      "composition": "Light variation of the shared October maple leaves, same scale and muted color balance.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few muted maple leaves on a slender branch tip, sparse on warm aged hanji.",
+      "canShareIllustrationWith": [
+        "m10_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m11_gwang",
+      "month": 11,
+      "type": "gwang",
+      "outputFilename": "m11_gwang.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "Paulownia leaves and a stylized phoenix-like bird, sparse, naive and gently humorous.",
+      "composition": "Phoenix-like bird is the only animal; paulownia leaves are broad but not dense, with no sky or landscape.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Paulownia leaves and a stylized phoenix-like bird, sparse, naive and gently humorous.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m11_ssangpi",
+      "month": 11,
+      "type": "ssangpi",
+      "outputFilename": "m11_ssangpi.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "A pair of paulownia leaves with one small warm gold accent, no text and no symbols.",
+      "composition": "Leaf pair is the main subject; gold accent is tiny and painterly, never metallic or emblem-like.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A pair of paulownia leaves with one small warm gold accent, no text and no symbols.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m11_pi_a",
+      "month": 11,
+      "type": "pi",
+      "outputFilename": "m11_pi_a.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 3,
+      "subject": "A few paulownia leaves, simple broad shapes with soft ink outline on aged hanji.",
+      "composition": "Leaves only, no bird and no gold accent; shared November pi motif with modest scale.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few paulownia leaves, simple broad shapes with soft ink outline on aged hanji.",
+      "canShareIllustrationWith": [
+        "m11_pi_b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m11_pi_b",
+      "month": 11,
+      "type": "pi",
+      "outputFilename": "m11_pi_b.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 3,
+      "subject": "A few paulownia leaves, simple broad shapes with soft ink outline on aged hanji.",
+      "composition": "Light variation of the shared November paulownia leaves, preserving broad empty margins.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A few paulownia leaves, simple broad shapes with soft ink outline on aged hanji.",
+      "canShareIllustrationWith": [
+        "m11_pi_a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "m12_gwang",
+      "month": 12,
+      "type": "gwang",
+      "outputFilename": "m12_gwang.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 1,
+      "subject": "A skeletal Joseon scholar figure holding a red paper umbrella in light rain, with one small frog near the feet, charming rather than frightening.",
+      "composition": "Scholar figure is moderately sized, umbrella red but muted; frog is the only support motif and rain is sparse.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A skeletal Joseon scholar figure holding a red paper umbrella in light rain, with one small frog near the feet, charming rather than frightening.",
+      "canShareIllustrationWith": [],
+      "status": "rendered_mvp_sample",
+      "rawFilename": "m12_gwang.png",
+      "processedFilename": "cardgen/illustrations/m12_gwang.png",
+      "renderedFilename": "cardgen/out/cards/m12_gwang.png"
+    },
+    {
+      "id": "m12_yeol",
+      "month": 12,
+      "type": "yeol",
+      "outputFilename": "m12_yeol.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "A small swallow or rain motif with a sparse willow-like branch, quiet and lightly brushed.",
+      "composition": "One bird or rain gesture plus one willow-like branch; no storm, no dark sky, no landscape.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small swallow or rain motif with a sparse willow-like branch, quiet and lightly brushed.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m12_tti",
+      "month": 12,
+      "type": "tti",
+      "outputFilename": "m12_tti.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "Simple light rain and a ribbon-like cloth motif, no text, no numbers, no symbols.",
+      "composition": "Rain marks should be sparse and delicate; ribbon is a soft cloth accent, not a written strip.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: Simple light rain and a ribbon-like cloth motif, no text, no numbers, no symbols.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "m12_ssangpi",
+      "month": 12,
+      "type": "ssangpi",
+      "outputFilename": "m12_ssangpi.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "A small frog beside a red paper umbrella detail, sparse on aged hanji, with no text.",
+      "composition": "Frog and umbrella detail only; keep the motif playful, small, and away from label-heavy corners.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small frog beside a red paper umbrella detail, sparse on aged hanji, with no text.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    },
+    {
+      "id": "bonus_ssangpi_a",
+      "month": 0,
+      "type": "ssangpi",
+      "outputFilename": "bonus_ssangpi_a.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 1,
+      "subject": "A small lucky pouch and two simple old coins arranged sparsely on aged hanji paper, playful and handmade, no text.",
+      "composition": "Lucky pouch is the main subject and coins are the single support motif; avoid symbols, writing, and ornate detail.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small lucky pouch and two simple old coins arranged sparsely on aged hanji paper, playful and handmade, no text.",
+      "canShareIllustrationWith": [],
+      "status": "rendered_mvp_sample",
+      "rawFilename": "bonus_ssangpi_a.png",
+      "processedFilename": "cardgen/illustrations/bonus_ssangpi_a.png",
+      "renderedFilename": "cardgen/out/cards/bonus_ssangpi_a.png"
+    },
+    {
+      "id": "bonus_ssangpi_b",
+      "month": 0,
+      "type": "ssangpi",
+      "outputFilename": "bonus_ssangpi_b.png",
+      "batch": "batch_10_12_bonus",
+      "priority": 2,
+      "subject": "A small charm knot and a folded paper talisman shape, with no writing, no symbols, and no seal.",
+      "composition": "Charm knot is the main shape; folded paper is blank and quiet, never marked like an actual talisman.",
+      "prompt": "Use stylePrompt exactly, replacing {Subject} with: A small charm knot and a folded paper talisman shape, with no writing, no symbols, and no seal.",
+      "canShareIllustrationWith": [],
+      "status": "planned"
+    }
+  ]
+}

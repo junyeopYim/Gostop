@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "purpose": "UI image generation manifest for the Gostop demo. These assets support the card art without competing with it.",
+  "outputRoots": {
+    "raw": "cardgen/ui_raw",
+    "processed": "cardgen/out/ui",
+    "optionalUnityTarget": "Assets/Art/UI"
+  },
+  "globalStyleContract": {
+    "style": "Traditional Korean minhwa and ink-wash inspired UI textures on aged hanji paper, quieter and simpler than the card illustrations.",
+    "contrast": "low",
+    "saturation": "low",
+    "detailDensity": "minimal",
+    "centerTreatment": "Keep the center empty and calm for labels, icons, or UI text rendered by the game layer.",
+    "background": "Warm aged cream hanji or muted traditional cloth texture, subtle grain, no scenery.",
+    "forbidden": [
+      "text",
+      "letters",
+      "numbers",
+      "seals",
+      "signatures",
+      "watermarks",
+      "logos",
+      "border text",
+      "modern objects",
+      "busy patterns",
+      "high saturation",
+      "photorealism",
+      "3D rendering",
+      "anime style",
+      "flat vector style"
+    ],
+    "notes": [
+      "Card illustrations are the visual focus; UI images must recede behind gameplay.",
+      "Buttons and panels should be suitable for 9-slice use, with soft edges and a mostly empty middle.",
+      "All UI text must be rendered by Unity or the UI layer, never baked into generated images."
+    ]
+  },
+  "items": [
+    {
+      "id": "card_back",
+      "outputFilename": "card_back.png",
+      "rawPath": "cardgen/ui_raw/card_back.png",
+      "processedPath": "cardgen/out/ui/card_back.png",
+      "optionalUnityPath": "Assets/Art/UI/card_back.png",
+      "priority": "mvp",
+      "recommendedAspect": "2:3 portrait",
+      "usage": "Back face for hidden cards.",
+      "subject": "A simple traditional Korean paper card back pattern, aged cream hanji, muted indigo and vermilion brush motifs, no text, no symbols, no border text.",
+      "prompt": "Traditional Korean minhwa and ink-wash inspired UI texture, quiet aged cream hanji paper, very low contrast, low saturation, handmade ink and mineral-pigment feel. A simple traditional Korean paper card back pattern with muted indigo and vermilion brush motifs, sparse and centered, leaving calm negative space. No text, letters, numbers, seals, symbols, logos, watermarks, border text, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "table_bg",
+      "outputFilename": "table_bg.png",
+      "rawPath": "cardgen/ui_raw/table_bg.png",
+      "processedPath": "cardgen/out/ui/table_bg.png",
+      "optionalUnityPath": "Assets/Art/UI/table_bg.png",
+      "priority": "mvp",
+      "recommendedAspect": "16:9 or square tileable crop",
+      "usage": "Low-distraction play table background.",
+      "subject": "A quiet dark green traditional cloth surface with very subtle hanji and fabric texture, low contrast, no objects, no text.",
+      "prompt": "Quiet traditional Korean game table background, dark muted green cloth with subtle hanji and fabric grain, low contrast, low saturation, matte ink-wash mood. Empty surface only, no objects, no scenery, no strong pattern, no bright highlights. No text, letters, numbers, seals, logos, watermarks, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "panel_9slice",
+      "outputFilename": "panel_9slice.png",
+      "rawPath": "cardgen/ui_raw/panel_9slice.png",
+      "processedPath": "cardgen/out/ui/panel_9slice.png",
+      "optionalUnityPath": "Assets/Art/UI/panel_9slice.png",
+      "priority": "mvp",
+      "recommendedAspect": "1:1 or 4:3",
+      "usage": "Resizable UI panel texture.",
+      "subject": "A simple aged hanji rectangular UI panel texture with soft ink-wash edge, very low contrast, no text.",
+      "prompt": "Traditional Korean aged hanji UI panel texture, soft ink-wash edge, warm cream paper, very low contrast, low saturation, handmade brush feel. Simple rectangular panel shape with an empty center for UI content and text rendered later, corners and edges gentle enough for 9-slice scaling. No text, letters, numbers, seals, logos, watermarks, decorative scene, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "button_normal",
+      "outputFilename": "button_normal.png",
+      "rawPath": "cardgen/ui_raw/button_normal.png",
+      "processedPath": "cardgen/out/ui/button_normal.png",
+      "optionalUnityPath": "Assets/Art/UI/button_normal.png",
+      "priority": "mvp",
+      "recommendedAspect": "3:1 horizontal",
+      "usage": "Default button state.",
+      "subject": "A small horizontal hanji paper button shape with subtle ink outline and muted wash, empty center, no text.",
+      "prompt": "Small horizontal Korean hanji paper UI button, subtle hand-painted ink outline, muted mineral wash, low contrast, low saturation, empty center for game-rendered label text, soft edge suitable for 9-slice. No text, letters, numbers, seals, logos, watermarks, symbols, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "button_pressed",
+      "outputFilename": "button_pressed.png",
+      "rawPath": "cardgen/ui_raw/button_pressed.png",
+      "processedPath": "cardgen/out/ui/button_pressed.png",
+      "optionalUnityPath": "Assets/Art/UI/button_pressed.png",
+      "priority": "mvp",
+      "recommendedAspect": "3:1 horizontal",
+      "usage": "Pressed button state.",
+      "subject": "A small horizontal hanji paper button shape, slightly darker pressed look, subtle ink outline, empty center, no text.",
+      "prompt": "Small horizontal Korean hanji paper UI button in a slightly darker pressed state, subtle hand-painted ink outline, muted wash, low contrast, low saturation, empty center for game-rendered label text, soft edge suitable for 9-slice. No text, letters, numbers, seals, logos, watermarks, symbols, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "score_badge",
+      "outputFilename": "score_badge.png",
+      "rawPath": "cardgen/ui_raw/score_badge.png",
+      "processedPath": "cardgen/out/ui/score_badge.png",
+      "optionalUnityPath": "Assets/Art/UI/score_badge.png",
+      "priority": "mvp",
+      "recommendedAspect": "1:1",
+      "usage": "Score or status badge background.",
+      "subject": "A small round paper badge with light gold wash and thin ink outline, empty center, no text.",
+      "prompt": "Small round Korean paper badge UI asset, warm aged hanji, light muted gold wash, thin natural ink outline, low contrast, low saturation, empty center for score text rendered by the game. No text, letters, numbers, seals, logos, watermarks, symbols, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "gwang_icon",
+      "outputFilename": "gwang_icon.png",
+      "rawPath": "cardgen/ui_raw/gwang_icon.png",
+      "processedPath": "cardgen/out/ui/gwang_icon.png",
+      "optionalUnityPath": "Assets/Art/UI/gwang_icon.png",
+      "priority": "mvp",
+      "recommendedAspect": "1:1",
+      "usage": "Small gwang category icon.",
+      "subject": "A tiny sun-and-brushstroke icon in muted gold and vermilion, transparent or simple hanji background, no text.",
+      "prompt": "Tiny traditional Korean ink-wash UI icon, muted gold and faded vermilion sun with one simple brushstroke, low contrast, low saturation, handmade mineral pigment feel, transparent background or simple aged hanji background. No text, letters, numbers, seals, logos, watermarks, border, modern objects, photorealism, 3D, anime style or flat vector style."
+    },
+    {
+      "id": "pi_icon",
+      "outputFilename": "pi_icon.png",
+      "rawPath": "cardgen/ui_raw/pi_icon.png",
+      "processedPath": "cardgen/out/ui/pi_icon.png",
+      "optionalUnityPath": "Assets/Art/UI/pi_icon.png",
+      "priority": "mvp",
+      "recommendedAspect": "1:1",
+      "usage": "Small pi category icon.",
+      "subject": "A tiny stacked paper slip icon in muted ink and faded red, no text.",
+      "prompt": "Tiny traditional Korean ink-wash UI icon, stacked handmade paper slips in muted ink and faded red, low contrast, low saturation, simple readable silhouette, transparent background or simple aged hanji background. No text, letters, numbers, seals, logos, watermarks, symbols, modern objects, photorealism, 3D, anime style or flat vector style."
+    }
+  ]
+}
