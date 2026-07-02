@@ -1,23 +1,42 @@
 using System;
 using Hwatu.Core;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Hwatu.View
 {
-    /// <summary>코드로 조립되는 카드 뷰. 프리팹/씬 편집을 사용하지 않는다.</summary>
-    public sealed class CardView : MonoBehaviour
+    /// <summary>
+    /// 코드로 조립되는 카드 뷰. 프리팹/씬 편집을 사용하지 않는다.
+    /// 위치는 "기본 레이아웃 목표(base target)" 위에 호버 오프셋을 레이어로 얹어 계산하므로,
+    /// 레이아웃 재계산과 호버가 서로의 위치를 덮어쓰지 않는다.
+    /// </summary>
+    public sealed class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public int CardId { get; private set; }
+        public Card Card { get; private set; }
+        public bool FaceUp => _faceUp;
 
+        private Image _hitImage;          // 루트 히트 영역 (호버로 비주얼이 떠도 움직이지 않는다)
+        private RectTransform _visualRt;  // 호버 오프셋이 적용되는 비주얼 컨테이너
         private Image _border;
         private Image _background;
         private Image _frameOverlay;
         private Image _badge;
+        private GameObject _back;
         private Color _baseColor;
 
-        /// <summary>onClick이 null이면 클릭 불가(획득 패널 미니 카드 등).</summary>
-        public static CardView Create(Transform parent, Card card, Vector2 size, Action<int> onClick)
+        // 기본 레이아웃 목표 (레이아웃 소유), 호버는 그 위의 레이어
+        private Vector2 _basePos;
+        private float _baseRot;
+        private float _baseScale = 1f;
+        private int _baseSibling;
+        private bool _hovered;
+        private bool _interactable;
+        private bool _faceUp = true;
+
+        /// <summary>onClick이 null이면 클릭 불가(획득 패널 미니 카드 등). withBack이면 뒷면 상태를 지원한다.</summary>
+        public static CardView Create(Transform parent, Card card, Vector2 size, Action<int> onClick, bool withBack = false)
         {
             var go = new GameObject($"Card_{card.Id}", typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -29,17 +48,28 @@ namespace Hwatu.View
 
             var view = go.AddComponent<CardView>();
             view.CardId = card.Id;
+            view.Card = card;
 
-            // 루트 이미지 = 선택 하이라이트 테두리 (평소 꺼 둠)
-            view._border = go.AddComponent<Image>();
+            // 히트 영역은 루트에 고정 — 호버가 비주얼만 띄우므로 Enter/Exit가 진동하지 않는다
+            view._hitImage = go.AddComponent<Image>();
+            view._hitImage.color = Color.clear;
+            view._hitImage.raycastTarget = onClick != null;
+
+            // 비주얼 컨테이너 (호버 오프셋 레이어). 자체 이미지 = 선택 하이라이트 테두리 (평소 꺼 둠)
+            var visualGo = new GameObject("Visual", typeof(RectTransform));
+            visualGo.transform.SetParent(go.transform, false);
+            UIBuilder.Stretch((RectTransform)visualGo.transform, 0f, 0f);
+            view._visualRt = (RectTransform)visualGo.transform;
+            view._border = visualGo.AddComponent<Image>();
             view._border.color = new Color(1f, 0.9f, 0.2f);
             view._border.enabled = false;
             view._border.raycastTarget = false;
 
             var bgGo = new GameObject("BG", typeof(RectTransform));
-            bgGo.transform.SetParent(go.transform, false);
+            bgGo.transform.SetParent(visualGo.transform, false);
             UIBuilder.Stretch((RectTransform)bgGo.transform, 3f, 3f);
             view._background = bgGo.AddComponent<Image>();
+            view._background.raycastTarget = false;
 
             Sprite baseSprite = null;
             var db = CardArtDatabase.Instance;
@@ -80,20 +110,180 @@ namespace Hwatu.View
                 labelRt.offsetMax = Vector2.zero;
             }
 
+            if (withBack) view.CreateBack(visualGo.transform);
+
             if (onClick != null)
             {
                 int id = card.Id;
                 var button = go.AddComponent<Button>();
                 button.transition = Selectable.Transition.None;
-                button.targetGraphic = view._background;
+                button.targetGraphic = view._hitImage;
                 button.onClick.AddListener(() => onClick(id));
-            }
-            else
-            {
-                view._background.raycastTarget = false;
             }
             return view;
         }
+
+        // ── 레이아웃 목표 + 호버 레이어 ─────────────────────────────
+
+        /// <summary>레이아웃이 주는 기본 목표 (루트에 적용). 호버 오프셋은 Visual 자식 레이어가 갖는다.</summary>
+        public void SetBaseTarget(Vector2 pos, float rotZ, float scale, float duration, Ease ease = Ease.OutCubic)
+        {
+            _basePos = pos;
+            _baseRot = rotZ;
+            _baseScale = scale;
+            RetargetLayout(duration, ease);
+        }
+
+        /// <summary>기본 형제 순서. 호버 중이면 맨앞을 유지하고 이탈 시 이 값으로 복귀한다.</summary>
+        public void SetBaseSibling(int index)
+        {
+            _baseSibling = index;
+            if (_hovered) transform.SetAsLastSibling();
+            else transform.SetSiblingIndex(index);
+        }
+
+        /// <summary>트윈 없이 즉시 배치 (기본 목표도 함께 갱신).</summary>
+        public void PlaceInstant(Vector2 pos, float rotZ, float scale) => SetBaseTarget(pos, rotZ, scale, 0f);
+
+        /// <summary>진행 중 트윈을 모두 끊고 현재 목표 값으로 스냅한다.</summary>
+        public void SnapVisual()
+        {
+            var rt = (RectTransform)transform;
+            Tween.Cancel(rt);
+            Tween.Cancel(this);
+            Tween.Cancel(_visualRt);
+            rt.anchoredPosition = _basePos;
+            rt.localRotation = Quaternion.Euler(0f, 0f, _baseRot);
+            rt.localScale = new Vector3(_baseScale, _baseScale, 1f);
+            _visualRt.anchoredPosition = _hovered ? new Vector2(0f, ViewTuning.HoverLift) : Vector2.zero;
+            _visualRt.localScale = _hovered ? new Vector3(ViewTuning.HoverScale, ViewTuning.HoverScale, 1f) : Vector3.one;
+            ApplyFace();
+        }
+
+        /// <summary>기본 목표로 트윈. 값이 이미 같고 진행 중 트윈도 없는 채널은 건드리지 않는다.</summary>
+        private void RetargetLayout(float duration, Ease ease)
+        {
+            var rt = (RectTransform)transform;
+            if ((rt.anchoredPosition - _basePos).sqrMagnitude > 0.0001f || Tween.IsActive(rt, "move"))
+                Tween.Move(rt, _basePos, duration, ease);
+            if (Mathf.Abs(Mathf.DeltaAngle(rt.localEulerAngles.z, _baseRot)) > 0.01f || Tween.IsActive(rt, "rotate"))
+                Tween.Rotate(rt, _baseRot, duration, ease);
+            // 스케일은 y로 비교한다 (플립이 x를 일시적으로 움직이므로)
+            if (Mathf.Abs(rt.localScale.y - _baseScale) > 0.0001f || Tween.IsActive(rt, "scale"))
+                Tween.Scale(rt, new Vector3(_baseScale, _baseScale, 1f), duration, ease);
+        }
+
+        private void RetargetHover(Ease ease)
+        {
+            var pos = _hovered ? new Vector2(0f, ViewTuning.HoverLift) : Vector2.zero;
+            float s = _hovered ? ViewTuning.HoverScale : 1f;
+            Tween.Move(_visualRt, pos, ViewTuning.HoverDuration, ease);
+            Tween.Scale(_visualRt, new Vector3(s, s, 1f), ViewTuning.HoverDuration, ease);
+        }
+
+        // ── 호버 (클릭 가능 카드에서만) ─────────────────────────────
+
+        public void SetInteractable(bool on)
+        {
+            _interactable = on;
+            if (!on && _hovered) Unhover();
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!_interactable || _hovered) return;
+            _hovered = true;
+            transform.SetAsLastSibling();
+            RetargetHover(Ease.OutBack);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (_hovered) Unhover();
+        }
+
+        /// <summary>재조정이 형제 순서를 재할당한 뒤 호버 카드의 맨앞을 복구한다.</summary>
+        public void ReassertHoverFront()
+        {
+            if (_hovered) transform.SetAsLastSibling();
+        }
+
+        private void Unhover()
+        {
+            _hovered = false;
+            if (transform.parent != null)
+                transform.SetSiblingIndex(Mathf.Min(_baseSibling, transform.parent.childCount - 1));
+            RetargetHover(Ease.OutCubic);
+        }
+
+        // ── 앞뒷면 ──────────────────────────────────────────────────
+
+        /// <summary>앞뒷면 전환. animate면 스케일X 축소·복원 플립 (중간에 면 교체).</summary>
+        public void SetFaceUp(bool up, bool animate)
+        {
+            if (_back == null) { _faceUp = true; return; } // 뒷면 없는 뷰(미니 카드)는 항상 앞면
+            if (!animate)
+            {
+                // 즉시 경로: 진행 중 플립을 끊고 면과 스케일X를 확정한다 (같은 면이어도)
+                _faceUp = up;
+                Tween.Cancel(this, "flip");
+                ApplyFace();
+                var cur = transform.localScale;
+                if (!Mathf.Approximately(cur.x, cur.y))
+                    transform.localScale = new Vector3(cur.y, cur.y, 1f);
+                return;
+            }
+            if (_faceUp == up) return;
+            _faceUp = up;
+            bool swapped = false;
+            Tween.Custom(this, "flip", ViewTuning.FaceFlipDuration, Ease.InOutQuad, t =>
+            {
+                if (this == null) return;
+                if (!swapped && t >= 0.5f) { swapped = true; ApplyFace(); }
+                var s = transform.localScale;
+                transform.localScale = new Vector3(Mathf.Abs(1f - 2f * t) * s.y, s.y, 1f);
+            }, () =>
+            {
+                if (this == null) return;
+                var s = transform.localScale;
+                transform.localScale = new Vector3(s.y, s.y, 1f);
+            });
+        }
+
+        private void ApplyFace()
+        {
+            if (_back != null) _back.SetActive(!_faceUp);
+        }
+
+        private void CreateBack(Transform parent)
+        {
+            _back = new GameObject("Back", typeof(RectTransform));
+            _back.transform.SetParent(parent, false);
+            UIBuilder.Stretch((RectTransform)_back.transform, 3f, 3f);
+            var bg = _back.AddComponent<Image>();
+            bg.color = new Color(0.52f, 0.13f, 0.15f); // 진홍 단색
+            bg.raycastTarget = false;
+
+            var inner = new GameObject("Inner", typeof(RectTransform));
+            inner.transform.SetParent(_back.transform, false);
+            UIBuilder.Stretch((RectTransform)inner.transform, 8f, 8f);
+            var innerImg = inner.AddComponent<Image>();
+            innerImg.color = new Color(0.38f, 0.08f, 0.10f);
+            innerImg.raycastTarget = false;
+
+            var mark = new GameObject("Mark", typeof(RectTransform));
+            mark.transform.SetParent(_back.transform, false);
+            var markRt = (RectTransform)mark.transform;
+            markRt.sizeDelta = new Vector2(30f, 30f);
+            markRt.localRotation = Quaternion.Euler(0f, 0f, 45f); // 마름모 문양
+            var markImg = mark.AddComponent<Image>();
+            markImg.color = new Color(0.85f, 0.66f, 0.28f);
+            markImg.raycastTarget = false;
+
+            _back.SetActive(false);
+        }
+
+        // ── 상태 표시 ───────────────────────────────────────────────
 
         public void SetHighlight(bool on) => _border.enabled = on;
 

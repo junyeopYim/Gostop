@@ -11,7 +11,8 @@ namespace Hwatu.View
 {
     /// <summary>
     /// 부트스트랩 씬의 유일한 컴포넌트. 시작 시 전체 UI를 코드로 생성하고,
-    /// Core 이벤트를 구독해 영역별 전체 다시 그리기로 렌더한다.
+    /// 카드 렌더는 CardTableView(재조정 렌더)에 위임한다. 텍스트/로그/획득 패널은
+    /// 기존처럼 dirty 시 다시 그린다. 엔진은 동기·즉시이며 뷰만 시간을 두고 따라간다.
     /// </summary>
     public sealed class GameController : MonoBehaviour
     {
@@ -20,11 +21,11 @@ namespace Hwatu.View
 
         private RoundEngine _engine;
         private UiRefs _ui;
+        private CardTableView _table;
         private RoundConfig _config = new RoundConfig();
         private int _currentSeed;
         private bool _started;
         private bool _dirty;
-        private Card _lastFlipped;
         private readonly List<int> _choiceCandidates = new List<int>();
         private readonly List<string> _logLines = new List<string>();
         private readonly List<string> _pendingSpecialLines = new List<string>();
@@ -32,6 +33,12 @@ namespace Hwatu.View
         private readonly Queue<string> _bannerQueue = new Queue<string>();
         private bool _bannerShowing;
         private int _lastLogLineCount = -1;
+
+        // 진행 중 트윈이 끝난 뒤(딜 제외 최대 0.5초 내)로 미루는 UI: 모달/종료 패널/획득 패널
+        private bool _uiDeferredPending;
+        private bool _uiDeferredCapApplied;
+        private float _uiDeferredSince;
+        private bool _roundOverPending;
 
         private void Awake()
         {
@@ -52,15 +59,40 @@ namespace Hwatu.View
 
             _ui = UIBuilder.Build(OnNewRoundClicked, OnRetrySameSeed, OnNewRandomSeed,
                 OnStopClicked, OnGoClicked);
+            _table = CardTableView.Create(_ui, _engine, OnTableCardClicked);
+            _ui.DealBlocker.GetComponent<Button>().onClick.AddListener(SkipDeal);
             _logLines.Add("시드를 입력(비우면 랜덤)하고 [새 판]을 누르세요");
             _dirty = true;
         }
 
         private void LateUpdate()
         {
-            if (!_dirty) return;
-            _dirty = false;
-            RedrawAll();
+            if (_dirty)
+            {
+                _dirty = false;
+                RedrawAll();
+            }
+            if (_uiDeferredPending)
+            {
+                if (!_table.IsBusy)
+                {
+                    _uiDeferredPending = false;
+                    RedrawDeferredUi();
+                }
+                else if (!_uiDeferredCapApplied && !_table.IsDealing
+                         && Time.unscaledTime - _uiDeferredSince > ViewTuning.ModalDeferMax)
+                {
+                    // 상한 도달: 모달/종료 패널만 먼저. 획득 패널은 비행이 끝난 뒤 갱신해
+                    // 같은 카드가 미니 뷰와 비행 뷰로 이중 표시되는 것을 막는다.
+                    _uiDeferredCapApplied = true;
+                    RedrawGoStopModal();
+                    if (_roundOverPending)
+                    {
+                        _roundOverPending = false;
+                        _ui.RoundOverPanel.SetActive(true);
+                    }
+                }
+            }
         }
 
         // ── 명령(버튼/카드 클릭) ────────────────────────────────────
@@ -73,14 +105,16 @@ namespace Hwatu.View
             _ui.TargetField.text = target.ToString();
             _config = new RoundConfig { TargetScore = target };
 
+            _table.PrepareCommand(); // 이전 판 연출이 남아 있으면 즉시 완료
+
             _currentSeed = seed;
             _started = true;
             _ui.SeedField.text = seed.ToString();
             _ui.RoundOverPanel.SetActive(false);
+            _roundOverPending = false;
             _logLines.Clear();
             _pendingSpecialLines.Clear();
             _turnLine.Length = 0;
-            _lastFlipped = null;
             _choiceCandidates.Clear();
             _bannerQueue.Clear();
 
@@ -96,11 +130,19 @@ namespace Hwatu.View
                 outcome = _engine.StartRound(deck, _config);
             }
 
+            _table.BeginRound(); // 셔플·딜 연출 (같은 시드 → 동일 재현)
+
             _logLines.Insert(0, $"시드 {seed} — 새 판 시작"
                 + (reshuffles > 0 ? $" (무효 딜 {reshuffles}회 재셔플)" : ""));
             FlushTurnLine();
             _dirty = true;
         }
+
+        /// <summary>딜 연출을 즉시 완료 상태로 스킵한다 (딜 중 화면 클릭과 동일).</summary>
+        public void SkipDeal() => _table.SkipDeal();
+
+        /// <summary>진행 중인 모든 연출을 즉시 완료한다 (테스트용).</summary>
+        public void CompleteAnimations() => _table.Flush();
 
         private void OnNewRoundClicked()
         {
@@ -114,6 +156,15 @@ namespace Hwatu.View
 
         private static int NewRandomSeed() => UnityEngine.Random.Range(0, int.MaxValue);
 
+        private void OnTableCardClicked(int cardId)
+        {
+            switch (_engine.Phase)
+            {
+                case Phase.AwaitingPlay: OnHandCardClicked(cardId); break;
+                case Phase.AwaitingFloorChoice: OnFloorCardClicked(cardId); break;
+            }
+        }
+
         private void OnHandCardClicked(int cardId)
         {
             if (_engine.Phase != Phase.AwaitingPlay) return;
@@ -122,7 +173,9 @@ namespace Hwatu.View
                 if (c.Id == cardId) { inHand = true; break; }
             if (!inHand) return;
 
+            _table.PrepareCommand();
             _engine.PlayCard(cardId);
+            _table.CommitTurn();
             if (_engine.Phase != Phase.AwaitingFloorChoice)
                 FlushTurnLine();
             _dirty = true;
@@ -132,14 +185,18 @@ namespace Hwatu.View
         {
             if (_engine.Phase != Phase.GoStopDecision) return;
             _logLines.Add($"스톱! — 끗수 {_engine.CurrentBreakdown.Total} x 배수 {_engine.CurrentMultiplier} = {_engine.StopScoreNow}점 확정");
+            _table.PrepareCommand();
             _engine.DeclareStop();
+            _table.CommitTurn();
             _dirty = true;
         }
 
         private void OnGoClicked()
         {
             if (_engine.Phase != Phase.GoStopDecision) return;
+            _table.PrepareCommand();
             _engine.DeclareGo();
+            _table.CommitTurn();
             _logLines.Add($"«{_engine.GoCount}고!» 배수 x{_engine.CurrentMultiplier}, 기준점 {_engine.GoBaseline}");
             _dirty = true;
         }
@@ -150,7 +207,9 @@ namespace Hwatu.View
             if (!_choiceCandidates.Contains(cardId)) return;
 
             _choiceCandidates.Clear();
+            _table.PrepareCommand();
             _engine.ChooseFloorTarget(cardId);
+            _table.CommitTurn();
             FlushTurnLine();
             _dirty = true;
         }
@@ -166,7 +225,6 @@ namespace Hwatu.View
 
         private void OnCardFlipped(Card card)
         {
-            _lastFlipped = card;
             _turnLine.Append($" / 뒤집기: {card.DebugName}");
             _dirty = true;
         }
@@ -234,7 +292,7 @@ namespace Hwatu.View
                 body.AppendLine($"끗수 {result.BaseScore} x 배수 {result.Multiplier} = {result.FinalScore}점 / 목표 {_engine.Config.TargetScore}");
             body.AppendLine($"고 {result.GoCount}회 / {result.TurnCount}턴 / 시드 {_currentSeed}");
             _ui.RoundOverBody.text = body.ToString();
-            _ui.RoundOverPanel.SetActive(true);
+            _roundOverPending = true; // 진행 중 트윈이 끝난 뒤 표시
             _dirty = true;
         }
 
@@ -305,7 +363,7 @@ namespace Hwatu.View
             _bannerShowing = false;
         }
 
-        // ── 렌더 (영역별 전체 다시 그리기) ──────────────────────────
+        // ── 렌더 ────────────────────────────────────────────────────
 
         private void RedrawAll()
         {
@@ -321,12 +379,35 @@ namespace Hwatu.View
                 + $" = 예상 {_engine.StopScoreNow}점 / 목표 {_engine.Config.TargetScore}"
                 + (_engine.GoCount > 0 ? $" ({_engine.GoCount}고)" : "");
 
-            RedrawHand();
-            RedrawFloor();
-            RedrawFlipSlot();
+            _table.ReconcileIfIdle(); // 연출 중이면 정산 스텝이 대신 재조정한다
+
+            // 모달 숨김은 즉시, 표시와 획득 패널 갱신은 진행 중 트윈이 끝난 뒤로 미룬다
+            if (_engine.Phase != Phase.GoStopDecision) _ui.GoStopModal.SetActive(false);
+            if (_table.IsBusy)
+            {
+                // 명령마다 다시 그려지므로, 새 연출이 시작될 때마다 지연 시계를 재무장한다
+                _uiDeferredPending = true;
+                _uiDeferredCapApplied = false;
+                _uiDeferredSince = Time.unscaledTime;
+            }
+            else
+            {
+                _uiDeferredPending = false;
+                RedrawDeferredUi();
+            }
+
+            RedrawLog();
+        }
+
+        private void RedrawDeferredUi()
+        {
             RedrawCaptured();
             RedrawGoStopModal();
-            RedrawLog();
+            if (_roundOverPending)
+            {
+                _roundOverPending = false;
+                _ui.RoundOverPanel.SetActive(true);
+            }
         }
 
         private void RedrawGoStopModal()
@@ -342,62 +423,6 @@ namespace Hwatu.View
             _ui.GoStopWarn.text = handLeft <= 2 ? $"남은 손패 {handLeft}장 — 고박 주의!" : "";
             _ui.StopButtonLabel.text = $"스톱 — {_engine.StopScoreNow}점 확정";
             _ui.GoButtonLabel.text = $"고 — 배수 x{ScoreCalculator.GetMultiplier(_engine.GoCount + 1)}";
-        }
-
-        private void RedrawHand()
-        {
-            ClearChildren(_ui.HandArea);
-            bool playable = _engine.Phase == Phase.AwaitingPlay;
-            foreach (var card in _engine.Hand)
-            {
-                var view = CardView.Create(_ui.HandArea, card, new Vector2(104f, 146f), OnHandCardClicked);
-                view.SetDim(!playable);
-            }
-        }
-
-        private void RedrawFloor()
-        {
-            ClearChildren(_ui.FloorArea);
-            foreach (var stack in _engine.BoundStacks)
-                CreateBoundStackView(_ui.FloorArea, stack);
-            bool choosing = _engine.Phase == Phase.AwaitingFloorChoice;
-            foreach (var card in _engine.FloorCards)
-            {
-                var view = CardView.Create(_ui.FloorArea, card, new Vector2(100f, 140f), OnFloorCardClicked);
-                if (choosing)
-                {
-                    bool candidate = _choiceCandidates.Contains(card.Id);
-                    view.SetHighlight(candidate);
-                    view.SetDim(!candidate);
-                }
-            }
-        }
-
-        private void CreateBoundStackView(Transform parent, BoundStack stack)
-        {
-            var go = new GameObject($"Bound_{stack.Month}", typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            for (int i = 0; i < stack.Cards.Count; i++)
-            {
-                var view = CardView.Create(go.transform, stack.Cards[i], new Vector2(78f, 110f), null);
-                var rt = (RectTransform)view.transform;
-                rt.anchoredPosition = new Vector2(-9f + i * 9f, 18f - i * 9f);
-            }
-            var badge = UIBuilder.CreateText(go.transform, "Badge", $"묶임 x{stack.Cards.Count}", 18,
-                new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter, FontStyle.Bold);
-            var badgeRt = (RectTransform)badge.transform;
-            badgeRt.anchorMin = new Vector2(0f, 0f);
-            badgeRt.anchorMax = new Vector2(1f, 0f);
-            badgeRt.pivot = new Vector2(0.5f, 0f);
-            badgeRt.sizeDelta = new Vector2(0f, 24f);
-            badgeRt.anchoredPosition = Vector2.zero;
-        }
-
-        private void RedrawFlipSlot()
-        {
-            ClearChildren(_ui.FlipContent);
-            if (_lastFlipped != null)
-                CardView.Create(_ui.FlipContent, _lastFlipped, new Vector2(84f, 118f), null);
         }
 
         private void RedrawCaptured()

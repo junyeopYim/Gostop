@@ -21,7 +21,10 @@ namespace Hwatu.View
         public Text RoundOverBody;
         public RectTransform HandArea;
         public RectTransform FloorArea;
-        public RectTransform FlipContent;
+        public RectTransform CardLayer;     // 모든 테이블 카드 뷰의 부모 (재조정 렌더)
+        public RectTransform DeckBackRect;
+        public RectTransform FlipSlotRect;
+        public GameObject DealBlocker;      // 딜 중 입력 잠금 + 클릭 스킵
         public Text[] CapturedHeaders;      // 광/열끗/띠/피 순
         public RectTransform[] CapturedGrids;
         public GameObject RoundOverPanel;
@@ -219,6 +222,7 @@ namespace Hwatu.View
             deckBackRt.pivot = new Vector2(0f, 0f);
             deckBackRt.sizeDelta = new Vector2(90f, 126f);
             deckBackRt.anchoredPosition = new Vector2(20f, 8f);
+            refs.DeckBackRect = deckBackRt;
             refs.DeckBackText = CreateText(deckBack.transform, "Count", "더미\n-", 20, Color.white, TextAnchor.MiddleCenter);
             Stretch((RectTransform)refs.DeckBackText.transform, 4f, 4f);
 
@@ -228,11 +232,7 @@ namespace Hwatu.View
             flipSlotRt.pivot = new Vector2(1f, 0f);
             flipSlotRt.sizeDelta = new Vector2(90f, 126f);
             flipSlotRt.anchoredPosition = new Vector2(-20f, 8f);
-            var flipContent = new GameObject("Content", typeof(RectTransform));
-            flipContent.transform.SetParent(flipSlot.transform, false);
-            var flipContentRt = (RectTransform)flipContent.transform;
-            Stretch(flipContentRt, 0f, 0f);
-            refs.FlipContent = flipContentRt;
+            refs.FlipSlotRect = flipSlotRt;
 
             // ── 중앙 바닥 ────────────────────────────────────────────
             var floorGo = new GameObject("FloorArea", typeof(RectTransform));
@@ -242,12 +242,7 @@ namespace Hwatu.View
             refs.FloorArea.pivot = new Vector2(0.5f, 0.5f);
             refs.FloorArea.sizeDelta = new Vector2(800f, 460f);
             refs.FloorArea.anchoredPosition = new Vector2(-20f, -40f);
-            var floorGrid = floorGo.AddComponent<GridLayoutGroup>();
-            floorGrid.cellSize = new Vector2(100f, 140f);
-            floorGrid.spacing = new Vector2(10f, 10f);
-            floorGrid.childAlignment = TextAnchor.MiddleCenter;
-            floorGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            floorGrid.constraintCount = 7;
+            // 바닥 배치는 CardTableView가 수동 계산한다 (레이아웃 그룹 없음)
 
             // ── 하단 손패 ────────────────────────────────────────────
             var handGo = new GameObject("HandArea", typeof(RectTransform));
@@ -257,13 +252,13 @@ namespace Hwatu.View
             refs.HandArea.pivot = new Vector2(0.5f, 0f);
             refs.HandArea.sizeDelta = new Vector2(1120f, 160f);
             refs.HandArea.anchoredPosition = new Vector2(-20f, 10f);
-            var handLayout = handGo.AddComponent<HorizontalLayoutGroup>();
-            handLayout.spacing = 8f;
-            handLayout.childAlignment = TextAnchor.MiddleCenter;
-            handLayout.childControlWidth = false;
-            handLayout.childControlHeight = false;
-            handLayout.childForceExpandWidth = false;
-            handLayout.childForceExpandHeight = false;
+            // 손패는 CardTableView가 부채꼴로 수동 배치한다 (레이아웃 그룹 없음)
+
+            // ── 카드 레이어 (모든 테이블 카드 뷰의 부모, 모달 아래·판 위) ──
+            var cardLayerGo = new GameObject("CardLayer", typeof(RectTransform));
+            cardLayerGo.transform.SetParent(root, false);
+            refs.CardLayer = (RectTransform)cardLayerGo.transform;
+            Stretch(refs.CardLayer, 0f, 0f);
 
             // ── 고/스톱 모달 ─────────────────────────────────────────
             var goStopOverlay = CreatePanel(root, "GoStopModal", new Color(0f, 0f, 0f, 0.6f));
@@ -383,6 +378,15 @@ namespace Hwatu.View
             bannerRt.sizeDelta = new Vector2(900f, 140f);
             bannerRt.anchoredPosition = new Vector2(-20f, 160f);
             refs.BannerText.gameObject.SetActive(false);
+
+            // ── 딜 입력 잠금 + 클릭 스킵 (맨 위 sibling — 전체 입력을 가로챈다) ──
+            var blocker = CreatePanel(root, "DealBlocker", Color.clear);
+            blocker.raycastTarget = true;
+            Stretch((RectTransform)blocker.transform, 0f, 0f);
+            var blockerButton = blocker.gameObject.AddComponent<Button>();
+            blockerButton.transition = Selectable.Transition.None;
+            refs.DealBlocker = blocker.gameObject;
+            refs.DealBlocker.SetActive(false);
 
             return refs;
         }
