@@ -22,6 +22,11 @@
     0.5161290322580645,
     0.4714285714285714
   ],
+  "inkSeed": [
+    0.5161290322580645,
+    0.5285714285714286
+  ],
   "cutoutApplied": true,
-  "source": "cardgen/elements/raw/petal_b.png"
+  "source": "cardgen/elements/raw/petal_b.png",
+  "inkMask": "petal_b_inkmask.png"
 }

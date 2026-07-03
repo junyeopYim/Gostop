@@ -49,6 +49,10 @@ namespace Hwatu.Run
         public bool todayNodeCleared;
         /// <summary>오늘 재 의식(심판일 입장 회복)이 이미 발동했는지 (재입장 중복 회복 금지). 필드명은 잿날 시절 그대로.</summary>
         public bool jaetnalHealedToday;
+
+        // ── v6 (갈림길 이벤트) ──────────────────────────────────
+        /// <summary>이번 런에서 이미 본 이벤트 id 목록. 배정 시 미방문 우선의 근거.</summary>
+        public List<string> seenEventIds = new List<string>();
     }
 
     /// <summary>차사와의 관계 상태 (이후 지시서에서 사용).</summary>

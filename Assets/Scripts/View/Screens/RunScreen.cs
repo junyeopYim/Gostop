@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hwatu.Core;
 using Hwatu.Run;
 using Hwatu.View.Flow;
+using Hwatu.View.Stage;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -50,6 +51,8 @@ namespace Hwatu.View.Screens
         private int _lastHonbul;
         private InkBleedEffect _inkBleed;
         private bool _jumakPushPending;
+        private bool _eventPushPending;
+        private WorldStage _worldStage;   // [B] 판 월드 무대 (임베드 판과 수명 일치)
 
         private RunController Run => Flow.CurrentRun;
 
@@ -142,6 +145,7 @@ namespace Hwatu.View.Screens
             BuildDebugPanel(canvasRoot);
             Root.AddComponent<RunScreenHotkey>().Bind(ToggleDebugPanel);
             Root.AddComponent<JumakAutoPush>().Bind(this);
+            Root.AddComponent<EventAutoPush>().Bind(this);
 
             // ── 결과 패널 (판 종료 후, 임베드 게임 캔버스 위) ────
             _resultPanel = BuildOverlayPanel(canvasRoot, "ResultPanel", out _resultText,
@@ -209,6 +213,7 @@ namespace Hwatu.View.Screens
             RebuildActionZone(node);
             RebuildChoices();
             MaybePushJumak(node);
+            MaybePushEvent(node);
         }
 
         /// <summary>대왕명 + 지옥명 + 기믹 한 줄 (기믹 없는 대왕은 이름·지옥만).</summary>
@@ -324,7 +329,7 @@ namespace Hwatu.View.Screens
 
                 case NodeKind.Event:
                     AddZoneLabel("이벤트");
-                    if (!cleared) AddZoneButton("PassButton", "지나가기", PassStubNode);
+                    AddZoneLabel(cleared ? "이벤트를 지나왔다." : "길 위에서 무언가가 걸음을 멈춰 세운다.");
                     break;
 
                 case NodeKind.Judgment:
@@ -417,9 +422,16 @@ namespace Hwatu.View.Screens
         private void SetUpEmbeddedRound(NodeSpec node)
         {
             var go = new GameObject("EmbeddedGame");
-            EmbeddedGame = go.AddComponent<GameController>(); // Awake에서 자체 캔버스(sortingOrder 0) 생성
+            EmbeddedGame = go.AddComponent<GameController>(); // Awake에서 자체 캔버스 생성 (여기선 스크린 스페이스)
             EmbeddedGame.SetEmbeddedMode(true);
             EmbeddedGame.RoundFinished += OnRoundFinished;
+
+            // [B] 판 월드화: 무대(원근 카메라·테이블·차사·깊이 배경) 구성 →
+            //     판 캔버스를 월드 스페이스로 전환(이벤트 카메라 = StageCamera) → 테이블로 눕혀 배치 →
+            //     TableView로 스냅. TensionShake는 WorldStage.Create가 엔진에 물린다.
+            _worldStage = WorldStage.Create(EmbeddedGame.Engine);
+            EmbeddedGame.ConfigureWorldCanvas(_worldStage.StageCamera);
+            _worldStage.EnterBoard(EmbeddedGame.BoardCanvas);
 
             // 부적(+심판일이면 대왕 기믹) 부착은 딜 이전 — 딜 직후 총통 같은
             // 즉시 종료 이벤트도 관찰할 수 있어야 한다
@@ -500,12 +512,35 @@ namespace Hwatu.View.Screens
             MaybePushJumak(Run.CurrentNode);
         }
 
-        /// <summary>스텁 노드(주막/이벤트)의 [지나가기] / 잿날의 [쉬어가기].</summary>
-        public void PassStubNode()
+        private void MaybePushEvent(NodeSpec node)
         {
-            if (IsRoundInProgress || Run == null || Run.IsOver || Run.TodayNodeCleared) return;
-            Run.MarkTodayNodeCleared();
-            RefreshHub(); // 갈림길 버튼 활성화
+            if (node.kind != NodeKind.Event || Run.TodayNodeCleared || _eventPushPending
+                || IsRoundInProgress || Flow.IsTransitioning || Root == null || !Root.activeInHierarchy)
+                return;
+            Flow.StartCoroutine(PushEventNextFrame());
+        }
+
+        private IEnumerator PushEventNextFrame()
+        {
+            _eventPushPending = true;
+            yield return null;
+            if (Root != null && Root.activeInHierarchy && Run != null && !Run.TodayNodeCleared
+                && Run.CurrentNode.kind == NodeKind.Event)
+            {
+                yield return Flow.PushScreen(new EventScreen(RefreshAfterEventClosed));
+            }
+            _eventPushPending = false;
+        }
+
+        public void RefreshAfterEventClosed()
+        {
+            RefreshHub();
+        }
+
+        public void TryOpenEventIfNeeded()
+        {
+            if (Run == null || Run.IsOver) return;
+            MaybePushEvent(Run.CurrentNode);
         }
 
         /// <summary>내일 갈림길 선택 = CompleteNode. 마지막 날은 여정의 끝(인자 무시).</summary>
@@ -572,6 +607,13 @@ namespace Hwatu.View.Screens
                 : $"실패… 최종점수 {result.FinalScore} / 목표 {targetScore}\n"
                   + $"혼불 -1 → {Run.State.honbul}"
                   + (Run.IsOver ? "\n혼불이 모두 꺼졌다…" : "\n같은 노드를 다시 친다 — 딜은 새로 섞인다.");
+
+            // [C] 승리 시 일어서기 시퀀스(셰이크 감쇠 → 0.4초 정지 → FrontView 상승 → 차사 끄덕임)를
+            //     결과 패널보다 먼저 재생한다. 실패는 기존 연출(먹 번짐) 유지 — 일어서기 없음.
+            if (result.Success && _worldStage != null)
+                yield return _worldStage.PlayStandUp();
+            if (Root == null || _resultPanel == null) yield break; // 시퀀스 도중 화면이 내려갔으면 중단
+
             _resultPanel.SetActive(true);
             if (result.Success)
             {
@@ -619,11 +661,19 @@ namespace Hwatu.View.Screens
 
         private void TearDownEmbeddedGame()
         {
+            DisposeWorldStage(); // 무대는 판보다 먼저 정리 (카메라·셰이크 구독 해제)
             if (EmbeddedGame == null) return;
             EmbeddedGame.RoundFinished -= OnRoundFinished;
             if (EmbeddedGame.UiRoot != null) Object.Destroy(EmbeddedGame.UiRoot);
-            Object.Destroy(EmbeddedGame.gameObject);
+            Object.Destroy(EmbeddedGame.gameObject); // GameController.OnDestroy가 스크린 오버레이(비네트)까지 정리
             EmbeddedGame = null;
+        }
+
+        private void DisposeWorldStage()
+        {
+            if (_worldStage == null) return;
+            _worldStage.Dispose();
+            _worldStage = null;
         }
 
         // ── 빌드 헬퍼 ───────────────────────────────────────────

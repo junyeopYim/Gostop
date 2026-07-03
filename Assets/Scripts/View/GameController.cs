@@ -25,6 +25,9 @@ namespace Hwatu.View
         /// <summary>[임베드 이음매] 코드 생성된 UI 캔버스 루트 (임베드 측 정리용).</summary>
         public GameObject UiRoot => _ui != null && _ui.Canvas != null ? _ui.Canvas.gameObject : null;
 
+        /// <summary>[임베드 이음매] 판 캔버스 (테스트/무대가 렌더 모드·이벤트 카메라를 검증·설정).</summary>
+        public Canvas BoardCanvas => _ui != null ? _ui.Canvas : null;
+
         private RoundEngine _engine;
         private UiRefs _ui;
         private CardTableView _table;
@@ -47,6 +50,7 @@ namespace Hwatu.View
         private float _uiDeferredSince;
         private bool _roundOverPending;
         private bool _roundOverStampPending;
+        private GameObject _worldOverlay; // [B] 월드 모드에서 스크린에 남는 것(비네트)의 오버레이 캔버스
 
         private void Awake()
         {
@@ -101,6 +105,12 @@ namespace Hwatu.View
             }
         }
 
+        private void OnDestroy()
+        {
+            // 월드 모드에서 만든 스크린 오버레이(비네트)는 판 캔버스와 별도 루트라 함께 정리한다
+            if (_worldOverlay != null) Destroy(_worldOverlay);
+        }
+
         // ── 명령(버튼/카드 클릭) ────────────────────────────────────
 
         public void StartNewRound(int seed)
@@ -136,6 +146,45 @@ namespace Hwatu.View
             _ui.RoundOverButtons.SetActive(!embedded);
             _ui.SeedField.interactable = !embedded;
             _ui.TargetField.interactable = !embedded;
+        }
+
+        /// <summary>
+        /// [임베드 이음매 ④] 판 캔버스를 월드 스페이스로 전환하는 "월드 모드" 지정 경로.
+        /// RunScreen 무대 임베드 전용 — HwatuPrototype 단독 씬은 호출하지 않아 스크린 스페이스를
+        /// 유지한다(회귀 방지). eventCamera는 계약상 필수: 누락하면 월드 캔버스 입력 전체가 죽는다.
+        /// 캔버스의 월드 지오메트리(크기·기울기·스케일·위치)는 무대(TableStage)가 세운다 —
+        /// 여기서는 렌더 모드·이벤트 카메라·라스터 해상도만 지정하고, 스크린에 남아야 할
+        /// 비네트를 별도 스크린 오버레이로 이전한다.
+        /// </summary>
+        public void ConfigureWorldCanvas(Camera eventCamera)
+        {
+            if (_ui == null || _ui.Canvas == null) return;
+            var canvas = _ui.Canvas;
+            canvas.renderMode = RenderMode.WorldSpace;
+            canvas.worldCamera = eventCamera; // 이벤트 카메라 (GraphicRaycaster) — 누락 시 입력 사망
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler != null) scaler.dynamicPixelsPerUnit = 3f; // 월드 UI 텍스트 라스터 선명도
+
+            RelocateVignetteToScreen();
+        }
+
+        /// <summary>[B] 스크린 스페이스였던 판의 비네트를 스크린에 유지한다: 판 위·HUD 아래 오버레이로 이전.</summary>
+        private void RelocateVignetteToScreen()
+        {
+            if (_worldOverlay != null) return;
+            var go = new GameObject("HwatuScreenOverlay");
+            var overlay = go.AddComponent<Canvas>();
+            overlay.renderMode = RenderMode.ScreenSpaceOverlay;
+            overlay.sortingOrder = 5; // 월드 판(카메라 렌더) 위, ScreenBase 화면(10) 아래
+            var scaler = go.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            _worldOverlay = go;
+
+            var vignette = _ui.Canvas.transform.Find("Vignette");
+            if (vignette != null) vignette.SetParent(go.transform, false);
+            else UIStyles.CreateVignette(go.transform);
         }
 
         private void HandleDevUiToggle()

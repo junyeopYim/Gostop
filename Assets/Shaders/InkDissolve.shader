@@ -10,6 +10,7 @@ Shader "Hwatu/InkDissolve"
         _EdgeColor ("Edge Color", Color) = (0.09,0.07,0.06,1)
         _NoiseStrength ("Noise Strength", Range(0,0.2)) = 0.035
         _Invert ("Invert", Float) = 0
+        _Saturation ("Saturation", Range(0,1)) = 1
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -86,6 +87,7 @@ Shader "Hwatu/InkDissolve"
             float _EdgeWidth;
             float _NoiseStrength;
             float _Invert;
+            float _Saturation;
 
             float hash21(float2 p)
             {
@@ -109,7 +111,9 @@ Shader "Hwatu/InkDissolve"
             fixed4 frag(v2f IN) : SV_Target
             {
                 fixed4 color = (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd) * IN.color;
-                float mask = dot(tex2D(_MaskTex, IN.texcoord).rgb, float3(0.299, 0.587, 0.114));
+                // 마스크는 단채널 데이터: 그레이(R=G=B) 절차 마스크든 R8 잉크순서 마스크든
+                // 값은 .r에 있다 (기존 그레이 마스크는 dot(rgb,luma)와 동일값).
+                float mask = tex2D(_MaskTex, IN.texcoord).r;
                 mask = lerp(mask, 1.0 - mask, step(0.5, _Invert));
 
                 float rough = (hash21(IN.texcoord * 160.0) - 0.5) * _NoiseStrength;
@@ -119,6 +123,11 @@ Shader "Hwatu/InkDissolve"
 
                 float edge = 1.0 - smoothstep(_EdgeWidth, _EdgeWidth * 2.0 + 0.0001, abs(mask - cut));
                 color.rgb = lerp(color.rgb, _EdgeColor.rgb, saturate(edge) * visible * _EdgeColor.a);
+
+                // 채색 스밈: 그려짐 1단계에서 _Saturation=0(먹 그레이) → 2단계 1(원본색).
+                // 기본 1이므로 기존 경로는 원본색 그대로 (동작 불변).
+                float3 gray = dot(color.rgb, float3(0.299, 0.587, 0.114)).xxx;
+                color.rgb = lerp(gray, color.rgb, _Saturation);
 
                 #ifdef UNITY_UI_CLIP_RECT
                 color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);

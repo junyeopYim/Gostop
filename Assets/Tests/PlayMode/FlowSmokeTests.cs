@@ -5,9 +5,12 @@ using Hwatu.Core;
 using Hwatu.Run;
 using Hwatu.View.Flow;
 using Hwatu.View.Screens;
+using Hwatu.View.Stage;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace Hwatu.View.Tests
 {
@@ -35,6 +38,9 @@ namespace Hwatu.View.Tests
             if (_appRoot != null) Object.DestroyImmediate(_appRoot);
             var embedded = GameObject.Find("EmbeddedGame");
             if (embedded != null) Object.DestroyImmediate(embedded);
+            // 판 도중 종료한 테스트가 남긴 월드 무대(캔버스가 아니라 루트 GO) 정리
+            var worldStage = GameObject.Find("WorldStage");
+            if (worldStage != null) Object.DestroyImmediate(worldStage);
             foreach (var canvas in Object.FindObjectsByType<Canvas>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (canvas != null && canvas.transform.parent == null)
@@ -91,7 +97,7 @@ namespace Hwatu.View.Tests
             int guard = 0;
             while (run.State.currentDay < 7)
             {
-                Assert.Less(guard++, 10, "7일차까지 디버그 전진");
+                Assert.Less(guard++, 40, "7일차까지 디버그 전진");
                 if (flow.IsTransitioning)
                 {
                     yield return null;
@@ -102,6 +108,12 @@ namespace Hwatu.View.Tests
                 {
                     jumak.LeaveJumak();
                     yield return WaitFor(() => Settled<RunScreen>(flow), "주막 퇴장");
+                }
+                else if (flow.Screens.Current is EventScreen ev)
+                {
+                    ev.SelectChoice(ev.ChoiceCount - 1); // 항상 활성인 마지막 무효과 선택지
+                    ev.Continue();
+                    yield return WaitFor(() => Settled<RunScreen>(flow), "이벤트 퇴장");
                 }
                 else if (flow.Screens.Current is RunScreen rs)
                 {
@@ -129,6 +141,12 @@ namespace Hwatu.View.Tests
                 {
                     jumak.LeaveJumak();
                     yield return WaitFor(() => Settled<RunScreen>(flow), "주막 퇴장");
+                }
+                else if (flow.Screens.Current is EventScreen ev)
+                {
+                    ev.SelectChoice(ev.ChoiceCount - 1); // 항상 활성인 마지막 무효과 선택지
+                    ev.Continue();
+                    yield return WaitFor(() => Settled<RunScreen>(flow), "이벤트 퇴장");
                 }
                 else if (flow.Screens.Current is RunScreen rs)
                 {
@@ -193,7 +211,7 @@ namespace Hwatu.View.Tests
             int guard = 0;
             while (run.State.currentDay < 7)
             {
-                Assert.Less(guard++, 10, "7일차까지 디버그 전진");
+                Assert.Less(guard++, 40, "7일차까지 디버그 전진");
                 if (flow.IsTransitioning)
                 {
                     yield return null;
@@ -204,6 +222,12 @@ namespace Hwatu.View.Tests
                 {
                     jumak.LeaveJumak();
                     yield return WaitFor(() => Settled<RunScreen>(flow), "주막 퇴장");
+                }
+                else if (flow.Screens.Current is EventScreen ev)
+                {
+                    ev.SelectChoice(ev.ChoiceCount - 1); // 항상 활성인 마지막 무효과 선택지
+                    ev.Continue();
+                    yield return WaitFor(() => Settled<RunScreen>(flow), "이벤트 퇴장");
                 }
                 else if (flow.Screens.Current is RunScreen rs)
                 {
@@ -270,6 +294,82 @@ namespace Hwatu.View.Tests
             Assert.LessOrEqual(wipeCanvases, 1, "Ink wipe overlay canvas should not multiply during spammed transitions.");
         }
 
+        [UnityTest]
+        public IEnumerator 월드_캔버스_판에서_카드_클릭이_이벤트_카메라를_경유한다()
+        {
+            var flow = Boot();
+            yield return WaitFor(() => Settled<TitleScreen>(flow), "타이틀 진입");
+            flow.StartNewGame(20260702);
+            yield return WaitFor(() => Settled<CharacterSelectScreen>(flow), "캐릭터 선택 진입");
+            flow.ConfirmCharacter(GameFlowController.DefaultCharacterId);
+            yield return WaitFor(() => Settled<StoryScreen>(flow), "스토리 진입");
+            flow.CompleteStory();
+            yield return WaitFor(() => Settled<TutorialScreen>(flow), "튜토리얼 진입");
+            flow.CompleteTutorial();
+            yield return WaitFor(() => Settled<RunScreen>(flow), "런 진입");
+            var runScreen = (RunScreen)flow.Screens.Current;
+
+            // 오늘의 판 진입 (먹 와이프 이후 딜) → 딜 스킵 → 내기 대기
+            runScreen.PlayTodaysRound();
+            yield return WaitFor(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
+                && (runScreen.EmbeddedGame.Engine.Phase != Phase.RoundOver || runScreen.IsResultVisible),
+                "임베드 판 시작 (와이프 이후 딜)");
+            var game = runScreen.EmbeddedGame;
+            game.SkipDeal();
+            yield return null;
+            var engine = game.Engine;
+            Assert.AreEqual(Phase.AwaitingPlay, engine.Phase, "딜 직후 내기 대기");
+
+            // [완료조건 1] 판 캔버스가 월드 스페이스 + 이벤트 카메라(원근)를 갖는다
+            var canvas = game.BoardCanvas;
+            Assert.IsNotNull(canvas, "판 캔버스 존재");
+            Assert.AreEqual(RenderMode.WorldSpace, canvas.renderMode, "판 캔버스는 월드 스페이스");
+            Assert.IsNotNull(canvas.worldCamera, "이벤트 카메라 지정 — 누락 시 월드 입력 전체가 죽는다");
+            Assert.IsFalse(canvas.worldCamera.orthographic, "무대 카메라는 원근");
+            var raycaster = canvas.GetComponent<GraphicRaycaster>();
+            Assert.IsNotNull(raycaster, "판 캔버스에 GraphicRaycaster");
+
+            // 손패 중앙 카드(부채꼴 꼭대기 — 화면 여유 최대)를 이벤트 카메라 경유로 레이캐스트
+            var target = engine.Hand[engine.Hand.Count / 2];
+            CardView targetView = null;
+            foreach (var v in Object.FindObjectsByType<CardView>(FindObjectsSortMode.None))
+                if (v != null && v.CardId == target.Id) { targetView = v; break; }
+            Assert.IsNotNull(targetView, "손패 카드 뷰 존재");
+
+            var cardRt = (RectTransform)targetView.transform;
+            Vector3 worldCenter = cardRt.TransformPoint(cardRt.rect.center);
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, worldCenter);
+
+            var pointer = new PointerEventData(EventSystem.current) { position = screenPoint };
+            var results = new List<RaycastResult>();
+            raycaster.Raycast(pointer, results);
+
+            RaycastResult hit = default;
+            CardView hitCard = null;
+            foreach (var r in results)
+            {
+                var cv = r.gameObject.GetComponentInParent<CardView>();
+                if (cv != null) { hit = r; hitCard = cv; break; }
+            }
+            Assert.IsNotNull(hitCard, "이벤트 카메라 경유 레이캐스트가 카드에 적중 (월드 입력 생존 증명)");
+            Assert.IsTrue(engine.Hand.Any(c => c.Id == hitCard.CardId), "레이캐스트 최상위 히트는 손패 카드");
+
+            // [완료조건 1] 그 히트를 이벤트 카메라 경유 클릭으로 실행 → 카드가 나간다 (엔진 전진).
+            // 바닥 선택 클릭도 같은 CardView→Button→OnTableCardClicked 경로·같은 레이캐스터를 탄다.
+            int handBefore = engine.Hand.Count;
+            ExecuteEvents.Execute(hit.gameObject, pointer, ExecuteEvents.pointerClickHandler);
+            yield return null;
+            Assert.AreEqual(handBefore - 1, engine.Hand.Count,
+                "이벤트 카메라 경유 클릭으로 손패 카드가 바닥으로 나갔다");
+
+            // 무대 정리 경로까지 태운다 (타이틀 복귀 → RunScreen.Exit → 무대 Dispose)
+            flow.ReturnToTitle();
+            yield return WaitFor(() => Settled<TitleScreen>(flow), "타이틀 복귀 (무대 정리)");
+            Assert.IsNull(GameObject.Find("WorldStage"), "판 이탈 시 월드 무대가 정리된다");
+            Assert.IsNull(GameObject.Find("EmbeddedGame"), "판 이탈 시 임베드 판이 정리된다");
+            Assert.IsNull(GameObject.Find("HwatuScreenOverlay"), "판 이탈 시 스크린 오버레이(비네트)가 정리된다");
+        }
+
         private const string V0SaveJson = @"{
     ""runSeed"": 424242,
     ""characterId"": ""gambler"",
@@ -324,7 +424,9 @@ namespace Hwatu.View.Tests
                     yield return null;
                 }
 
-                yield return WaitFor(() => runScreen.IsResultVisible, "판 결과 패널 표시");
+                // [C] 승리 시 결과 패널 앞에 일어서기 시퀀스(~1.5초 실시간)가 낀다 —
+                // 프레임 예산이 아니라 실시간으로 기다린다 (높은 fps에서 300프레임 초과 방지).
+                yield return WaitForRealtime(() => runScreen.IsResultVisible, "판 결과 패널 표시", 8f);
                 runScreen.ConfirmRoundResult();
                 yield return null;
                 Assert.IsFalse(run.IsOver, "스모크 시드에서 소멸하면 안 된다");

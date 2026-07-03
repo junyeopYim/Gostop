@@ -35,13 +35,14 @@ namespace Hwatu.View.Editor
             db.UiEntries = CollectSprites(UiDir);            // 파일명 = UI atlas id
             db.BackgroundEntries = CollectSprites(BackgroundDir);
             db.ElementEntries = CollectSprites(ElementDir);
+            db.ElementInkMaskEntries = CollectInkMasks(ElementDir); // <id>_inkmask.png → 요소 id
             db.BackSprite = TakeBackSprite(db.BaseEntries); // card_back은 카드 id가 아니라 전용 슬롯
             db.ClearLookupCaches();
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
             Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장, stamp {db.StampEntries.Count}장, "
                       + $"ui {db.UiEntries.Count}장, background {db.BackgroundEntries.Count}장, element {db.ElementEntries.Count}장, "
-                      + $"back {(db.BackSprite != null ? "있음" : "없음")} → {AssetPath}");
+                      + $"inkmask {db.ElementInkMaskEntries.Count}장, back {(db.BackSprite != null ? "있음" : "없음")} → {AssetPath}");
         }
 
         // Base 폴더에 함께 복사되는 card_back.png을 카드 id 목록에서 빼서 전용 슬롯에 담는다
@@ -55,6 +56,31 @@ namespace Hwatu.View.Editor
                 return sprite;
             }
             return null;
+        }
+
+        private const string InkMaskSuffix = "_inkmask";
+
+        // <id>_inkmask.png 텍스처(단채널 R8, 스프라이트 아님)를 요소 id에 매핑한다.
+        private static List<CardArtDatabase.TextureEntry> CollectInkMasks(string dir)
+        {
+            var entries = new List<CardArtDatabase.TextureEntry>();
+            if (!AssetDatabase.IsValidFolder(dir)) return entries;
+
+            foreach (var guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var name = Path.GetFileNameWithoutExtension(path);
+                if (!name.EndsWith(InkMaskSuffix, System.StringComparison.Ordinal)) continue;
+                var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture == null) continue;
+                entries.Add(new CardArtDatabase.TextureEntry
+                {
+                    Key = name.Substring(0, name.Length - InkMaskSuffix.Length),
+                    Texture = texture,
+                });
+            }
+            entries.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+            return entries;
         }
 
         private static List<CardArtDatabase.Entry> CollectSprites(string dir)

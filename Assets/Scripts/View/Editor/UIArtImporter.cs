@@ -11,6 +11,7 @@ namespace Hwatu.View.Editor
         private const string UiRoot = "Assets/Art/UI/";
         private const string BackgroundRoot = "Assets/Art/Backgrounds/";
         private const string ElementRoot = "Assets/Art/Elements/";
+        private const string InkMaskSuffix = "_inkmask";
         private const string SourceManifestPath = "cardgen/ui/manifest.json";
         private const string CopiedManifestPath = "Assets/Art/UI/manifest.json";
 
@@ -26,6 +27,14 @@ namespace Hwatu.View.Editor
             if (!isUi && !isBackground && !isElement) return;
 
             var importer = (TextureImporter)assetImporter;
+
+            // 잉크순서 마스크: 스프라이트가 아니라 단채널 R8 데이터 텍스처로 임포트한다.
+            if (isElement && Path.GetFileNameWithoutExtension(normalized).EndsWith(InkMaskSuffix, StringComparison.Ordinal))
+            {
+                ConfigureInkMask(importer);
+                return;
+            }
+
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Single;
             importer.spritePixelsPerUnit = 100f;
@@ -47,6 +56,23 @@ namespace Hwatu.View.Editor
             if (TryGetUiItem(id, out var item))
                 importer.spriteBorder = new Vector4(item.border.left, item.border.bottom,
                     item.border.right, item.border.top);
+        }
+
+        // 단채널·sRGB 해제·R8. 셰이더는 잉크순서 값을 .r에서 읽는다.
+        private static void ConfigureInkMask(TextureImporter importer)
+        {
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = false;              // 데이터(그려짐 순서), 색이 아님
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+
+            var platform = importer.GetDefaultPlatformTextureSettings();
+            platform.format = TextureImporterFormat.R8; // 단채널 8비트
+            platform.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.SetPlatformTextureSettings(platform);
         }
 
         private static bool TryGetElementPivot(string normalizedAssetPath, out Vector2 pivot)

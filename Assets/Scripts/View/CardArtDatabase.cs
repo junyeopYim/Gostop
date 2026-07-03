@@ -18,12 +18,22 @@ namespace Hwatu.View
             public Sprite Sprite;
         }
 
+        [Serializable]
+        public struct TextureEntry
+        {
+            public string Key;
+            public Texture2D Texture;
+        }
+
         public List<Entry> BaseEntries = new List<Entry>();
         public List<Entry> OverlayEntries = new List<Entry>();
         public List<Entry> StampEntries = new List<Entry>();
         public List<Entry> UiEntries = new List<Entry>();
         public List<Entry> BackgroundEntries = new List<Entry>();
         public List<Entry> ElementEntries = new List<Entry>();
+
+        /// <summary>요소 id → 잉크순서 마스크 텍스처 (단채널 R8). PaintInEffect.PlayDrawn이 소비.</summary>
+        public List<TextureEntry> ElementInkMaskEntries = new List<TextureEntry>();
 
         /// <summary>카드 뒷면 스프라이트 (card_back.png). 없으면 뷰가 기존 단색 표현으로 폴백.</summary>
         public Sprite BackSprite;
@@ -34,6 +44,7 @@ namespace Hwatu.View
         private Dictionary<string, Sprite> _uiLookup;
         private Dictionary<string, Sprite> _backgroundLookup;
         private Dictionary<string, Sprite> _elementLookup;
+        private Dictionary<string, Texture2D> _elementInkMaskLookup;
 
         private static CardArtDatabase _instance;
         private static bool _searched;
@@ -70,6 +81,9 @@ namespace Hwatu.View
         public bool TryGetElement(string elementName, out Sprite sprite)
             => TryGet(ref _elementLookup, ElementEntries, elementName, out sprite);
 
+        public bool TryGetElementInkMask(string elementName, out Texture2D texture)
+            => TryGetTexture(ref _elementInkMaskLookup, ElementInkMaskEntries, elementName, out texture);
+
         public void ClearLookupCaches()
         {
             _baseLookup = null;
@@ -78,6 +92,7 @@ namespace Hwatu.View
             _uiLookup = null;
             _backgroundLookup = null;
             _elementLookup = null;
+            _elementInkMaskLookup = null;
         }
 
         private static bool TryGet(ref Dictionary<string, Sprite> cache, List<Entry> entries,
@@ -94,6 +109,22 @@ namespace Hwatu.View
             }
             sprite = null;
             return key != null && cache.TryGetValue(key, out sprite);
+        }
+
+        private static bool TryGetTexture(ref Dictionary<string, Texture2D> cache, List<TextureEntry> entries,
+                                          string key, out Texture2D texture)
+        {
+            if (cache == null)
+            {
+                cache = new Dictionary<string, Texture2D>(entries.Count);
+                foreach (var entry in entries)
+                {
+                    if (!string.IsNullOrEmpty(entry.Key) && entry.Texture != null)
+                        cache[entry.Key] = entry.Texture;
+                }
+            }
+            texture = null;
+            return key != null && cache.TryGetValue(key, out texture);
         }
     }
 }

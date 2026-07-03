@@ -162,6 +162,8 @@ MonoBehaviour:
   ElementEntries:
   - Key: branch_plum
     Sprite: {fileID: -5503723008399095931, guid: d02cb9db9ec26054eb2cb3d13f562d56, type: 3}
+  - Key: chasa_seated
+    Sprite: {fileID: 21300000, guid: 4711b6d4c2cf33243bfff4bb578091ae, type: 3}
   - Key: gambler_portrait
     Sprite: {fileID: -1260514618648877656, guid: a7f57a33254303c4d8a6c5085c7eb47b, type: 3}
   - Key: lantern
@@ -170,4 +172,15 @@ MonoBehaviour:
     Sprite: {fileID: 2315701458803286205, guid: 83aad8ed637f1134eaffb44d1b71f1bc, type: 3}
   - Key: petal_b
     Sprite: {fileID: 4344739252266534815, guid: 9de889170eb43a844855863de0903e84, type: 3}
+  ElementInkMaskEntries:
+  - Key: branch_plum
+    Texture: {fileID: 2800000, guid: e9f7781be8c3ab34888f67cc993c250a, type: 3}
+  - Key: gambler_portrait
+    Texture: {fileID: 2800000, guid: cb3c01528397f5943b13a2a30eaa925b, type: 3}
+  - Key: lantern
+    Texture: {fileID: 2800000, guid: 27622150e5d054144a9d5058e11edba1, type: 3}
+  - Key: petal_a
+    Texture: {fileID: 2800000, guid: 253efb5aa2438164cb8bc6d82b1d8987, type: 3}
+  - Key: petal_b
+    Texture: {fileID: 2800000, guid: 59913d624567a2241957ee92efc01dfd, type: 3}
   BackSprite: {fileID: 21300000, guid: 0b766a4d134c77043a2a1d12c8a1d236, type: 3}

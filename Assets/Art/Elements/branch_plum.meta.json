@@ -22,6 +22,11 @@
     0.03141104294478528,
     0.64228432563791
   ],
+  "inkSeed": [
+    0.03141104294478528,
+    0.3577156743620899
+  ],
   "cutoutApplied": true,
-  "source": "cardgen/elements/raw/branch_plum.png"
+  "source": "cardgen/elements/raw/branch_plum.png",
+  "inkMask": "branch_plum_inkmask.png"
 }

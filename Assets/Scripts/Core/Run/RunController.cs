@@ -173,6 +173,35 @@ namespace Hwatu.Run
             ResourcesChanged?.Invoke();
         }
 
+        /// <summary>노잣돈을 하한 0까지만 차감하고 실제 차감액을 반환한다 (이벤트 결과 경유).</summary>
+        public int LoseNojatdon(int amount)
+        {
+            int spent = Math.Max(0, Math.Min(amount, State.nojatdon));
+            if (spent == 0) return 0;
+            State.nojatdon -= spent;
+            ResourcesChanged?.Invoke();
+            return spent;
+        }
+
+        /// <summary>혼불 회복(상한 honbulMax 클램프). 이벤트 GainHonbul의 단일 창구.</summary>
+        public void GainHonbul(int amount = 1)
+        {
+            if (amount <= 0) return;
+            State.honbul = Math.Min(State.honbul + amount, State.honbulMax);
+            ResourcesChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// 혼불 소모(하한 0 클램프). 이벤트로는 즉사할 수 없다 — 호출 측(선택지 활성 규칙)이
+        /// 혼불 1일 때 LoseHonbul 선택지를 비활성화하므로 여기서 엔딩을 발화하지 않는다.
+        /// </summary>
+        public void LoseHonbul(int amount = 1)
+        {
+            if (amount <= 0) return;
+            State.honbul = Math.Max(0, State.honbul - amount);
+            ResourcesChanged?.Invoke();
+        }
+
         private void End(RunEnding ending)
         {
             Ending = ending;

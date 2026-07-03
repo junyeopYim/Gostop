@@ -33,7 +33,7 @@ namespace Hwatu.View.Screens
             UIStyles.Stretch((RectTransform)skip.transform, 0f, 0f);
             skip.transform.SetAsLastSibling();
 
-            player.Play(PlayUnroll(scroll), () => CompleteUnroll(scroll),
+            player.Play(PlayEntry(scroll), () => CompleteEntry(scroll),
                 () =>
                 {
                     skip.gameObject.SetActive(false);
@@ -115,10 +115,10 @@ namespace Hwatu.View.Screens
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
 
-            CreatePortrait(content.transform);
+            var portrait = CreatePortrait(content.transform);
             CreateText(content.transform, "Name", UITextPreset.Jeho, character.DisplayName, 48,
                 UIStyles.Ink, new Vector2(520f, 58f), FontStyle.Bold);
-            CreateSinStamp(content.transform, character.SinLabel);
+            var sinStamp = CreateSinStamp(content.transform, character.SinLabel);
             CreateText(content.transform, "Intro", UITextPreset.Body, character.Intro, 24,
                 UIStyles.Ink, new Vector2(560f, 44f));
             CreateText(content.transform, "StartBonus", UITextPreset.Body, character.StartBonusText, 22,
@@ -127,7 +127,7 @@ namespace Hwatu.View.Screens
             var bottomRod = CreateRod(root.transform, "BottomRod", new Vector2(0f, ScrollMaskTopY));
             bottomRod.transform.SetAsLastSibling();
 
-            return new ScrollLayer(maskRt, bottomRod.rectTransform);
+            return new ScrollLayer(maskRt, bottomRod.rectTransform, portrait, sinStamp);
         }
 
         private static Image CreateRod(Transform parent, string name, Vector2 position)
@@ -145,7 +145,7 @@ namespace Hwatu.View.Screens
             return rod;
         }
 
-        private static void CreatePortrait(Transform parent)
+        private static Image CreatePortrait(Transform parent)
         {
             var image = UIStyles.CreateSolidImage(parent, "Portrait", Color.clear);
             image.sprite = UIStyles.GetElementSprite("gambler_portrait") ?? GetFallbackPortrait();
@@ -154,6 +154,10 @@ namespace Hwatu.View.Screens
             var rt = (RectTransform)image.transform;
             rt.sizeDelta = new Vector2(190f, 220f);
             UIStyles.SetPreferred(image.gameObject, 190f, 220f);
+            var group = image.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f; // 언롤 동안 숨김 — 언롤 후 그려짐으로 등장
+            image.gameObject.AddComponent<PaintInEffect>();
+            return image;
         }
 
         private static TextMeshProUGUI CreateText(Transform parent, string name, UITextPreset preset, string text,
@@ -178,19 +182,57 @@ namespace Hwatu.View.Screens
                 UIStyles.Paper, TextAnchor.MiddleCenter, FontStyle.Bold);
             label.enableWordWrapping = false;
             UIBuilder.Stretch((RectTransform)label.transform, 8f, 8f);
+            var group = stamp.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f; // 언롤·초상 뒤에 죄목 인장이 찍힌다
             return rt;
         }
 
-        private static IEnumerator PlayUnroll(ScrollLayer scroll)
+        private static IEnumerator PlayEntry(ScrollLayer scroll)
         {
             SetScrollHeight(scroll, 0f);
             Tween.Custom(scroll.Mask, "unroll", 0.7f, Ease.OutCubic, t => SetScrollHeight(scroll, ScrollHeight * t));
             yield return new WaitForSeconds(0.7f);
+
+            // 언롤 완료 직후 초상이 그려지며 등장 (잉크 0.5 + 채색 0.25)
+            if (scroll.Portrait != null)
+            {
+                var portraitGroup = scroll.Portrait.GetComponent<CanvasGroup>();
+                if (portraitGroup != null) portraitGroup.alpha = 1f;
+                var paint = scroll.Portrait.GetComponent<PaintInEffect>();
+                if (paint != null) paint.PlayDrawn(0.5f, 0.25f);
+            }
+            yield return new WaitForSeconds(0.75f);
+
+            RevealSinStamp(scroll); // 그 뒤 죄목 인장이 찍힌다
         }
 
-        private static void CompleteUnroll(ScrollLayer scroll)
+        private static void CompleteEntry(ScrollLayer scroll)
         {
             SetScrollHeight(scroll, ScrollHeight);
+            if (scroll.Portrait != null)
+            {
+                var portraitGroup = scroll.Portrait.GetComponent<CanvasGroup>();
+                if (portraitGroup != null) portraitGroup.alpha = 1f;
+                scroll.Portrait.GetComponent<PaintInEffect>()?.CompleteDraw(); // 스킵 시 즉시 최종 상태
+            }
+            RevealSinStampInstant(scroll);
+        }
+
+        private static void RevealSinStamp(ScrollLayer scroll)
+        {
+            if (scroll.SinStamp == null) return;
+            var group = scroll.SinStamp.GetComponent<CanvasGroup>();
+            if (group != null) group.alpha = 1f;
+            scroll.SinStamp.localScale = Vector3.one * 1.35f;
+            Tween.Scale(scroll.SinStamp, Vector3.one, 0.16f, Ease.OutBack);
+        }
+
+        private static void RevealSinStampInstant(ScrollLayer scroll)
+        {
+            if (scroll.SinStamp == null) return;
+            var group = scroll.SinStamp.GetComponent<CanvasGroup>();
+            if (group != null) group.alpha = 1f;
+            scroll.SinStamp.localScale = Vector3.one;
         }
 
         private static void SetScrollHeight(ScrollLayer scroll, float height)
@@ -266,11 +308,15 @@ namespace Hwatu.View.Screens
         {
             public readonly RectTransform Mask;
             public readonly RectTransform BottomRod;
+            public readonly Image Portrait;
+            public readonly RectTransform SinStamp;
 
-            public ScrollLayer(RectTransform mask, RectTransform bottomRod)
+            public ScrollLayer(RectTransform mask, RectTransform bottomRod, Image portrait, RectTransform sinStamp)
             {
                 Mask = mask;
                 BottomRod = bottomRod;
+                Portrait = portrait;
+                SinStamp = sinStamp;
             }
         }
     }

@@ -190,8 +190,9 @@ namespace Hwatu.View.Screens
         private static IEnumerator PlayEntry(ArtLayer branch, PetalLayer petals,
             TextLayer title, CanvasGroup subtitle, CanvasGroup menu, ArtLayer seal)
         {
-            branch.Image.gameObject.AddComponent<PaintInEffect>().Play(0.5f, Ease.OutCubic, InkMaskKind.SweepDiag);
-            yield return new WaitForSeconds(0.5f);
+            // 매화 가지가 뿌리→가지끝 순서로 그려진 뒤 색이 스민다 (잉크 0.6 + 채색 0.3).
+            branch.Image.gameObject.AddComponent<PaintInEffect>().PlayDrawn(0.6f, 0.3f);
+            yield return new WaitForSeconds(0.6f); // 먹이 다 그려지면 꽃잎이 내리고, 그 사이 색이 스민다
 
             Fade(petals.Group, 1f, 0.2f);
             yield return new WaitForSeconds(0.1f);
@@ -222,7 +223,7 @@ namespace Hwatu.View.Screens
             menu.alpha = 1f;
             seal.Group.alpha = 1f;
             var branchPaint = branch.Image.GetComponent<PaintInEffect>();
-            if (branchPaint != null) branchPaint.Play(0f, Ease.Linear, InkMaskKind.SweepDiag);
+            if (branchPaint != null) branchPaint.CompleteDraw(); // 스킵 시 그려짐을 즉시 최종 상태로
         }
 
         private static void Fade(CanvasGroup group, float to, float duration)

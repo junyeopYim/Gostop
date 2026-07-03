@@ -22,6 +22,11 @@
     0.49742533470648814,
     0.5133689839572193
   ],
+  "inkSeed": [
+    0.49742533470648814,
+    0.48663101604278075
+  ],
   "cutoutApplied": true,
-  "source": "cardgen/elements/raw/gambler_portrait.png"
+  "source": "cardgen/elements/raw/gambler_portrait.png",
+  "inkMask": "gambler_portrait_inkmask.png"
 }
