@@ -20,10 +20,12 @@ namespace Hwatu.Core.Tests
                 nojatdon = 42,
                 relicIds = new List<string>
                 {
-                    DemoMultiplierPlusEffect.EffectId,
-                    DemoJjokNojatdonEffect.EffectId,
+                    RelicIds.MoonScroll,
+                    RelicIds.Gombangdae,
                 },
                 deck = CardSpecs.CreateStandardDeckSpecs(),
+                salpuriCount = 3,
+                relicSlotLimit = 5,
                 chasa = new ChasaState { jeong = 3, revealedUntilDay = 21 },
                 dayAttempt = 2,
                 stateVersion = RunStateMigration.CurrentVersion,
@@ -36,6 +38,7 @@ namespace Hwatu.Core.Tests
             original.deck[0].enhancements.Add("enh_test_a");
             original.deck[0].enhancements.Add("enh_test_b");
             original.deck[47].enhancements.Add("enh_test_c");
+            original.deck.RemoveAt(46);
 
             string json = JsonUtility.ToJson(original);
             var restored = JsonUtility.FromJson<RunState>(json);
@@ -46,6 +49,8 @@ namespace Hwatu.Core.Tests
             Assert.AreEqual(original.honbul, restored.honbul);
             Assert.AreEqual(original.nojatdon, restored.nojatdon);
             Assert.AreEqual(original.dayAttempt, restored.dayAttempt);
+            Assert.AreEqual(original.salpuriCount, restored.salpuriCount);
+            Assert.AreEqual(original.relicSlotLimit, restored.relicSlotLimit);
             CollectionAssert.AreEqual(original.relicIds, restored.relicIds);
             Assert.AreEqual(original.chasa.jeong, restored.chasa.jeong);
             Assert.AreEqual(original.chasa.revealedUntilDay, restored.chasa.revealedUntilDay);

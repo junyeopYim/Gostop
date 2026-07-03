@@ -49,6 +49,7 @@ namespace Hwatu.View.Screens
         private RunController _trackedRun;
         private int _lastHonbul;
         private InkBleedEffect _inkBleed;
+        private bool _jumakPushPending;
 
         private RunController Run => Flow.CurrentRun;
 
@@ -140,6 +141,7 @@ namespace Hwatu.View.Screens
             BuildTopRightTitleButton(canvasRoot);
             BuildDebugPanel(canvasRoot);
             Root.AddComponent<RunScreenHotkey>().Bind(ToggleDebugPanel);
+            Root.AddComponent<JumakAutoPush>().Bind(this);
 
             // ── 결과 패널 (판 종료 후, 임베드 게임 캔버스 위) ────
             _resultPanel = BuildOverlayPanel(canvasRoot, "ResultPanel", out _resultText,
@@ -206,6 +208,7 @@ namespace Hwatu.View.Screens
 
             RebuildActionZone(node);
             RebuildChoices();
+            MaybePushJumak(node);
         }
 
         /// <summary>대왕명 + 지옥명 + 기믹 한 줄 (기믹 없는 대왕은 이름·지옥만).</summary>
@@ -249,7 +252,7 @@ namespace Hwatu.View.Screens
             }
 
             foreach (var id in ids)
-                CreateEffectChip(row, EffectRegistry.GetDisplayName(id));
+                CreateEffectChip(row, id);
         }
 
         private void RebuildJudgmentChips(NodeSpec node)
@@ -264,12 +267,15 @@ namespace Hwatu.View.Screens
                 $"{king.KingName}({king.HellName})", 18, UIStyles.Ink, TextAnchor.MiddleCenter);
             UIBuilder.SetPreferred(label.gameObject, 230f, 28f);
             if (king.HasGimmick)
-                CreateEffectChip(_judgmentRow, EffectRegistry.GetDisplayName(king.EffectId));
+                CreateEffectChip(_judgmentRow, king.EffectId);
         }
 
-        private static void CreateEffectChip(Transform row, string label)
+        private static void CreateEffectChip(Transform row, string effectId)
         {
-            float chipWidth = Mathf.Clamp(68f + label.Length * 17f, 190f, 380f);
+            string label = EffectRegistry.GetDisplayName(effectId);
+            string description = EffectRegistry.GetDescription(effectId);
+            string chipText = string.IsNullOrEmpty(description) ? label : $"{label} — {description}";
+            float chipWidth = Mathf.Clamp(78f + chipText.Length * 12f, 220f, 760f);
             var chipImage = UIStyles.CreatePanel(row, "EffectChip", new Vector2(chipWidth, 30f));
             chipImage.raycastTarget = false;
             var chip = chipImage.gameObject;
@@ -282,7 +288,7 @@ namespace Hwatu.View.Screens
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
             UIStyles.CreateIcon(chip.transform, "bujeok", new Vector2(48f, 24f));
-            var text = UIStyles.CreateText(chip.transform, "Label", UITextPreset.Body, label, 17,
+            var text = UIStyles.CreateText(chip.transform, "Label", UITextPreset.Body, chipText, 17,
                 UIStyles.Ink, TextAnchor.MiddleLeft);
             text.enableWordWrapping = false; // 칩은 단일행 설계 — 어절 줄바꿈 전역화의 영향 차단
             UIBuilder.SetPreferred(text.gameObject, chipWidth - 70f, 26f);
@@ -299,7 +305,7 @@ namespace Hwatu.View.Screens
                 case NodeKind.FinalBattle:
                     if (!cleared)
                     {
-                        int target = TargetScoreCurve.GetTarget(node.day, node.kind);
+                        int target = TargetScoreFor(node);
                         string label = node.kind == NodeKind.FinalBattle
                             ? $"마지막 판 치기 — 목표 {target}점"
                             : $"오늘의 판 치기 — 목표 {target}점";
@@ -313,7 +319,7 @@ namespace Hwatu.View.Screens
 
                 case NodeKind.Jumak:
                     AddZoneLabel("주막");
-                    if (!cleared) AddZoneButton("PassButton", "지나가기", PassStubNode);
+                    AddZoneLabel(cleared ? "주막을 떠났다." : "문턱 너머로 등불이 흔들린다.");
                     break;
 
                 case NodeKind.Event:
@@ -328,7 +334,7 @@ namespace Hwatu.View.Screens
                     AddZoneLabel($"{king.KingName} — {king.HellName}");
                     if (king.HasGimmick) AddZoneLabel(king.GimmickLine);
                     if (!cleared)
-                        AddZoneButton("PlayRoundButton", $"심판 받기 — 목표 {king.TargetScore}점", PlayTodaysRound);
+                        AddZoneButton("PlayRoundButton", $"심판 받기 — 목표 {TargetScoreFor(node)}점", PlayTodaysRound);
                     else
                         AddZoneLabel("심판을 통과했다.");
                     break;
@@ -451,8 +457,47 @@ namespace Hwatu.View.Screens
             int dealSeed = SeedDerivation.Derive(Run.State.runSeed, RngStream.DeckShuffle,
                 Run.State.currentDay, Run.State.dayAttempt);
             var deck = CardSpecs.ToCards(Run.State.deck);
-            var config = new RoundConfig { TargetScore = TargetScoreCurve.GetTarget(node.day, node.kind) };
+            var config = new RoundConfig { TargetScore = TargetScoreFor(node) };
             EmbeddedGame.StartExternalRound(deck, dealSeed, config);
+        }
+
+        private int TargetScoreFor(NodeSpec node)
+        {
+            int baseTarget = node.kind == NodeKind.Judgment
+                ? BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day)).TargetScore
+                : TargetScoreCurve.GetTarget(node.day, node.kind);
+            return JumakShop.AdjustTargetScore(baseTarget, Run.State.relicIds);
+        }
+
+        private void MaybePushJumak(NodeSpec node)
+        {
+            if (node.kind != NodeKind.Jumak || Run.TodayNodeCleared || _jumakPushPending
+                || IsRoundInProgress || Flow.IsTransitioning || Root == null || !Root.activeInHierarchy)
+                return;
+            Flow.StartCoroutine(PushJumakNextFrame());
+        }
+
+        private IEnumerator PushJumakNextFrame()
+        {
+            _jumakPushPending = true;
+            yield return null;
+            if (Root != null && Root.activeInHierarchy && Run != null && !Run.TodayNodeCleared
+                && Run.CurrentNode.kind == NodeKind.Jumak)
+            {
+                yield return Flow.PushScreen(new JumakScreen(RefreshAfterJumakClosed));
+            }
+            _jumakPushPending = false;
+        }
+
+        public void RefreshAfterJumakClosed()
+        {
+            RefreshHub();
+        }
+
+        public void TryOpenJumakIfNeeded()
+        {
+            if (Run == null || Run.IsOver) return;
+            MaybePushJumak(Run.CurrentNode);
         }
 
         /// <summary>스텁 노드(주막/이벤트)의 [지나가기] / 잿날의 [쉬어가기].</summary>
@@ -694,101 +739,4 @@ namespace Hwatu.View.Screens
         }
     }
 
-    public sealed class RunScreenHotkey : MonoBehaviour
-    {
-        private System.Action _onDebugToggle;
-
-        public void Bind(System.Action onDebugToggle)
-        {
-            _onDebugToggle = onDebugToggle;
-        }
-
-        private void Update()
-        {
-            bool pressed;
-#if ENABLE_INPUT_SYSTEM
-            pressed = UnityEngine.InputSystem.Keyboard.current != null
-                && UnityEngine.InputSystem.Keyboard.current.f1Key.wasPressedThisFrame;
-#else
-            pressed = Input.GetKeyDown(KeyCode.F1);
-#endif
-            if (pressed) _onDebugToggle?.Invoke();
-        }
-    }
-
-    public sealed class EffectChipFlowLayout : LayoutGroup
-    {
-        public float Spacing = 8f;
-        public float LineSpacing = 6f;
-        public float RowHeight = 30f;
-
-        public override void CalculateLayoutInputHorizontal()
-        {
-            base.CalculateLayoutInputHorizontal();
-            SetLayoutInputForAxis(0f, Width, -1f, 0);
-        }
-
-        public override void CalculateLayoutInputVertical()
-        {
-            SetLayoutInputForAxis(PreferredHeight(), PreferredHeight(), -1f, 1);
-        }
-
-        public override void SetLayoutHorizontal()
-        {
-            LayoutChildren();
-        }
-
-        public override void SetLayoutVertical()
-        {
-            LayoutChildren();
-        }
-
-        private float PreferredHeight()
-        {
-            int rows = CountRows(Width);
-            if (rows <= 0) return RowHeight;
-            return padding.vertical + rows * RowHeight + (rows - 1) * LineSpacing;
-        }
-
-        private void LayoutChildren()
-        {
-            float width = Width;
-            float x = padding.left;
-            float y = padding.top;
-            for (int i = 0; i < rectChildren.Count; i++)
-            {
-                var child = rectChildren[i];
-                float childWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(child), width - padding.horizontal);
-                if (x > padding.left && x + childWidth > width - padding.right)
-                {
-                    x = padding.left;
-                    y += RowHeight + LineSpacing;
-                }
-
-                SetChildAlongAxis(child, 0, x, childWidth);
-                SetChildAlongAxis(child, 1, y, RowHeight);
-                x += childWidth + Spacing;
-            }
-        }
-
-        private int CountRows(float width)
-        {
-            if (rectChildren.Count == 0) return 1;
-            int rows = 1;
-            float x = padding.left;
-            for (int i = 0; i < rectChildren.Count; i++)
-            {
-                float childWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(rectChildren[i]), width - padding.horizontal);
-                if (x > padding.left && x + childWidth > width - padding.right)
-                {
-                    rows++;
-                    x = padding.left;
-                }
-                x += childWidth + Spacing;
-            }
-            return rows;
-        }
-
-        private float Width => Mathf.Max(1f, rectTransform.rect.width > 1f ? rectTransform.rect.width : 850f);
-    }
 }

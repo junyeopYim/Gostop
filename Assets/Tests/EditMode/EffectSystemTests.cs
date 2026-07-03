@@ -30,7 +30,7 @@ namespace Hwatu.Core.Tests
             return ordered.Select(id => all[id]).ToList();
         }
 
-        // ── 배수 수정 훅 경로 (demo_multiplier_plus) ─────────────
+        // ── 배수 수정 훅 경로 (달빛 족자) ────────────────────────
         // 조작 판: 손패 3장 = 홍단(1월/2월/3월), 바닥 = 같은 월 피 3장 + 10월 2장.
         // 더미 상단 3장은 바닥에 없는 월의 피 → 매 턴 단독 안착. 3턴 뒤 손패 소진으로
         // 정확히 "홍단 3점"만 완성된 채 판이 끝난다.
@@ -66,11 +66,11 @@ namespace Hwatu.Core.Tests
         }
 
         [Test]
-        public void 데모_배수_효과_부착_시_최종점수는_끗수_x_배수더하기1()
+        public void 달빛_족자_부착_시_최종점수는_끗수_x_배수더하기1()
         {
             var system = new EffectSystem();
             var engine = PlayHongdanRound(system, new FakeRunServices(),
-                new[] { DemoMultiplierPlusEffect.EffectId }, false);
+                new[] { RelicIds.MoonScroll }, false);
 
             Assert.AreEqual(2, engine.Result.Multiplier, "배수 1 → 수정자 +1 → 2");
             Assert.AreEqual(6, engine.Result.FinalScore, "최종점수 = 끗수 3 x 배수(1+1)");
@@ -78,27 +78,27 @@ namespace Hwatu.Core.Tests
         }
 
         [Test]
-        public void 데모_배수_효과_해제_후에는_정산이_원래대로_돌아온다()
+        public void 달빛_족자_해제_후에는_정산이_원래대로_돌아온다()
         {
             var system = new EffectSystem();
             var engine = PlayHongdanRound(system, new FakeRunServices(),
-                new[] { DemoMultiplierPlusEffect.EffectId }, detachBeforePlay: true);
+                new[] { RelicIds.MoonScroll }, detachBeforePlay: true);
 
             Assert.AreEqual(1, engine.Result.Multiplier, "Detach 후에는 수정자가 남아 있으면 안 된다");
             Assert.AreEqual(3, engine.Result.FinalScore);
         }
 
-        // ── 이벤트 관찰 + IRunServices 경로 (demo_jjok_nojatdon) ──
+        // ── 이벤트 관찰 + IRunServices 경로 (곰방대) ─────────────
         // 조작 판: 손패 = 1월 광, 12월 광. 바닥에는 그 월이 없고 더미 상단이
         // 같은 월 → 두 턴 모두 쪽. 1턴 후 Detach하면 2턴째 쪽은 무효과여야 한다.
 
         [Test]
-        public void 데모_쪽_효과는_부착_중_노잣돈을_주고_해제_후에는_주지_않는다()
+        public void 곰방대_효과는_부착_중_첫_쪽에_노잣돈을_주고_해제_후에는_주지_않는다()
         {
             var engine = new RoundEngine();
             var services = new FakeRunServices();
             var system = new EffectSystem();
-            system.AttachAll(new[] { DemoJjokNojatdonEffect.EffectId },
+            system.AttachAll(new[] { RelicIds.Gombangdae },
                 new EffectContext(engine, services));
 
             var deck = OrderDeck(0, 44, 20, 21, 24, 25, 1, 46);
@@ -110,14 +110,14 @@ namespace Hwatu.Core.Tests
 
             engine.PlayCard(0); // 1월 광 단독 → 1월 홍단 뒤집힘 → 쪽
             Assert.AreEqual(1, jjokCount);
-            Assert.AreEqual(1, services.Nojatdon, "쪽 발생 시 노잣돈 +1");
+            Assert.AreEqual(2, services.Nojatdon, "판마다 첫 쪽 발생 시 노잣돈 +2");
 
             system.DetachAll(); // 판 도중 강제 해제 → 이후 이벤트는 무효과여야 한다
 
             engine.PlayCard(44); // 12월 광 단독 → 12월 띠 뒤집힘 → 두 번째 쪽
             Assert.AreEqual(Phase.RoundOver, engine.Phase);
             Assert.AreEqual(2, jjokCount, "엔진은 두 번째 쪽을 정상 발생시킨다");
-            Assert.AreEqual(1, services.Nojatdon, "Detach 후에는 이벤트가 일어나도 아무 효과 없어야 한다 (구독 누수 없음)");
+            Assert.AreEqual(2, services.Nojatdon, "Detach 후에는 이벤트가 일어나도 아무 효과 없어야 한다 (구독 누수 없음)");
         }
 
         // ── 레지스트리/시스템 일반 동작 ──────────────────────────
@@ -128,12 +128,12 @@ namespace Hwatu.Core.Tests
             var system = new EffectSystem();
             var engine = new RoundEngine();
             system.AttachAll(
-                new[] { DemoMultiplierPlusEffect.EffectId, DemoJjokNojatdonEffect.EffectId },
+                new[] { RelicIds.MoonScroll, RelicIds.Gombangdae },
                 new EffectContext(engine, new FakeRunServices()));
 
             Assert.AreEqual(2, system.Attached.Count);
             CollectionAssert.AreEqual(
-                new[] { DemoMultiplierPlusEffect.EffectId, DemoJjokNojatdonEffect.EffectId },
+                new[] { RelicIds.MoonScroll, RelicIds.Gombangdae },
                 system.Attached.Select(e => e.Id).ToList());
 
             system.DetachAll();

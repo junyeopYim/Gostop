@@ -92,7 +92,22 @@ namespace Hwatu.View.Tests
             while (run.State.currentDay < 7)
             {
                 Assert.Less(guard++, 10, "7일차까지 디버그 전진");
-                runScreen.AdvanceDayDebug();
+                if (flow.IsTransitioning)
+                {
+                    yield return null;
+                    continue;
+                }
+
+                if (flow.Screens.Current is JumakScreen jumak)
+                {
+                    jumak.LeaveJumak();
+                    yield return WaitFor(() => Settled<RunScreen>(flow), "주막 퇴장");
+                }
+                else if (flow.Screens.Current is RunScreen rs)
+                {
+                    runScreen = rs;
+                    runScreen.AdvanceDayDebug();
+                }
                 yield return null;
             }
             Assert.AreEqual(NodeKind.Judgment, run.CurrentNode.kind, "7일차는 심판일");
@@ -104,8 +119,22 @@ namespace Hwatu.View.Tests
             while (!(flow.Screens.Current is EndingScreen))
             {
                 Assert.Less(guard++, 300, "디버그 전진이 유한 횟수 안에 엔딩 도달");
-                if (flow.Screens.Current is RunScreen rs && !flow.IsTransitioning)
+                if (flow.IsTransitioning)
+                {
+                    yield return null;
+                    continue;
+                }
+
+                if (flow.Screens.Current is JumakScreen jumak)
+                {
+                    jumak.LeaveJumak();
+                    yield return WaitFor(() => Settled<RunScreen>(flow), "주막 퇴장");
+                }
+                else if (flow.Screens.Current is RunScreen rs)
+                {
+                    runScreen = rs;
                     rs.AdvanceDayDebug();
+                }
                 yield return null;
             }
             yield return WaitFor(() => !flow.IsTransitioning, "엔딩 전환 완료");
@@ -165,7 +194,22 @@ namespace Hwatu.View.Tests
             while (run.State.currentDay < 7)
             {
                 Assert.Less(guard++, 10, "7일차까지 디버그 전진");
-                runScreen.AdvanceDayDebug();
+                if (flow.IsTransitioning)
+                {
+                    yield return null;
+                    continue;
+                }
+
+                if (flow.Screens.Current is JumakScreen jumak)
+                {
+                    jumak.LeaveJumak();
+                    yield return WaitFor(() => Settled<RunScreen>(flow), "주막 퇴장");
+                }
+                else if (flow.Screens.Current is RunScreen rs)
+                {
+                    runScreen = rs;
+                    runScreen.AdvanceDayDebug();
+                }
                 yield return null;
             }
             Assert.AreEqual(NodeKind.Judgment, run.CurrentNode.kind);
@@ -173,6 +217,7 @@ namespace Hwatu.View.Tests
             Assert.IsTrue(run.State.jaetnalHealedToday);
 
             // 심판일 상태로 저장 → 재입장 → 중복 회복 금지 (플래그가 깨지면 3이 되어 잡힌다)
+            yield return WaitFor(() => Settled<RunScreen>(flow), "심판일 허브 안정화");
             flow.ReturnToTitle();
             yield return WaitFor(() => Settled<TitleScreen>(flow), "타이틀 복귀 2");
             flow.ContinueRun();
@@ -243,14 +288,14 @@ namespace Hwatu.View.Tests
         // ── 헬퍼 ────────────────────────────────────────────────
 
         /// <summary>
-        /// 오늘의 판을 승리할 때까지 최대 3판 (봇: 첫 카드/첫 후보/스톱).
+        /// 오늘의 판을 승리할 때까지 최대 8판 (봇: 첫 카드/첫 후보/목표 미달이면 고).
         /// [A] 판 진입·재도전·복귀가 전부 먹 와이프를 거치므로 각 경계를 기다린다
         /// (실패 확인은 재도전 와이프로 같은 날 새 딜에 직행한다 — 재진입 호출 불필요).
         /// </summary>
         private static IEnumerator WinTodaysBattle(GameFlowController flow, RunScreen runScreen, RunController run)
         {
             runScreen.PlayTodaysRound();
-            for (int attempt = 0; attempt < 3 && !run.TodayNodeCleared; attempt++)
+            for (int attempt = 0; attempt < 8 && !run.TodayNodeCleared; attempt++)
             {
                 yield return WaitFor(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
                     && (runScreen.EmbeddedGame.Engine.Phase != Phase.RoundOver || runScreen.IsResultVisible),
@@ -269,7 +314,12 @@ namespace Hwatu.View.Tests
                     {
                         case Phase.AwaitingPlay: engine.PlayCard(engine.Hand[0].Id); break;
                         case Phase.AwaitingFloorChoice: engine.ChooseFloorTarget(candidates[0]); break;
-                        case Phase.GoStopDecision: engine.DeclareStop(); break;
+                        case Phase.GoStopDecision:
+                            if (engine.StopScoreNow >= engine.Config.TargetScore && engine.StopBlockReason == null)
+                                engine.DeclareStop();
+                            else
+                                engine.DeclareGo();
+                            break;
                     }
                     yield return null;
                 }
@@ -279,7 +329,7 @@ namespace Hwatu.View.Tests
                 yield return null;
                 Assert.IsFalse(run.IsOver, "스모크 시드에서 소멸하면 안 된다");
             }
-            Assert.IsTrue(run.TodayNodeCleared, "3판 안에 오늘의 판을 이겨야 한다 (결정적 시드)");
+            Assert.IsTrue(run.TodayNodeCleared, "8판 안에 오늘의 판을 이겨야 한다 (결정적 시드)");
             yield return WaitFor(() => !flow.IsTransitioning && !runScreen.IsRoundInProgress,
                 "판 종료 복귀 와이프 완료");
         }

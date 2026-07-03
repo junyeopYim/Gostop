@@ -39,6 +39,8 @@ namespace Hwatu.Core.Tests
             Assert.AreEqual(3, run.State.honbul);
             Assert.AreEqual(3, run.State.honbulMax);
             Assert.AreEqual(0, run.State.nojatdon);
+            Assert.AreEqual(0, run.State.relicIds.Count, "새 런은 부적 없이 시작한다");
+            Assert.AreEqual(5, run.State.relicSlotLimit, "부적 슬롯 상한");
             Assert.AreEqual(48, run.State.deck.Count);
             Assert.AreEqual(RunStateMigration.CurrentVersion, run.State.stateVersion);
             Assert.AreEqual(JourneyGenerator.JourneyDays, run.State.journey.days.Count);

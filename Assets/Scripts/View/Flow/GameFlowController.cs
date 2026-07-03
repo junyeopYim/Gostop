@@ -78,6 +78,32 @@ namespace Hwatu.View.Flow
             yield break;
         }
 
+        public IEnumerator PushScreen(IScreen screen)
+        {
+            if (IsTransitioning)
+            {
+                Debug.LogWarning("화면 전환 중 중복 내비게이션 요청을 무시했습니다.");
+                yield break;
+            }
+
+            IsTransitioning = true;
+            yield return Screens.Push(screen, _transition);
+            IsTransitioning = false;
+        }
+
+        public IEnumerator PopScreen()
+        {
+            if (IsTransitioning)
+            {
+                Debug.LogWarning("화면 전환 중 중복 내비게이션 요청을 무시했습니다.");
+                yield break;
+            }
+
+            IsTransitioning = true;
+            yield return Screens.Pop(_transition);
+            IsTransitioning = false;
+        }
+
         // ── 타이틀 ──────────────────────────────────────────────
 
         /// <summary>새 게임 시작. seedOverride는 테스트/디버그용 (없으면 랜덤 런 시드).</summary>
@@ -110,9 +136,6 @@ namespace Hwatu.View.Flow
         public void ConfirmCharacter(string characterId)
         {
             var run = RunController.StartNew(_pendingRunSeed, characterId);
-            // [데모] 관통 검증용 임시 부적 2종 — 다음 지시서에서 제거 예정
-            run.State.relicIds.Add(DemoMultiplierPlusEffect.EffectId);
-            run.State.relicIds.Add(DemoJjokNojatdonEffect.EffectId);
             AdoptRun(run);
             Navigate(Screens.Replace(new StoryScreen(), _transition));
         }

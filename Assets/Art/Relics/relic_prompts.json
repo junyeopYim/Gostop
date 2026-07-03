@@ -1,0 +1,57 @@
+﻿{
+    "schemaVersion":  1,
+    "size":  "128x128",
+    "style":  "transparent PNG, hanji parchment, black ink outline, restrained hwatu palette",
+    "items":  [
+                  {
+                      "ko":  "단풍 부채",
+                      "prompt":  "Small Unity UI relic icon, Korean hwatu-inspired paper talisman, folding fan with red maple leaves, black ink outline, warm hanji texture, transparent background, readable at 64px.",
+                      "id":  "relic_maple_fan"
+                  },
+                  {
+                      "ko":  "홍단 노리개",
+                      "prompt":  "Small Unity UI relic icon, red hongdan ribbon norigae pendant with gold bead and tassel, Korean folk brush style, black ink outline, warm hanji texture, transparent background.",
+                      "id":  "relic_hongdan_norigae"
+                  },
+                  {
+                      "ko":  "해진 짚신",
+                      "prompt":  "Small Unity UI relic icon, worn straw shoes pair tied with loose fibers, muted ocher, black ink outline, Korean folk talisman on hanji, transparent background.",
+                      "id":  "relic_worn_straw_shoes"
+                  },
+                  {
+                      "ko":  "오광 꿈",
+                      "prompt":  "Small Unity UI relic icon, five gwang lights as moon/sun/star wisps above a sleeping cloud, gold and red accents, black ink outline, Korean hwatu talisman, transparent background.",
+                      "id":  "relic_ogwang_dream"
+                  },
+                  {
+                      "ko":  "국화주",
+                      "prompt":  "Small Unity UI relic icon, small bowl of chrysanthemum wine with yellow flower petals, Korean folk brush style, black ink outline, warm hanji texture, transparent background.",
+                      "id":  "relic_chrysanthemum_wine"
+                  },
+                  {
+                      "ko":  "곰방대",
+                      "prompt":  "Small Unity UI relic icon, traditional Korean long pipe gombangdae, brass bowl and dark stem with smoke curl, black ink outline, hanji talisman, transparent background.",
+                      "id":  "relic_gombangdae"
+                  },
+                  {
+                      "ko":  "뻑값",
+                      "prompt":  "Small Unity UI relic icon, jokbo score token showing ppeok value, red seal coin and small stacked plaques, Korean hwatu-inspired brush style, black ink outline, transparent background.",
+                      "id":  "relic_ppeokgap"
+                  },
+                  {
+                      "ko":  "도깨비 감투",
+                      "prompt":  "Small Unity UI relic icon, magical dokkaebi hat/gamtu with tiny horn-like folds and blue ghost flame, Korean folk brush style, black ink outline, hanji talisman, transparent background.",
+                      "id":  "relic_dokkaebi_hat"
+                  },
+                  {
+                      "ko":  "달빛 족자",
+                      "prompt":  "Small Unity UI relic icon, small hanging scroll with moonlight circle and ink bamboo, Korean brush painting style, black ink outline, warm hanji texture, transparent background.",
+                      "id":  "relic_moonlight_scroll"
+                  },
+                  {
+                      "ko":  "탁주 한 사발",
+                      "prompt":  "Small Unity UI relic icon, one bowl of cloudy makgeolli/takju with foam, earthen bowl, Korean folk brush style, black ink outline, hanji talisman, transparent background.",
+                      "id":  "relic_takju_bowl"
+                  }
+              ]
+}

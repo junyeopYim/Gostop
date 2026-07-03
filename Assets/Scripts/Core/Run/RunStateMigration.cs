@@ -6,8 +6,8 @@ namespace Hwatu.Run
     /// </summary>
     public static class RunStateMigration
     {
-        /// <summary>v4: 시왕 심판 — 잿날/최종판 노드가 심판일(Judgment)로 대체됐다.</summary>
-        public const int CurrentVersion = 4;
+        /// <summary>v5: 주막/살풀이와 실제 부적 10종 도입. 구버전 데모 부적 세이브는 폐기한다.</summary>
+        public const int CurrentVersion = 5;
 
         /// <summary>
         /// 상태가 현재 버전이고 온전한지 검사한다. 반환 false = 쓸 수 없는 세이브

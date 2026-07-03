@@ -146,9 +146,9 @@ namespace Hwatu.Core.Tests
         public void 업칭_홀수_끗은_배수를_절반_내림한다()
         {
             var engine = new RoundEngine();
-            // 데모 부적 2장으로 원배수를 3으로 올린 뒤 업칭: 3/2 = 1 (내림)
+            // 달빛 족자 2장으로 원배수를 3으로 올린 뒤 업칭: 3/2 = 1 (내림)
             var system = Attach(engine,
-                DemoMultiplierPlusEffect.EffectId, DemoMultiplierPlusEffect.EffectId,
+                RelicIds.MoonScroll, RelicIds.MoonScroll,
                 EopchingBossEffect.EffectId);
 
             var result = PlayHongdanRound(engine);

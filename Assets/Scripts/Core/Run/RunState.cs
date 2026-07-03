@@ -22,6 +22,10 @@ namespace Hwatu.Run
         public int nojatdon = 0;
         /// <summary>장착 부적 id 목록. EffectRegistry로 실체화(hydrate)된다.</summary>
         public List<string> relicIds = new List<string>();
+        /// <summary>이번 런 살풀이 사용 횟수. 가격이 8 + 횟수*2로 오른다.</summary>
+        public int salpuriCount;
+        /// <summary>장착 부적 슬롯 상한. v1 성장 루프 기본값은 5.</summary>
+        public int relicSlotLimit = 5;
         /// <summary>현재 덱 전체. 개조·추가 카드가 전부 이 리스트 하나로 표현된다.</summary>
         public List<CardSpec> deck = new List<CardSpec>();
         /// <summary>차사 상태 (지금은 저장만 하고 사용하지 않는다).</summary>

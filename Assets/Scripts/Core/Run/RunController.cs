@@ -56,6 +56,7 @@ namespace Hwatu.Run
                 honbul = StartingHonbul,
                 honbulMax = StartingHonbul,
                 nojatdon = 0,
+                relicSlotLimit = JumakShop.DefaultRelicSlotLimit,
                 deck = CardSpecs.CreateStandardDeckSpecs(),
                 stateVersion = RunStateMigration.CurrentVersion,
                 journey = JourneyGenerator.Generate(seed),

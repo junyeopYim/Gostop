@@ -294,14 +294,14 @@ namespace Hwatu.View
             goStopTitleRt.anchorMax = new Vector2(1f, 1f);
             goStopTitleRt.pivot = new Vector2(0.5f, 1f);
             goStopTitleRt.sizeDelta = new Vector2(0f, 60f);
-            goStopTitleRt.anchoredPosition = new Vector2(0f, -12f);
+            goStopTitleRt.anchoredPosition = new Vector2(0f, -30f);
 
             refs.GoStopBody = CreateText(goStopBox.transform, "Body", "", 26, UIStyles.Ink, TextAnchor.UpperCenter);
             var goStopBodyRt = (RectTransform)refs.GoStopBody.transform;
             goStopBodyRt.anchorMin = new Vector2(0f, 0f);
             goStopBodyRt.anchorMax = new Vector2(1f, 1f);
-            goStopBodyRt.offsetMin = new Vector2(24f, 140f);
-            goStopBodyRt.offsetMax = new Vector2(-24f, -80f);
+            goStopBodyRt.offsetMin = new Vector2(24f, 132f);
+            goStopBodyRt.offsetMax = new Vector2(-24f, -112f);
 
             refs.GoStopWarn = CreateText(goStopBox.transform, "Warn", "", 24,
                 UIStyles.Vermilion, TextAnchor.MiddleCenter, FontStyle.Bold);

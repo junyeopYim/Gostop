@@ -40,6 +40,22 @@ namespace Hwatu.Core
         private readonly List<Card> _deck = new List<Card>();
         private readonly List<Card> _captured = new List<Card>();
 
+        // [효과 계층 이음매] 정산 직전 끗수 가산 질의 목록. Breakdown 계산 직후
+        // 가산치를 1회 합산하며, 없으면 기존 정산과 완전히 동일하다.
+        private readonly List<Func<int>> _scoreBonusProviders = new List<Func<int>>();
+
+        /// <summary>정산 직전 끗수 가산 질의 등록. 질의는 { () → 추가 끗수 }.</summary>
+        public void AddScoreBonusProvider(Func<int> provider)
+        {
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
+            _scoreBonusProviders.Add(provider);
+        }
+
+        public void RemoveScoreBonusProvider(Func<int> provider)
+        {
+            _scoreBonusProviders.Remove(provider);
+        }
+
         // [효과 계층 이음매] 정산 직전 배수 수정자 목록. 부적/보스/캐릭터 패시브
         // (Hwatu.Run의 IEffect)가 등록하는 유일한 룰 개입 지점이며, 보스의 규칙 변형과
         // 주간 지옥 컬러도 "음(-)의 부적"으로서 같은 훅을 쓸 예정이다.
@@ -100,15 +116,16 @@ namespace Hwatu.Core
         public DealOutcome StartRound(IReadOnlyList<Card> shuffledCards, RoundConfig config = null)
         {
             if (shuffledCards == null) throw new ArgumentNullException(nameof(shuffledCards));
-            if (shuffledCards.Count != 48) throw new ArgumentException("48장이 필요합니다.", nameof(shuffledCards));
-            if (shuffledCards.Select(c => c.Id).Distinct().Count() != 48)
+            var cfg = config ?? new RoundConfig();
+            int totalCards = shuffledCards.Count;
+            if (shuffledCards.Select(c => c.Id).Distinct().Count() != totalCards)
                 throw new ArgumentException("카드 Id가 중복됩니다.", nameof(shuffledCards));
-
-            Config = config ?? new RoundConfig();
             // 매 턴 1장을 뒤집으므로 더미에 최소 HandSize장이 남아야 판이 완주된다
-            if (Config.HandSize < 1 || Config.FloorSize < 0
-                || Config.HandSize * 2 + Config.FloorSize > 48)
-                throw new ArgumentException("손패/바닥 크기가 유효하지 않습니다 (2*HandSize + FloorSize <= 48).", nameof(config));
+            if (cfg.HandSize < 1 || cfg.FloorSize < 0
+                || cfg.HandSize * 2 + cfg.FloorSize > totalCards)
+                throw new ArgumentException("손패/바닥/더미 크기가 유효하지 않습니다 (더미는 최소 HandSize장).", nameof(config));
+
+            Config = cfg;
 
             ResetState();
 
@@ -116,7 +133,7 @@ namespace Hwatu.Core
             int floorEnd = handEnd + Config.FloorSize;
             for (int i = 0; i < handEnd; i++) _hand.Add(shuffledCards[i]);
             for (int i = handEnd; i < floorEnd; i++) _floor.Add(shuffledCards[i]);
-            for (int i = floorEnd; i < 48; i++) _deck.Add(shuffledCards[i]);
+            for (int i = floorEnd; i < totalCards; i++) _deck.Add(shuffledCards[i]);
 
             // a) 손패 같은 월 4장 → 총통, 판 즉시 종료
             var chongtong = _hand.GroupBy(c => c.Month).FirstOrDefault(g => g.Count() == 4);
@@ -403,7 +420,10 @@ namespace Hwatu.Core
         private void EndRound(EndReason reason)
         {
             CurrentBreakdown = ScoreCalculator.Calculate(_captured);
-            int baseScore = CurrentBreakdown.Total;
+            int scoreBonus = 0;
+            for (int i = 0; i < _scoreBonusProviders.Count; i++)
+                scoreBonus += _scoreBonusProviders[i]();
+            int baseScore = CurrentBreakdown.Total + scoreBonus;
             int multiplier = CurrentMultiplier;
             // [효과 계층 이음매] 최종 배수 확정 전, 등록된 수정자들에게 1회 질의한다.
             for (int i = 0; i < _multiplierModifiers.Count; i++)
