@@ -1,0 +1,38 @@
+{
+  "outputDir": "Assets/Art/Elements",
+  "elements": [
+    {
+      "id": "branch_plum",
+      "subject": "a single gnarled plum blossom branch sweeping in from the left edge toward the right, dark ink branch with sparse muted vermilion-pink blossoms and a few small buds",
+      "size": "1536x1024",
+      "pivot": [0.03, 0.35],
+      "note": "왼쪽 가장자리 절단 허용(뿌리쪽)"
+    },
+    {
+      "id": "lantern",
+      "subject": "a small traditional Korean paper lantern, warm muted vermilion paper body, simple dark wooden top and bottom caps, a small hanging ring at the top, a gentle inner glow suggested by a lighter wash",
+      "size": "1024x1536",
+      "pivot": [0.5, 0.04],
+      "note": "피벗 = 상단 고리 (진자 스웨이 기준점)"
+    },
+    {
+      "id": "petal_a",
+      "subject": "a single tiny falling plum blossom petal, muted vermilion-pink, seen mid-fall",
+      "size": "512x512",
+      "pivot": [0.5, 0.5]
+    },
+    {
+      "id": "petal_b",
+      "subject": "a single tiny falling plum blossom petal curling slightly, muted vermilion-pink",
+      "size": "512x512",
+      "pivot": [0.5, 0.5]
+    },
+    {
+      "id": "gambler_portrait",
+      "subject": "a half-length portrait of a shabby Joseon-era gambler ghost, a middle-aged man in a worn white durumagi with a dishevelled topknot, holding a few hwatu cards close to his chest, rueful tired expression with a faint wry smile",
+      "size": "1024x1536",
+      "pivot": [0.5, 0.5],
+      "note": "명부 초상용"
+    }
+  ]
+}

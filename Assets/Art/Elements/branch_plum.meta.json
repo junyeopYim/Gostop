@@ -1,0 +1,27 @@
+{
+  "id": "branch_plum",
+  "originalSize": {
+    "width": 1536,
+    "height": 1024
+  },
+  "size": {
+    "width": 1467,
+    "height": 823
+  },
+  "trim": {
+    "left": 0,
+    "top": 64,
+    "width": 1467,
+    "height": 823
+  },
+  "pivot": [
+    0.03141104294478528,
+    0.3577156743620899
+  ],
+  "unityPivot": [
+    0.03141104294478528,
+    0.64228432563791
+  ],
+  "cutoutApplied": true,
+  "source": "cardgen/elements/raw/branch_plum.png"
+}

@@ -146,6 +146,10 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: 5c11a6bd46a3b7c42bb3d8af75514885, type: 3}
   - Key: panel_hanji
     Sprite: {fileID: 21300000, guid: 84b8f95b17950a1428be2beb7f90ff33, type: 3}
+  - Key: scroll_body
+    Sprite: {fileID: 21300000, guid: f6ab1e7043e8ac44aa571402d31bd210, type: 3}
+  - Key: scroll_rod
+    Sprite: {fileID: 21300000, guid: 7bff5ce86fe94e74c833f2648097c448, type: 3}
   - Key: vignette_edge
     Sprite: {fileID: 21300000, guid: 7b09421b23eb2c740858b491759c5fdb, type: 3}
   BackgroundEntries:
@@ -155,4 +159,15 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: 192be41c9008786448fbfa31fe425cef, type: 3}
   - Key: hanji_light
     Sprite: {fileID: 21300000, guid: f53405f4f263a1040bf13f35c2ceb7e9, type: 3}
+  ElementEntries:
+  - Key: branch_plum
+    Sprite: {fileID: -5503723008399095931, guid: d02cb9db9ec26054eb2cb3d13f562d56, type: 3}
+  - Key: gambler_portrait
+    Sprite: {fileID: -1260514618648877656, guid: a7f57a33254303c4d8a6c5085c7eb47b, type: 3}
+  - Key: lantern
+    Sprite: {fileID: 5342801015690890752, guid: 6ee5f2dccc82e764b8beb88e29831d6e, type: 3}
+  - Key: petal_a
+    Sprite: {fileID: 2315701458803286205, guid: 83aad8ed637f1134eaffb44d1b71f1bc, type: 3}
+  - Key: petal_b
+    Sprite: {fileID: 4344739252266534815, guid: 9de889170eb43a844855863de0903e84, type: 3}
   BackSprite: {fileID: 21300000, guid: 0b766a4d134c77043a2a1d12c8a1d236, type: 3}

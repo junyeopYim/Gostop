@@ -10,6 +10,7 @@ namespace Hwatu.View.Editor
     {
         private const string UiRoot = "Assets/Art/UI/";
         private const string BackgroundRoot = "Assets/Art/Backgrounds/";
+        private const string ElementRoot = "Assets/Art/Elements/";
         private const string SourceManifestPath = "cardgen/ui/manifest.json";
         private const string CopiedManifestPath = "Assets/Art/UI/manifest.json";
 
@@ -21,7 +22,8 @@ namespace Hwatu.View.Editor
             var normalized = assetPath.Replace('\\', '/');
             bool isUi = normalized.StartsWith(UiRoot);
             bool isBackground = normalized.StartsWith(BackgroundRoot);
-            if (!isUi && !isBackground) return;
+            bool isElement = normalized.StartsWith(ElementRoot);
+            if (!isUi && !isBackground && !isElement) return;
 
             var importer = (TextureImporter)assetImporter;
             importer.textureType = TextureImporterType.Sprite;
@@ -31,11 +33,40 @@ namespace Hwatu.View.Editor
             importer.alphaIsTransparency = true;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
 
+            if (isElement && TryGetElementPivot(normalized, out var pivot))
+            {
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.spriteAlignment = (int)SpriteAlignment.Custom;
+                settings.spritePivot = pivot;
+                importer.SetTextureSettings(settings);
+            }
+
             if (!isUi) return;
             var id = Path.GetFileNameWithoutExtension(normalized);
             if (TryGetUiItem(id, out var item))
                 importer.spriteBorder = new Vector4(item.border.left, item.border.bottom,
                     item.border.right, item.border.top);
+        }
+
+        private static bool TryGetElementPivot(string normalizedAssetPath, out Vector2 pivot)
+        {
+            var sidecarPath = Path.ChangeExtension(normalizedAssetPath, ".meta.json");
+            if (!File.Exists(sidecarPath))
+            {
+                pivot = default;
+                return false;
+            }
+
+            var meta = JsonUtility.FromJson<ElementMeta>(File.ReadAllText(sidecarPath));
+            if (meta == null || meta.unityPivot == null || meta.unityPivot.Length < 2)
+            {
+                pivot = default;
+                return false;
+            }
+
+            pivot = new Vector2(Mathf.Clamp01(meta.unityPivot[0]), Mathf.Clamp01(meta.unityPivot[1]));
+            return true;
         }
 
         private static bool TryGetUiItem(string id, out UiManifestItem item)
@@ -89,6 +120,12 @@ namespace Hwatu.View.Editor
             public int right;
             public int top;
             public int bottom;
+        }
+
+        [Serializable]
+        private sealed class ElementMeta
+        {
+            public float[] unityPivot;
         }
     }
 }

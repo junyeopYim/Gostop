@@ -224,6 +224,18 @@ namespace Hwatu.View
             return db != null && db.TryGetBackground(id, out var sprite) ? sprite : null;
         }
 
+        public static Sprite GetStampSprite(string id)
+        {
+            var db = CardArtDatabase.Instance;
+            return db != null && db.TryGetStamp(id, out var sprite) ? sprite : null;
+        }
+
+        public static Sprite GetElementSprite(string id)
+        {
+            var db = CardArtDatabase.Instance;
+            return db != null && db.TryGetElement(id, out var sprite) ? sprite : null;
+        }
+
         public static TMP_FontAsset FontFor(UITextPreset preset)
         {
             switch (preset)

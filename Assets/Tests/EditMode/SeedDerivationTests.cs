@@ -16,7 +16,7 @@ namespace Hwatu.Core.Tests
         [Test]
         public void 스트림이_다르면_같은_문맥에서도_다른_시드가_나온다()
         {
-            var streams = new[] { RngStream.MapGen, RngStream.DeckShuffle, RngStream.Shop, RngStream.Event };
+            var streams = new[] { RngStream.MapGen, RngStream.DeckShuffle, RngStream.Shop, RngStream.Event, RngStream.FloorJitter };
             for (int i = 0; i < streams.Length; i++)
                 for (int j = i + 1; j < streams.Length; j++)
                     Assert.AreNotEqual(

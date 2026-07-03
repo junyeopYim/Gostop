@@ -12,8 +12,7 @@ namespace Hwatu.View.Screens
             var column = BuildCenterColumn(canvasRoot, "스토리");
             AddBodyPanel(column,
                 "노름으로 삶을 탕진하고 빚 대신 목숨을 저당 잡힌 밤, 차사가 문턱에 섰다.\n" +
-                "\"갚을 것이 남았으니 따라오너라.\" 그렇게 저승길 마흔아홉 날이 시작되었다.\n\n" +
-                "(임시 스토리 스텁)");
+                "\"갚을 것이 남았으니 따라오너라.\" 그렇게 저승길 마흔아홉 날이 시작되었다.");
             AddButton(column, "ContinueButton", "계속", () => Flow.CompleteStory());
         }
     }

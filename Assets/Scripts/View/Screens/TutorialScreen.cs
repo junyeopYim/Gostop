@@ -9,7 +9,7 @@ namespace Hwatu.View.Screens
 
         protected override void Build(Transform canvasRoot)
         {
-            var column = BuildCenterColumn(canvasRoot, "튜토리얼 (준비 중)");
+            var column = BuildCenterColumn(canvasRoot, "튜토리얼");
             AddButton(column, "SkipButton", "건너뛰기", () => Flow.CompleteTutorial());
         }
     }

@@ -1,0 +1,27 @@
+{
+  "id": "gambler_portrait",
+  "originalSize": {
+    "width": 1024,
+    "height": 1536
+  },
+  "size": {
+    "width": 971,
+    "height": 1496
+  },
+  "trim": {
+    "left": 29,
+    "top": 40,
+    "width": 971,
+    "height": 1496
+  },
+  "pivot": [
+    0.49742533470648814,
+    0.48663101604278075
+  ],
+  "unityPivot": [
+    0.49742533470648814,
+    0.5133689839572193
+  ],
+  "cutoutApplied": true,
+  "source": "cardgen/elements/raw/gambler_portrait.png"
+}

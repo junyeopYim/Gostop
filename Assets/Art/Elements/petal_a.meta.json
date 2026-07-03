@@ -1,0 +1,27 @@
+{
+  "id": "petal_a",
+  "originalSize": {
+    "width": 512,
+    "height": 512
+  },
+  "size": {
+    "width": 77,
+    "height": 84
+  },
+  "trim": {
+    "left": 214,
+    "top": 209,
+    "width": 77,
+    "height": 84
+  },
+  "pivot": [
+    0.5454545454545454,
+    0.5595238095238095
+  ],
+  "unityPivot": [
+    0.5454545454545454,
+    0.44047619047619047
+  ],
+  "cutoutApplied": true,
+  "source": "cardgen/elements/raw/petal_a.png"
+}

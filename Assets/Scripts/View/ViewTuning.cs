@@ -16,6 +16,13 @@ namespace Hwatu.View
         public static float DeckScale = 90f / 104f;
         public static float CaptureEndScale = 45f / 156f;
 
+        // ── 바닥 자연 산포 (딜 시드 + 카드 Id에서 무상태 파생) ─────────────
+        public static float FloorJitterMaxX = 12f;
+        public static float FloorJitterMaxY = 8f;
+        public static float FloorJitterRotationDegrees = 3f;
+        public static float FloorJitterPitchFraction = 0.25f;
+        public static float BoundStackRotationJitterDegrees = 1.25f;
+
         // ── 부채꼴 손패 ─────────────────────────────────────────────
         public static float FanRadius = 1600f;
         public static float FanAnglePerCard = 4.5f;  // 도 (인접 카드 간격)

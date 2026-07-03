@@ -19,6 +19,7 @@ namespace Hwatu.View
         private UiRefs _ui;
         private Action<int> _onCardClicked;
         private RectTransform _layer;
+        private int _jitterSeed;
 
         private readonly Dictionary<int, CardView> _views = new Dictionary<int, CardView>();
         private readonly HashSet<int> _flying = new HashSet<int>();     // 획득 패널로 비행 중
@@ -58,6 +59,11 @@ namespace Hwatu.View
                 foreach (var c in cards) table._choiceIds.Add(c.Id);
             };
             return table;
+        }
+
+        public void SetJitterSeed(int jitterSeed)
+        {
+            _jitterSeed = jitterSeed;
         }
 
         private void Update()
@@ -170,24 +176,28 @@ namespace Hwatu.View
             int cell = 0;
             foreach (var stack in _engine.BoundStacks)
             {
-                var cellPos = FloorCellPosition(cell++, cellCount);
+                var cellPos = BoundStackPosition(stack, cell++, cellCount);
+                float rot = BoundStackRotation(stack);
                 for (int i = 0; i < stack.Cards.Count; i++)
                     deals.Add(new DealTarget
                     {
                         Card = stack.Cards[i],
                         Pos = cellPos + BoundOffset(i),
-                        Rot = 0f,
+                        Rot = rot,
                         Scale = ViewTuning.BoundScale
                     });
             }
             foreach (var card in _engine.FloorCards)
+            {
+                var target = FloorJitteredPosition(card.Id, cell++, cellCount);
                 deals.Add(new DealTarget
                 {
                     Card = card,
-                    Pos = FloorCellPosition(cell++, cellCount),
-                    Rot = 0f,
+                    Pos = target.Position,
+                    Rot = target.Rotation,
                     Scale = ViewTuning.FloorScale
                 });
+            }
             var hand = _engine.Hand;
             for (int i = 0; i < hand.Count; i++)
             {
@@ -280,6 +290,7 @@ namespace Hwatu.View
             view.transform.SetAsLastSibling();
 
             Vector2 pos;
+            float rot = 0f;
             float scale = ViewTuning.FloorScale;
             int cellCount = FloorCellCount();
             int floorIndex = IndexInFloor(played.Id);
@@ -292,7 +303,9 @@ namespace Hwatu.View
             else if (floorIndex >= 0)
             {
                 // 단독 배치(짝 없음/뻑 전 단계 아님) — 최종 바닥 자리로
-                pos = FloorCellPosition(_engine.BoundStacks.Count + floorIndex, cellCount);
+                var target = FloorJitteredPosition(played.Id, _engine.BoundStacks.Count + floorIndex, cellCount);
+                pos = target.Position;
+                rot = target.Rotation;
             }
             else if (TryFindMonthPos(played, out var monthPos))
             {
@@ -302,9 +315,11 @@ namespace Hwatu.View
             else
             {
                 // 쪽 등: 바닥에 혼자 놓였다 곧 잡히는 카드 — 가상의 다음 칸으로
-                pos = FloorCellPosition(cellCount, cellCount + 1);
+                var target = FloorJitteredPosition(played.Id, cellCount, cellCount + 1);
+                pos = target.Position;
+                rot = target.Rotation;
             }
-            view.SetBaseTarget(pos, 0f, scale, ViewTuning.PlayStepDuration, Ease.OutCubic);
+            view.SetBaseTarget(pos, rot, scale, ViewTuning.PlayStepDuration, Ease.OutCubic);
         }
 
         private void FireFlipMove(Card flipped)
@@ -456,7 +471,8 @@ namespace Hwatu.View
             // 1) 바닥: 묶임 스택 → 개별 카드 (기존 GridLayout 순서 재현)
             foreach (var stack in _engine.BoundStacks)
             {
-                var cellPos = FloorCellPosition(cell++, cellCount);
+                var cellPos = BoundStackPosition(stack, cell++, cellCount);
+                float rot = BoundStackRotation(stack);
                 for (int i = 0; i < stack.Cards.Count; i++)
                 {
                     var v = GetOrCreate(stack.Cards[i]);
@@ -464,7 +480,7 @@ namespace Hwatu.View
                     v.SetInteractable(false);
                     v.SetHighlight(false);
                     v.SetDim(false);
-                    v.SetBaseTarget(cellPos + BoundOffset(i), 0f, ViewTuning.BoundScale, dur);
+                    v.SetBaseTarget(cellPos + BoundOffset(i), rot, ViewTuning.BoundScale, dur);
                     v.SetBaseSibling(sibling++);
                     _placed.Add(stack.Cards[i].Id);
                 }
@@ -472,12 +488,13 @@ namespace Hwatu.View
             foreach (var card in _engine.FloorCards)
             {
                 var v = GetOrCreate(card);
+                var target = FloorJitteredPosition(card.Id, cell++, cellCount);
                 bool candidate = choosing && _choiceIds.Contains(card.Id);
                 v.SetFaceUp(true, !instant);
                 v.SetInteractable(candidate);
                 v.SetHighlight(candidate);
                 v.SetDim(choosing && !candidate);
-                v.SetBaseTarget(FloorCellPosition(cell++, cellCount), 0f, ViewTuning.FloorScale, dur);
+                v.SetBaseTarget(target.Position, target.Rotation, ViewTuning.FloorScale, dur);
                 v.SetBaseSibling(sibling++);
                 _placed.Add(card.Id);
             }
@@ -572,7 +589,7 @@ namespace Hwatu.View
             int cell = 0;
             foreach (var stack in _engine.BoundStacks)
             {
-                var pos = FloorCellPosition(cell++, cellCount) + new Vector2(0f, -87f);
+                var pos = BoundStackPosition(stack, cell++, cellCount) + new Vector2(0f, -87f);
                 var badge = UIStyles.CreateText(_layer, $"Badge_{stack.Month}", UITextPreset.Hwaje,
                     $"묶임 x{stack.Cards.Count}", 20, UIStyles.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
                 var rt = (RectTransform)badge.transform;
@@ -626,6 +643,38 @@ namespace Hwatu.View
         private static Vector2 BoundOffset(int i) => new Vector2(-13.5f + i * 13.5f, 27f - i * 13.5f);
 
         private int FloorCellCount() => _engine.BoundStacks.Count + _engine.FloorCards.Count;
+
+        private struct FloorTarget { public Vector2 Position; public float Rotation; }
+
+        private FloorTarget FloorJitteredPosition(int cardId, int index, int count)
+        {
+            var sample = FloorJitter.ForCard(_jitterSeed, cardId, FloorCellPitch());
+            return new FloorTarget
+            {
+                Position = FloorCellPosition(index, count) + sample.Offset,
+                Rotation = sample.RotationDegrees
+            };
+        }
+
+        private Vector2 BoundStackPosition(BoundStack stack, int index, int count)
+        {
+            int key = BoundStackKey(stack);
+            return FloorCellPosition(index, count) + FloorJitter.ForCard(_jitterSeed, key, FloorCellPitch()).Offset;
+        }
+
+        private float BoundStackRotation(BoundStack stack)
+            => FloorJitter.ForBoundStackRotation(_jitterSeed, BoundStackKey(stack));
+
+        private static int BoundStackKey(BoundStack stack)
+            => stack.Cards.Count > 0 ? stack.Cards[0].Id : stack.Month;
+
+        private Vector2 FloorCellPitch()
+        {
+            float cw = ViewTuning.CardSize.x * ViewTuning.FloorScale;
+            float ch = ViewTuning.CardSize.y * ViewTuning.FloorScale;
+            const float sp = 15f;
+            return new Vector2(cw + sp, ch + sp);
+        }
 
         private Vector2 FloorCellPosition(int index, int count)
         {

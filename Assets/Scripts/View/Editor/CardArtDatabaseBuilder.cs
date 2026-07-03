@@ -13,6 +13,7 @@ namespace Hwatu.View.Editor
         private const string StampDir = "Assets/Art/Cards/Stamps";
         private const string UiDir = "Assets/Art/UI";
         private const string BackgroundDir = "Assets/Art/Backgrounds";
+        private const string ElementDir = "Assets/Art/Elements";
         private const string ResourcesDir = "Assets/Resources";
         private const string AssetPath = ResourcesDir + "/CardArtDatabase.asset";
 
@@ -33,12 +34,13 @@ namespace Hwatu.View.Editor
             db.StampEntries = CollectSprites(StampDir);     // 파일명 = 낙관 이름 (seal_red, seal_gold)
             db.UiEntries = CollectSprites(UiDir);            // 파일명 = UI atlas id
             db.BackgroundEntries = CollectSprites(BackgroundDir);
+            db.ElementEntries = CollectSprites(ElementDir);
             db.BackSprite = TakeBackSprite(db.BaseEntries); // card_back은 카드 id가 아니라 전용 슬롯
             db.ClearLookupCaches();
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
             Debug.Log($"[CardArtDatabase] base {db.BaseEntries.Count}장, overlay {db.OverlayEntries.Count}장, stamp {db.StampEntries.Count}장, "
-                      + $"ui {db.UiEntries.Count}장, background {db.BackgroundEntries.Count}장, "
+                      + $"ui {db.UiEntries.Count}장, background {db.BackgroundEntries.Count}장, element {db.ElementEntries.Count}장, "
                       + $"back {(db.BackSprite != null ? "있음" : "없음")} → {AssetPath}");
         }
 

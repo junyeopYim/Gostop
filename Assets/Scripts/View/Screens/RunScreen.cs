@@ -44,6 +44,7 @@ namespace Hwatu.View.Screens
         private TextMeshProUGUI _resultText;
         private GameObject _nightPanel;
         private TextMeshProUGUI _nightText;
+        private GameObject _devPanel;
         private RoundResult _pendingResult;
         private RunController _trackedRun;
         private int _lastHonbul;
@@ -59,11 +60,11 @@ namespace Hwatu.View.Screens
             UIBuilder.Stretch((RectTransform)_hubPanel.transform, 0f, 0f);
 
             var column = BuildCenterColumn(_hubPanel.transform, "저승길");
-            var infoPanel = UIStyles.CreatePanel(column, "RunInfoPanel", new Vector2(900f, 170f));
+            var infoPanel = UIStyles.CreatePanel(column, "RunInfoPanel", new Vector2(900f, 290f));
             var infoLayout = infoPanel.gameObject.AddComponent<VerticalLayoutGroup>();
-            infoLayout.padding = new RectOffset(24, 24, 18, 14);
+            infoLayout.padding = new RectOffset(24, 24, 36, 14);
             infoLayout.spacing = 8f;
-            infoLayout.childAlignment = TextAnchor.MiddleCenter;
+            infoLayout.childAlignment = TextAnchor.UpperCenter;
             infoLayout.childControlWidth = true;
             infoLayout.childControlHeight = true;
             infoLayout.childForceExpandWidth = false;
@@ -71,7 +72,7 @@ namespace Hwatu.View.Screens
 
             _statusText = UIStyles.CreateText(infoPanel.transform, "Status", UITextPreset.Body, "", 24,
                 UIStyles.Ink, TextAnchor.MiddleCenter);
-            UIBuilder.SetPreferred(_statusText.gameObject, 850f, 34f);
+            UIBuilder.SetPreferred(_statusText.gameObject, 850f, 38f);
 
             var resourceRow = new GameObject("ResourceRow", typeof(RectTransform));
             resourceRow.transform.SetParent(infoPanel.transform, false);
@@ -136,8 +137,9 @@ namespace Hwatu.View.Screens
             UIBuilder.SetPreferred(choicesGo, 900f, 80f);
             _choicesRow = (RectTransform)choicesGo.transform;
 
-            AddButton(column, "AdvanceDayButton", "하루 넘기기 (디버그)", AdvanceDayDebug);
-            AddButton(column, "ToTitleButton", "타이틀로", () => Flow.ReturnToTitle());
+            BuildTopRightTitleButton(canvasRoot);
+            BuildDebugPanel(canvasRoot);
+            Root.AddComponent<RunScreenHotkey>().Bind(ToggleDebugPanel);
 
             // ── 결과 패널 (판 종료 후, 임베드 게임 캔버스 위) ────
             _resultPanel = BuildOverlayPanel(canvasRoot, "ResultPanel", out _resultText,
@@ -218,14 +220,12 @@ namespace Hwatu.View.Screens
         {
             var rowGo = new GameObject(name, typeof(RectTransform));
             rowGo.transform.SetParent(parent, false);
-            var layout = rowGo.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 8f;
-            layout.childAlignment = TextAnchor.MiddleCenter;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            UIBuilder.SetPreferred(rowGo, 850f, 30f);
+            var layout = rowGo.AddComponent<EffectChipFlowLayout>();
+            layout.Spacing = 8f;
+            layout.LineSpacing = 6f;
+            layout.RowHeight = 30f;
+            layout.padding = new RectOffset(0, 0, 0, 0);
+            UIBuilder.SetPreferred(rowGo, 850f, 66f);
             return (RectTransform)rowGo.transform;
         }
 
@@ -269,9 +269,12 @@ namespace Hwatu.View.Screens
 
         private static void CreateEffectChip(Transform row, string label)
         {
-            var chip = new GameObject("EffectChip", typeof(RectTransform));
-            chip.transform.SetParent(row, false);
+            float chipWidth = Mathf.Clamp(68f + label.Length * 17f, 190f, 380f);
+            var chipImage = UIStyles.CreatePanel(row, "EffectChip", new Vector2(chipWidth, 30f));
+            chipImage.raycastTarget = false;
+            var chip = chipImage.gameObject;
             var layout = chip.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(8, 10, 2, 2);
             layout.spacing = 4f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = false;
@@ -281,7 +284,7 @@ namespace Hwatu.View.Screens
             UIStyles.CreateIcon(chip.transform, "bujeok", new Vector2(48f, 24f));
             var text = UIStyles.CreateText(chip.transform, "Label", UITextPreset.Body, label, 17,
                 UIStyles.Ink, TextAnchor.MiddleLeft);
-            UIBuilder.SetPreferred(text.gameObject, Mathf.Clamp(label.Length * 17f, 120f, 330f), 28f);
+            UIBuilder.SetPreferred(text.gameObject, chipWidth - 70f, 26f);
         }
 
         private void RebuildActionZone(NodeSpec node)
@@ -308,12 +311,12 @@ namespace Hwatu.View.Screens
                     break;
 
                 case NodeKind.Jumak:
-                    AddZoneLabel("주막 (준비 중)");
+                    AddZoneLabel("주막");
                     if (!cleared) AddZoneButton("PassButton", "지나가기", PassStubNode);
                     break;
 
                 case NodeKind.Event:
-                    AddZoneLabel("이벤트 (준비 중)");
+                    AddZoneLabel("이벤트");
                     if (!cleared) AddZoneButton("PassButton", "지나가기", PassStubNode);
                     break;
 
@@ -338,7 +341,7 @@ namespace Hwatu.View.Screens
             {
                 var hint = UIStyles.CreateText(_choicesRow, "Hint", UITextPreset.Body,
                     "오늘 노드를 완료하면 내일 갈림길이 열린다", 20,
-                    UIStyles.Ash, TextAnchor.MiddleCenter);
+                    SecondaryTextColor, TextAnchor.MiddleCenter);
                 UIBuilder.SetPreferred(hint.gameObject, 500f, 60f);
                 return;
             }
@@ -488,7 +491,7 @@ namespace Hwatu.View.Screens
             _resultPanel.SetActive(true);
             if (result.Success)
             {
-                SealStampEffect.Play((RectTransform)_resultText.transform,
+                SealStampEffect.PlayInsideParentTopRight((RectTransform)_resultText.transform,
                     wasJudgment ? SealStampKind.Gold : SealStampKind.Red);
             }
         }
@@ -522,6 +525,44 @@ namespace Hwatu.View.Screens
         }
 
         // ── 빌드 헬퍼 ───────────────────────────────────────────
+
+        private void BuildTopRightTitleButton(Transform canvasRoot)
+        {
+            var button = UIStyles.CreateButton(canvasRoot, "ToTitleButton", "타이틀로",
+                new Vector2(150f, 44f), 20, () => Flow.ReturnToTitle());
+            var rt = (RectTransform)button.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-24f, -24f);
+        }
+
+        private void BuildDebugPanel(Transform canvasRoot)
+        {
+            var panel = UIStyles.CreatePanel(canvasRoot, "RunDebugPanel", new Vector2(322f, 74f));
+            _devPanel = panel.gameObject;
+            var rt = (RectTransform)_devPanel.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(24f, -24f);
+
+            var layout = _devPanel.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(12, 12, 9, 9);
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            UIStyles.CreateButton(_devPanel.transform, "AdvanceDayButton", "하루 넘기기",
+                new Vector2(290f, 50f), 22, AdvanceDayDebug);
+            _devPanel.SetActive(false);
+        }
+
+        private void ToggleDebugPanel()
+        {
+            if (_devPanel != null) _devPanel.SetActive(!_devPanel.activeSelf);
+        }
 
         private GameObject BuildOverlayPanel(Transform canvasRoot, string name, out TextMeshProUGUI bodyText,
                                              string buttonName, string buttonLabel, System.Action onClick)
@@ -588,10 +629,108 @@ namespace Hwatu.View.Screens
                 case NodeKind.Jumak: return "주막";
                 case NodeKind.Event: return "이벤트";
                 case NodeKind.Judgment: return "심판";
-                case NodeKind.Jaetnal: return "잿날 (레거시)";       // 생성되지 않음
-                case NodeKind.FinalBattle: return "최종판 (레거시)"; // 생성되지 않음
+                case NodeKind.Jaetnal: return "잿날";       // 생성되지 않음
+                case NodeKind.FinalBattle: return "최종판"; // 생성되지 않음
                 default: return kind.ToString();
             }
         }
+    }
+
+    public sealed class RunScreenHotkey : MonoBehaviour
+    {
+        private System.Action _onDebugToggle;
+
+        public void Bind(System.Action onDebugToggle)
+        {
+            _onDebugToggle = onDebugToggle;
+        }
+
+        private void Update()
+        {
+            bool pressed;
+#if ENABLE_INPUT_SYSTEM
+            pressed = UnityEngine.InputSystem.Keyboard.current != null
+                && UnityEngine.InputSystem.Keyboard.current.f1Key.wasPressedThisFrame;
+#else
+            pressed = Input.GetKeyDown(KeyCode.F1);
+#endif
+            if (pressed) _onDebugToggle?.Invoke();
+        }
+    }
+
+    public sealed class EffectChipFlowLayout : LayoutGroup
+    {
+        public float Spacing = 8f;
+        public float LineSpacing = 6f;
+        public float RowHeight = 30f;
+
+        public override void CalculateLayoutInputHorizontal()
+        {
+            base.CalculateLayoutInputHorizontal();
+            SetLayoutInputForAxis(0f, Width, -1f, 0);
+        }
+
+        public override void CalculateLayoutInputVertical()
+        {
+            SetLayoutInputForAxis(PreferredHeight(), PreferredHeight(), -1f, 1);
+        }
+
+        public override void SetLayoutHorizontal()
+        {
+            LayoutChildren();
+        }
+
+        public override void SetLayoutVertical()
+        {
+            LayoutChildren();
+        }
+
+        private float PreferredHeight()
+        {
+            int rows = CountRows(Width);
+            if (rows <= 0) return RowHeight;
+            return padding.vertical + rows * RowHeight + (rows - 1) * LineSpacing;
+        }
+
+        private void LayoutChildren()
+        {
+            float width = Width;
+            float x = padding.left;
+            float y = padding.top;
+            for (int i = 0; i < rectChildren.Count; i++)
+            {
+                var child = rectChildren[i];
+                float childWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(child), width - padding.horizontal);
+                if (x > padding.left && x + childWidth > width - padding.right)
+                {
+                    x = padding.left;
+                    y += RowHeight + LineSpacing;
+                }
+
+                SetChildAlongAxis(child, 0, x, childWidth);
+                SetChildAlongAxis(child, 1, y, RowHeight);
+                x += childWidth + Spacing;
+            }
+        }
+
+        private int CountRows(float width)
+        {
+            if (rectChildren.Count == 0) return 1;
+            int rows = 1;
+            float x = padding.left;
+            for (int i = 0; i < rectChildren.Count; i++)
+            {
+                float childWidth = Mathf.Min(LayoutUtility.GetPreferredWidth(rectChildren[i]), width - padding.horizontal);
+                if (x > padding.left && x + childWidth > width - padding.right)
+                {
+                    rows++;
+                    x = padding.left;
+                }
+                x += childWidth + Spacing;
+            }
+            return rows;
+        }
+
+        private float Width => Mathf.Max(1f, rectTransform.rect.width > 1f ? rectTransform.rect.width : 850f);
     }
 }

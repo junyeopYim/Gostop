@@ -104,6 +104,12 @@ namespace Hwatu.View
                 onComplete?.Invoke();
                 return;
             }
+            if (!Application.isPlaying)
+            {
+                apply(1f);
+                onComplete?.Invoke();
+                return;
+            }
             EnsureRunner();
             _items.Add(new Item
             {

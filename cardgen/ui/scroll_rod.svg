@@ -1,0 +1,18 @@
+<svg viewBox="0 0 896 96" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--gold)" stop-opacity="0.74"/>
+      <stop offset="0.48" stop-color="var(--ash)" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="var(--ink)" stop-opacity="0.50"/>
+    </linearGradient>
+  </defs>
+  <path d="M56 21 L840 21 Q868 24 874 48 Q868 72 840 75 L56 75 Q28 72 22 48 Q28 24 56 21 Z"
+        fill="url(#wood)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M58 31 L838 31" fill="none" stroke="var(--paper)" stroke-opacity="0.24" stroke-width="5" stroke-linecap="round"/>
+  <path d="M94 62 Q210 51 314 61 M452 34 Q574 43 690 34 M724 63 Q776 56 826 63"
+        fill="none" stroke="var(--ink)" stroke-opacity="0.20" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="48" cy="48" r="31" fill="var(--ash)" fill-opacity="0.82" stroke="var(--ink)" stroke-width="5"/>
+  <circle cx="848" cy="48" r="31" fill="var(--ash)" fill-opacity="0.82" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M37 48 Q48 35 59 48 Q48 61 37 48 Z M837 48 Q848 35 859 48 Q848 61 837 48 Z"
+        fill="var(--paper)" fill-opacity="0.28"/>
+</svg>

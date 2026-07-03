@@ -178,6 +178,7 @@ namespace Hwatu.View
                 outcome = _engine.StartRound(deck, _config);
             }
 
+            _table.SetJitterSeed(seed);
             _table.BeginRound(); // 셔플·딜 연출 (같은 시드 → 동일 재현)
 
             _logLines.Insert(0, $"시드 {seed} — 새 판 시작"
@@ -472,7 +473,7 @@ namespace Hwatu.View
             _ui.RoundOverPanel.SetActive(true);
             if (!_roundOverStampPending) return;
             _roundOverStampPending = false;
-            SealStampEffect.Play((RectTransform)_ui.RoundOverTitle.transform, SealStampKind.Red);
+            SealStampEffect.PlayInsideParentTopRight((RectTransform)_ui.RoundOverTitle.transform, SealStampKind.Red);
         }
 
         private void RedrawGoStopModal()

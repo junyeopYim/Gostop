@@ -166,6 +166,11 @@ namespace Hwatu.View
 
     public static class SealStampEffect
     {
+        private const float StampMarginX = 28f;
+        private const float StampMarginY = 24f;
+        private const float StampMaxSize = 126f;
+        private const float StampRingPadding = 10f;
+
         public static void Play(RectTransform target, SealStampKind kind)
         {
             if (target == null || target.parent == null) return;
@@ -173,7 +178,26 @@ namespace Hwatu.View
             if (parent == null) return;
 
             Vector2 local = parent.InverseTransformPoint(target.TransformPoint(target.rect.center));
-            local += new Vector2(0f, 24f);
+            float stampSize = Mathf.Clamp(Mathf.Max(target.rect.width, target.rect.height), 96f, 132f);
+            PlayAt(parent, local, kind, stampSize, stampSize + StampRingPadding);
+        }
+
+        public static void PlayInsideParentTopRight(RectTransform target, SealStampKind kind)
+        {
+            if (target == null || target.parent == null) return;
+            var parent = target.parent as RectTransform;
+            if (parent == null) return;
+
+            float stampSize = Mathf.Min(StampMaxSize, parent.rect.height * 0.45f);
+            float ringSize = stampSize + StampRingPadding;
+            Vector2 local = new Vector2(
+                parent.rect.xMax - (ringSize * 0.5f + StampMarginX),
+                parent.rect.yMax - (ringSize * 0.5f + StampMarginY));
+            PlayAt(parent, local, kind, stampSize, ringSize);
+        }
+
+        private static void PlayAt(RectTransform parent, Vector2 local, SealStampKind kind, float stampSize, float ringSize)
+        {
             ClearExisting(parent);
             var sprite = ResolveSprite(kind);
             var stampColor = kind == SealStampKind.Gold ? UIStyles.Gold : UIStyles.Vermilion;
@@ -181,8 +205,8 @@ namespace Hwatu.View
 
             var ring = CreateImage(parent, "SealStampRing", sprite, stampColor);
             var stamp = CreateImage(parent, "SealStamp", sprite, stampColor);
-            SetupRect(ring.rectTransform, local, rotation, 142f);
-            SetupRect(stamp.rectTransform, local, rotation, 132f);
+            SetupRect(parent, ring.rectTransform, local, rotation, ringSize);
+            SetupRect(parent, stamp.rectTransform, local, rotation, stampSize);
 
             var ringGroup = ring.gameObject.AddComponent<CanvasGroup>();
             ringGroup.alpha = 0.42f;
@@ -211,6 +235,8 @@ namespace Hwatu.View
             image.preserveAspect = true;
             image.raycastTarget = false;
             image.color = sprite != null ? Color.white : color;
+            var layout = go.AddComponent<LayoutElement>();
+            layout.ignoreLayout = true;
             return image;
         }
 
@@ -224,9 +250,9 @@ namespace Hwatu.View
             }
         }
 
-        private static void SetupRect(RectTransform rt, Vector2 position, float rotation, float size)
+        private static void SetupRect(RectTransform parent, RectTransform rt, Vector2 position, float rotation, float size)
         {
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.anchorMin = rt.anchorMax = parent.pivot;
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(size, size);
             rt.anchoredPosition = position;

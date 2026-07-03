@@ -10,6 +10,7 @@ namespace Hwatu.Run
         DeckShuffle = 2,
         Shop = 3,
         Event = 4,
+        FloorJitter = 5,
     }
 
     /// <summary>

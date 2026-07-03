@@ -1,0 +1,27 @@
+{
+  "id": "lantern",
+  "originalSize": {
+    "width": 1024,
+    "height": 1536
+  },
+  "size": {
+    "width": 638,
+    "height": 1258
+  },
+  "trim": {
+    "left": 193,
+    "top": 88,
+    "width": 638,
+    "height": 1258
+  },
+  "pivot": [
+    0.5,
+    0
+  ],
+  "unityPivot": [
+    0.5,
+    1
+  ],
+  "cutoutApplied": true,
+  "source": "cardgen/elements/raw/lantern.png"
+}
