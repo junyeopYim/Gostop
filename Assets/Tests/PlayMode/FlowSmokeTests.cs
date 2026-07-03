@@ -70,7 +70,7 @@ namespace Hwatu.View.Tests
             var runScreen = (RunScreen)flow.Screens.Current;
 
             // 1일차 판을 이겨 노드 완료 (커브 목표 4점, 필요 시 같은 날 재도전)
-            yield return WinTodaysBattle(runScreen, run);
+            yield return WinTodaysBattle(flow, runScreen, run);
             Assert.AreEqual(1, run.State.currentDay, "성공만으로는 날이 가지 않는다");
             Assert.GreaterOrEqual(run.State.nojatdon, 5, "성공 보상 +5");
 
@@ -135,7 +135,7 @@ namespace Hwatu.View.Tests
             var runScreen = (RunScreen)flow.Screens.Current;
 
             // 1일차 판 승리 → 완료 상태 (갈림길은 아직 선택하지 않음)
-            yield return WinTodaysBattle(runScreen, run);
+            yield return WinTodaysBattle(flow, runScreen, run);
             int nojatdonBefore = run.State.nojatdon;
             int honbulBefore = run.State.honbul;
 
@@ -242,13 +242,19 @@ namespace Hwatu.View.Tests
 
         // ── 헬퍼 ────────────────────────────────────────────────
 
-        /// <summary>오늘의 판을 승리할 때까지 최대 3판 (봇: 첫 카드/첫 후보/스톱).</summary>
-        private static IEnumerator WinTodaysBattle(RunScreen runScreen, RunController run)
+        /// <summary>
+        /// 오늘의 판을 승리할 때까지 최대 3판 (봇: 첫 카드/첫 후보/스톱).
+        /// [A] 판 진입·재도전·복귀가 전부 먹 와이프를 거치므로 각 경계를 기다린다
+        /// (실패 확인은 재도전 와이프로 같은 날 새 딜에 직행한다 — 재진입 호출 불필요).
+        /// </summary>
+        private static IEnumerator WinTodaysBattle(GameFlowController flow, RunScreen runScreen, RunController run)
         {
+            runScreen.PlayTodaysRound();
             for (int attempt = 0; attempt < 3 && !run.TodayNodeCleared; attempt++)
             {
-                runScreen.PlayTodaysRound();
-                Assert.IsNotNull(runScreen.EmbeddedGame, "임베드 판 게임 생성");
+                yield return WaitFor(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
+                    && (runScreen.EmbeddedGame.Engine.Phase != Phase.RoundOver || runScreen.IsResultVisible),
+                    "임베드 판 시작 (와이프 이후 딜)");
                 var engine = runScreen.EmbeddedGame.Engine;
                 runScreen.EmbeddedGame.SkipDeal();
                 yield return null;
@@ -274,6 +280,8 @@ namespace Hwatu.View.Tests
                 Assert.IsFalse(run.IsOver, "스모크 시드에서 소멸하면 안 된다");
             }
             Assert.IsTrue(run.TodayNodeCleared, "3판 안에 오늘의 판을 이겨야 한다 (결정적 시드)");
+            yield return WaitFor(() => !flow.IsTransitioning && !runScreen.IsRoundInProgress,
+                "판 종료 복귀 와이프 완료");
         }
 
         private GameFlowController Boot()

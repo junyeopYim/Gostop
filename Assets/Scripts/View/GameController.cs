@@ -31,6 +31,7 @@ namespace Hwatu.View
         private RoundConfig _config = new RoundConfig();
         private int _currentSeed;
         private bool _started;
+        private bool _embedded;
         private bool _dirty;
         private readonly List<int> _choiceCandidates = new List<int>();
         private readonly List<string> _logLines = new List<string>();
@@ -125,10 +126,12 @@ namespace Hwatu.View
 
         /// <summary>
         /// [임베드 이음매 ③] 임베드 모드: 새판/재시도 등 자체 재시작 UI를 숨기고
-        /// 시드/목표 입력을 읽기 전용 표시로 전환한다.
+        /// 시드/목표 입력을 읽기 전용 표시로 전환한다. 자체 종료 패널(전면 딤 포함)도
+        /// 띄우지 않는다 — 결과 UI는 런 화면의 결과 패널 1장(딤 1장)만 쓴다.
         /// </summary>
         public void SetEmbeddedMode(bool embedded)
         {
+            _embedded = embedded;
             _ui.NewRoundButton.gameObject.SetActive(!embedded);
             _ui.RoundOverButtons.SetActive(!embedded);
             _ui.SeedField.interactable = !embedded;
@@ -342,8 +345,9 @@ namespace Hwatu.View
                 body.AppendLine($"끗수 {result.BaseScore} x 배수 {result.Multiplier} = {result.FinalScore}점 / 목표 {_engine.Config.TargetScore}");
             body.AppendLine($"고 {result.GoCount}회 / {result.TurnCount}턴 / 시드 {_currentSeed}");
             _ui.RoundOverBody.text = body.ToString();
-            _roundOverPending = true; // 진행 중 트윈이 끝난 뒤 표시
-            _roundOverStampPending = result.Success;
+            // [C] 임베드 모드에서는 자체 종료 패널을 띄우지 않는다 (딤 이중 적층 금지)
+            _roundOverPending = !_embedded;
+            _roundOverStampPending = result.Success && !_embedded;
             _dirty = true;
 
             RoundFinished?.Invoke(result); // [임베드 이음매 ②]

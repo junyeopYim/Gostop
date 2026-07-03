@@ -220,15 +220,6 @@ namespace Hwatu.View
             flipAreaRt.sizeDelta = new Vector2(deckSlotSize.x * 2f + 60f, deckSlotSize.y + 46f);
             flipAreaRt.anchoredPosition = new Vector2(-120f, -215f);
 
-            var flipLabel = CreateText(flipArea.transform, "Label", "더미 / 마지막 뒤집힘", 18,
-                UIStyles.MutedPaper, TextAnchor.MiddleCenter);
-            var flipLabelRt = (RectTransform)flipLabel.transform;
-            flipLabelRt.anchorMin = new Vector2(0f, 1f);
-            flipLabelRt.anchorMax = new Vector2(1f, 1f);
-            flipLabelRt.pivot = new Vector2(0.5f, 1f);
-            flipLabelRt.sizeDelta = new Vector2(0f, 24f);
-            flipLabelRt.anchoredPosition = Vector2.zero;
-
             var deckBack = CreateDeckBackStack(flipArea.transform, "DeckBack", deckSlotSize);
             var deckBackRt = (RectTransform)deckBack.transform;
             deckBackRt.anchorMin = deckBackRt.anchorMax = new Vector2(0f, 0f);
@@ -272,6 +263,18 @@ namespace Hwatu.View
             cardLayerGo.transform.SetParent(root, false);
             refs.CardLayer = (RectTransform)cardLayerGo.transform;
             Stretch(refs.CardLayer, 0f, 0f);
+
+            // ── 더미/뒤집힘 라벨 — [C] 카드 위 정렬: 산포된 바닥 카드에 가려지지 않게
+            //    카드 레이어 위(모달 아래)에 먹색 배킹과 함께 그린다 ──
+            var flipLabelBack = UIStyles.CreateSolidImage(root, "DeckFlipLabel", WithAlpha(UIStyles.Ink, 0.55f));
+            var flipLabelBackRt = (RectTransform)flipLabelBack.transform;
+            flipLabelBackRt.anchorMin = flipLabelBackRt.anchorMax = new Vector2(0.5f, 1f);
+            flipLabelBackRt.pivot = new Vector2(0.5f, 1f);
+            flipLabelBackRt.sizeDelta = new Vector2(236f, 30f);
+            flipLabelBackRt.anchoredPosition = new Vector2(-120f, -215f);
+            var flipLabel = CreateText(flipLabelBack.transform, "Label", "더미 / 마지막 뒤집힘", 18,
+                UIStyles.Paper, TextAnchor.MiddleCenter);
+            Stretch((RectTransform)flipLabel.transform, 6f, 2f);
 
             // ── 고/스톱 모달 ─────────────────────────────────────────
             var goStopOverlay = CreatePanel(root, "GoStopModal", WithAlpha(UIStyles.Ink, 0.60f));

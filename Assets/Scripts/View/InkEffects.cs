@@ -12,10 +12,24 @@ namespace Hwatu.View
 
     internal static class InkEffectResources
     {
+        /// <summary>셰이더/머티리얼 로드 실패 시 1회 출력하는 경고 (폴백 계약의 단일 출처).</summary>
+        public const string FallbackWarning = "[Hwatu] InkDissolve 셰이더/머티리얼 로드 실패 — 단색 페이드로 폴백";
+
+        /// <summary>[테스트 전용] 셰이더 로드를 강제로 실패시켜 폴백 경로를 검증한다.</summary>
+        internal static bool ForceShaderUnavailableForTests;
+
         private static readonly Dictionary<InkMaskKind, Texture2D> Masks = new Dictionary<InkMaskKind, Texture2D>();
         private static Shader _shader;
+        private static bool _fallbackWarned;
 
-        public static Shader Shader => _shader != null ? _shader : (_shader = Shader.Find("Hwatu/InkDissolve"));
+        public static Shader Shader
+        {
+            get
+            {
+                if (ForceShaderUnavailableForTests) return null;
+                return _shader != null ? _shader : (_shader = Shader.Find("Hwatu/InkDissolve"));
+            }
+        }
 
         public static Texture2D Mask(InkMaskKind kind)
         {
@@ -30,7 +44,7 @@ namespace Hwatu.View
         {
             if (Shader == null)
             {
-                Debug.LogError("[Hwatu] Shader not found: Hwatu/InkDissolve");
+                WarnFallbackOnce(); // 조용한 통과 금지 — 소비자는 단색/알파 페이드로 폴백한다
                 return null;
             }
 
@@ -43,6 +57,16 @@ namespace Hwatu.View
             material.SetColor("_EdgeColor", UIStyles.Ink);
             return material;
         }
+
+        private static void WarnFallbackOnce()
+        {
+            if (_fallbackWarned) return;
+            _fallbackWarned = true;
+            Debug.LogWarning(FallbackWarning);
+        }
+
+        /// <summary>[테스트 전용] 경고 1회 플래그 초기화 — 각 테스트가 자기 경고를 관찰할 수 있게.</summary>
+        internal static void ResetFallbackWarningForTests() => _fallbackWarned = false;
     }
 
     [DisallowMultipleComponent]
@@ -52,6 +76,8 @@ namespace Hwatu.View
         private SpriteRenderer _spriteRenderer;
         private Material _runtimeMaterial;
         private Material _originalMaterial;
+        private bool _fallbackActive;
+        private Color _fallbackOriginalColor;
 
         public void Play(float duration, Ease ease = Ease.OutCubic, InkMaskKind mask = InkMaskKind.SweepHoriz)
         {
@@ -61,7 +87,11 @@ namespace Hwatu.View
             if (_image == null && _spriteRenderer == null) return;
 
             _runtimeMaterial = InkEffectResources.CreateMaterial(mask);
-            if (_runtimeMaterial == null) return;
+            if (_runtimeMaterial == null)
+            {
+                PlayAlphaFallback(duration, ease); // 경고는 CreateMaterial이 1회 출력했다
+                return;
+            }
 
             if (_image != null)
             {
@@ -80,6 +110,25 @@ namespace Hwatu.View
                 () => Cleanup(restore: true));
         }
 
+        /// <summary>[B] 셰이더 부재 폴백: 마스크 페인트인 대신 알파 페이드인 (전환감 유지).</summary>
+        private void PlayAlphaFallback(float duration, Ease ease)
+        {
+            _fallbackActive = true;
+            _fallbackOriginalColor = _image != null ? _image.color : _spriteRenderer.color;
+            SetFallbackAlpha(0f);
+            Tween.Custom(this, "paint-in", duration, ease,
+                t => SetFallbackAlpha(Mathf.Lerp(0f, _fallbackOriginalColor.a, t)),
+                () => Cleanup(restore: true));
+        }
+
+        private void SetFallbackAlpha(float alpha)
+        {
+            var color = _fallbackOriginalColor;
+            color.a = alpha;
+            if (_image != null) _image.color = color;
+            else if (_spriteRenderer != null) _spriteRenderer.color = color;
+        }
+
         private void OnDisable() => Cleanup(restore: true);
         private void OnDestroy() => Cleanup(restore: true);
 
@@ -90,7 +139,9 @@ namespace Hwatu.View
             {
                 if (_image != null) _image.material = _originalMaterial;
                 if (_spriteRenderer != null) _spriteRenderer.sharedMaterial = _originalMaterial;
+                if (_fallbackActive) SetFallbackAlpha(_fallbackOriginalColor.a);
             }
+            _fallbackActive = false;
 
             if (_runtimeMaterial != null)
             {

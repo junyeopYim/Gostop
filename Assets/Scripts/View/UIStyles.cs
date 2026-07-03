@@ -40,12 +40,23 @@ namespace Hwatu.View
             ? _myeongjoFont
             : (_myeongjoFont = Resources.Load<TMP_FontAsset>(MyeongjoFontPath) ?? TMP_Settings.defaultFontAsset);
 
+        // TMP 기본 한글 줄바꿈은 글자 단위(CJK 규칙)다 — 어절 단위로 전환 (프로세스당 1회).
+        private static bool _koreanWordWrapApplied;
+
+        private static void EnsureKoreanWordWrap()
+        {
+            if (_koreanWordWrapApplied) return;
+            _koreanWordWrapApplied = true;
+            TMP_Settings.useModernHangulLineBreakingRules = true;
+        }
+
         // TMP does not support Korean vertical writing as a built-in flow. The onboarding remake should
         // arrange characters one by one when true vertical composition is needed.
         public static TextMeshProUGUI CreateText(Transform parent, string name, UITextPreset preset, string text,
             int? fontSize = null, Color? color = null, TextAnchor anchor = TextAnchor.MiddleCenter,
             FontStyle style = FontStyle.Normal)
         {
+            EnsureKoreanWordWrap();
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
 

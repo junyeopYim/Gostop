@@ -284,6 +284,7 @@ namespace Hwatu.View.Screens
             UIStyles.CreateIcon(chip.transform, "bujeok", new Vector2(48f, 24f));
             var text = UIStyles.CreateText(chip.transform, "Label", UITextPreset.Body, label, 17,
                 UIStyles.Ink, TextAnchor.MiddleLeft);
+            text.enableWordWrapping = false; // 칩은 단일행 설계 — 어절 줄바꿈 전역화의 영향 차단
             UIBuilder.SetPreferred(text.gameObject, chipWidth - 70f, 26f);
         }
 
@@ -342,7 +343,10 @@ namespace Hwatu.View.Screens
                 var hint = UIStyles.CreateText(_choicesRow, "Hint", UITextPreset.Body,
                     "오늘 노드를 완료하면 내일 갈림길이 열린다", 20,
                     SecondaryTextColor, TextAnchor.MiddleCenter);
-                UIBuilder.SetPreferred(hint.gameObject, 500f, 60f);
+                // ChoicesRow는 childControlWidth=false — LayoutElement가 아니라 rect 크기가
+                // 실제 폭을 결정한다 (좁은 기본 rect에 갇히면 글자 단위로 세로 깨짐)
+                ((RectTransform)hint.transform).sizeDelta = new Vector2(640f, 60f);
+                UIBuilder.SetPreferred(hint.gameObject, 640f, 60f);
                 return;
             }
 
@@ -367,19 +371,45 @@ namespace Hwatu.View.Screens
 
         /// <summary>
         /// 오늘의 판 치기: 임베드 GameController로 판 1회 (목표 점수는 커브/심판 테이블 주입).
+        /// [A] 먹 와이프가 가린 사이 임베드를 세우고, 셔플·딜은 Reveal이 끝난 뒤 시작한다.
         /// 심판일이면 대왕 기믹 효과를 부적과 같은 경로로 attach한다 — 판 종료 시
         /// DetachAll이 함께 해제한다 (잔여 구독 없음).
         /// </summary>
         public void PlayTodaysRound()
         {
-            if (IsRoundInProgress || Run == null || Run.IsOver || Run.TodayNodeCleared) return;
+            if (IsRoundInProgress || Run == null || Run.IsOver || Run.TodayNodeCleared
+                || Flow.IsTransitioning) return;
             var node = Run.CurrentNode;
             if (node.kind != NodeKind.Battle && node.kind != NodeKind.FinalBattle
                 && node.kind != NodeKind.Judgment) return;
 
-            _hubPanel.SetActive(false);
-            SetScreenBackgroundVisible(false);
+            Flow.StartCoroutine(EnterRoundWithWipe(node, () =>
+            {
+                _hubPanel.SetActive(false);
+                SetScreenBackgroundVisible(false);
+            }));
+        }
 
+        /// <summary>
+        /// [A] 판 진입/재도전 공용 와이프: Hide → preSetup + 임베드 설치 → Reveal → 딜 시작.
+        /// 딜(셔플·비행) 연출은 와이프 Reveal 완료 이후에만 시작한다 (겹치면 둘 다 죽는다).
+        /// </summary>
+        private IEnumerator EnterRoundWithWipe(NodeSpec node, System.Action preSetup)
+        {
+            bool entered = false;
+            yield return Flow.PlayWipe(() =>
+            {
+                entered = true;
+                preSetup();
+                SetUpEmbeddedRound(node);
+            }, InkMaskKind.SweepDiag);
+            if (!entered) yield break; // 와이프가 거부됨(중복 전환) — 딜을 시작하면 안 된다
+            BeginEmbeddedDeal(node);
+        }
+
+        /// <summary>임베드 생성 + 효과 부착 + (심판일) 효과 표기 — 딜은 시작하지 않는다.</summary>
+        private void SetUpEmbeddedRound(NodeSpec node)
+        {
             var go = new GameObject("EmbeddedGame");
             EmbeddedGame = go.AddComponent<GameController>(); // Awake에서 자체 캔버스(sortingOrder 0) 생성
             EmbeddedGame.SetEmbeddedMode(true);
@@ -396,13 +426,6 @@ namespace Hwatu.View.Screens
             }
             _effects.AttachAll(effectIds, new EffectContext(EmbeddedGame.Engine, Run));
 
-            // [C] 딜 시드 규약: Derive(runSeed, DeckShuffle, currentDay, dayAttempt)
-            int dealSeed = SeedDerivation.Derive(Run.State.runSeed, RngStream.DeckShuffle,
-                Run.State.currentDay, Run.State.dayAttempt);
-            var deck = CardSpecs.ToCards(Run.State.deck);
-            var config = new RoundConfig { TargetScore = TargetScoreCurve.GetTarget(node.day, node.kind) };
-            EmbeddedGame.StartExternalRound(deck, dealSeed, config);
-
             // 판 중 활성 효과 표기: 대왕명 + 지옥명 + 기믹 한 줄 (텍스트 수준, 연출 없음).
             // 임베드 캔버스에 붙여 임베드 정리와 함께 사라진다.
             if (isJudgment && EmbeddedGame.UiRoot != null)
@@ -417,6 +440,19 @@ namespace Hwatu.View.Screens
                 rt.sizeDelta = new Vector2(0f, 32f);
                 rt.anchoredPosition = new Vector2(0f, -100f);
             }
+        }
+
+        /// <summary>[A] Reveal 완료 후 딜 시작. 와이프 중 화면이 내려갔으면 아무것도 하지 않는다.</summary>
+        private void BeginEmbeddedDeal(NodeSpec node)
+        {
+            if (EmbeddedGame == null || Root == null || Run == null) return;
+
+            // [C] 딜 시드 규약: Derive(runSeed, DeckShuffle, currentDay, dayAttempt)
+            int dealSeed = SeedDerivation.Derive(Run.State.runSeed, RngStream.DeckShuffle,
+                Run.State.currentDay, Run.State.dayAttempt);
+            var deck = CardSpecs.ToCards(Run.State.deck);
+            var config = new RoundConfig { TargetScore = TargetScoreCurve.GetTarget(node.day, node.kind) };
+            EmbeddedGame.StartExternalRound(deck, dealSeed, config);
         }
 
         /// <summary>스텁 노드(주막/이벤트)의 [지나가기] / 잿날의 [쉬어가기].</summary>
@@ -439,16 +475,19 @@ namespace Hwatu.View.Screens
                 return;
             }
             // 밤 사이클 자리 (연출 없음 — 이후 지시서의 낮/밤 시스템이 여기 꽂힌다)
-            _nightText.text = $"밤이 깊었다…\n({Run.State.currentDay}일차 아침으로)";
+            _nightText.text = "밤이 깊었다…";
             _nightPanel.SetActive(true);
         }
 
-        /// <summary>밤 패널 [다음 날로]: 새 날의 허브로.</summary>
+        /// <summary>밤 패널 [다음 날로]: [A] 하루 넘김 와이프(SweepHoriz)를 사이에 두고 새 날의 허브로.</summary>
         public void ConfirmNight()
         {
-            if (!IsNightVisible) return;
-            _nightPanel.SetActive(false);
-            RefreshHub();
+            if (!IsNightVisible || Flow.IsTransitioning) return;
+            Flow.StartCoroutine(Flow.PlayWipe(() =>
+            {
+                _nightPanel.SetActive(false);
+                RefreshHub();
+            }, InkMaskKind.SweepHoriz));
         }
 
         /// <summary>[디버그] 오늘 노드 강제 완료 + 첫 갈림길로 이동 (밤 패널 생략).</summary>
@@ -487,7 +526,7 @@ namespace Hwatu.View.Screens
                   + $"노잣돈 +{RunController.RoundSuccessReward} → {Run.State.nojatdon}\n내일 갈 길을 고르시오."
                 : $"실패… 최종점수 {result.FinalScore} / 목표 {targetScore}\n"
                   + $"혼불 -1 → {Run.State.honbul}"
-                  + (Run.IsOver ? "\n혼불이 모두 꺼졌다…" : "\n같은 노드를 다시 친다 (딜이 달라진다).");
+                  + (Run.IsOver ? "\n혼불이 모두 꺼졌다…" : "\n같은 노드를 다시 친다 — 딜은 새로 섞인다.");
             _resultPanel.SetActive(true);
             if (result.Success)
             {
@@ -496,22 +535,40 @@ namespace Hwatu.View.Screens
             }
         }
 
-        /// <summary>결과 패널 [계속]: 임베드 정리 후 허브 복귀 또는 (소멸) 엔딩 전환.</summary>
+        /// <summary>
+        /// 결과 패널 [계속]: (소멸) 엔딩 전환 / 성공 → [A] 판 종료 복귀 와이프로 허브 /
+        /// 실패 → [A] 재도전 와이프로 같은 날 새 딜 직행 (dayAttempt는 결과 반영 때 이미 +1).
+        /// </summary>
         public void ConfirmRoundResult()
         {
-            if (!IsResultVisible) return;
-            _resultPanel.SetActive(false);
-            TearDownEmbeddedGame();
+            if (!IsResultVisible || Flow.IsTransitioning) return;
 
             if (Run.IsOver)
             {
-                Flow.ShowEnding(Run.Ending);
+                _resultPanel.SetActive(false);
+                TearDownEmbeddedGame();
+                Flow.ShowEnding(Run.Ending); // 스택 전환(Navigate)이 와이프를 건다
+                return;
+            }
+
+            if (Run.TodayNodeCleared)
+            {
+                Flow.StartCoroutine(Flow.PlayWipe(() =>
+                {
+                    _resultPanel.SetActive(false);
+                    TearDownEmbeddedGame();
+                    RefreshHub();
+                    SetScreenBackgroundVisible(true);
+                    _hubPanel.SetActive(true);
+                }));
             }
             else
             {
-                RefreshHub();
-                SetScreenBackgroundVisible(true);
-                _hubPanel.SetActive(true);
+                Flow.StartCoroutine(EnterRoundWithWipe(Run.CurrentNode, () =>
+                {
+                    _resultPanel.SetActive(false);
+                    TearDownEmbeddedGame();
+                }));
             }
         }
 
@@ -601,6 +658,7 @@ namespace Hwatu.View.Screens
         {
             var t = UIStyles.CreateText(_actionZone, "ZoneLabel", UITextPreset.Body, text, 28,
                 UIStyles.Paper, TextAnchor.MiddleCenter);
+            t.enableWordWrapping = false; // 고정 높이 단일행 — 경계선 폭에서 두 줄로 겹치는 것 방지
             UIBuilder.SetPreferred(t.gameObject, 860f, 46f);
         }
 

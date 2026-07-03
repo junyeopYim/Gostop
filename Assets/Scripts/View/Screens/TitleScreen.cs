@@ -9,7 +9,7 @@ namespace Hwatu.View.Screens
     /// <summary>살아있는 민화 타이틀. [이어하기]는 현재 버전 세이브가 있을 때만 표시한다.</summary>
     public sealed class TitleScreen : ScreenBase
     {
-        private const string TitleText = "화투 로그라이크 (가제)";
+        private const string TitleText = "화투 로그라이크";
         private const string SubtitleText = "저승길 마흔아홉 날 — 걸어다니는 뼈대";
 
         protected override string ScreenName => "TitleScreen";

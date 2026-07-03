@@ -44,6 +44,40 @@ namespace Hwatu.View.Flow
             _transition = transition ?? new InstantTransition();
         }
 
+        /// <summary>
+        /// [A] 화면 내부 상태 전환용 공용 먹 와이프: Hide → midAction → Reveal.
+        /// 스택 항해(Navigate)와 IsTransitioning 잠금을 공유해 중복 전환을 막고,
+        /// 와이프 중 입력 차단은 전환 오버레이(레이캐스트)가 담당한다.
+        /// hideMask는 이번 Hide 1회에만 적용된다 (스택 전환 기본값은 불변).
+        /// 이터레이터가 아닌 즉시 평가 래퍼 — 호출 프레임에 잠금이 성립해
+        /// 중첩 코루틴의 지연 시작 프레임 동안에도 중복 전환이 끼어들 수 없다.
+        /// </summary>
+        public IEnumerator PlayWipe(Action midAction, InkMaskKind hideMask = InkMaskKind.SweepDiag)
+        {
+            if (IsTransitioning)
+            {
+                Debug.LogWarning("화면 전환 중 중복 와이프 요청을 무시했습니다.");
+                return EmptyRoutine();
+            }
+            IsTransitioning = true;
+            return RunWipe(midAction, hideMask);
+        }
+
+        private IEnumerator RunWipe(Action midAction, InkMaskKind hideMask)
+        {
+            var ink = _transition as InkWipeTransition;
+            if (ink != null) ink.SetNextHideMask(hideMask);
+            yield return _transition.Hide();
+            midAction?.Invoke();
+            yield return _transition.Reveal();
+            IsTransitioning = false;
+        }
+
+        private static IEnumerator EmptyRoutine()
+        {
+            yield break;
+        }
+
         // ── 타이틀 ──────────────────────────────────────────────
 
         /// <summary>새 게임 시작. seedOverride는 테스트/디버그용 (없으면 랜덤 런 시드).</summary>
