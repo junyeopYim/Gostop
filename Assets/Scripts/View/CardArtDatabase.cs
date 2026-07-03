@@ -21,6 +21,8 @@ namespace Hwatu.View
         public List<Entry> BaseEntries = new List<Entry>();
         public List<Entry> OverlayEntries = new List<Entry>();
         public List<Entry> StampEntries = new List<Entry>();
+        public List<Entry> UiEntries = new List<Entry>();
+        public List<Entry> BackgroundEntries = new List<Entry>();
 
         /// <summary>카드 뒷면 스프라이트 (card_back.png). 없으면 뷰가 기존 단색 표현으로 폴백.</summary>
         public Sprite BackSprite;
@@ -28,6 +30,8 @@ namespace Hwatu.View
         private Dictionary<string, Sprite> _baseLookup;
         private Dictionary<string, Sprite> _overlayLookup;
         private Dictionary<string, Sprite> _stampLookup;
+        private Dictionary<string, Sprite> _uiLookup;
+        private Dictionary<string, Sprite> _backgroundLookup;
 
         private static CardArtDatabase _instance;
         private static bool _searched;
@@ -55,11 +59,19 @@ namespace Hwatu.View
         public bool TryGetStamp(string stampName, out Sprite sprite)
             => TryGet(ref _stampLookup, StampEntries, stampName, out sprite);
 
+        public bool TryGetUi(string uiName, out Sprite sprite)
+            => TryGet(ref _uiLookup, UiEntries, uiName, out sprite);
+
+        public bool TryGetBackground(string backgroundName, out Sprite sprite)
+            => TryGet(ref _backgroundLookup, BackgroundEntries, backgroundName, out sprite);
+
         public void ClearLookupCaches()
         {
             _baseLookup = null;
             _overlayLookup = null;
             _stampLookup = null;
+            _uiLookup = null;
+            _backgroundLookup = null;
         }
 
         private static bool TryGet(ref Dictionary<string, Sprite> cache, List<Entry> entries,

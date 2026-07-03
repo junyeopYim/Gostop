@@ -1,0 +1,6 @@
+<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <path d="M48 13 C60 29 76 36 72 56 C69 75 54 84 41 80 C27 75 22 62 28 48 C33 36 44 31 48 13 Z"
+        fill="var(--spirit)" fill-opacity="0.92" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M49 34 C55 44 58 51 54 61 C51 69 43 71 39 65 C35 58 41 49 49 34 Z"
+        fill="var(--paper)" fill-opacity="0.38"/>
+</svg>

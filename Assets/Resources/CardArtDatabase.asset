@@ -125,4 +125,34 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: ed481f5a52f0d144dbb12e17265de786, type: 3}
   - Key: seal_red
     Sprite: {fileID: 21300000, guid: 1e9c63d18c67984478ca5a0ef1fb5002, type: 3}
+  UiEntries:
+  - Key: btn_ink_disabled
+    Sprite: {fileID: 21300000, guid: 0271ed7c9f39cc44e8698bee18b94e4e, type: 3}
+  - Key: btn_ink_hover
+    Sprite: {fileID: 21300000, guid: 228697ee545cdec479c97419185bdc21, type: 3}
+  - Key: btn_ink_normal
+    Sprite: {fileID: 21300000, guid: 71562513cb74d664b94115d0bbb7b060, type: 3}
+  - Key: btn_ink_pressed
+    Sprite: {fileID: 21300000, guid: fb83cc89ab3c2574aa0136948d2d84b3, type: 3}
+  - Key: divider_stroke
+    Sprite: {fileID: 21300000, guid: d3b1beb9c4f9c8e46a470af94e639dc2, type: 3}
+  - Key: icon_bujeok
+    Sprite: {fileID: 21300000, guid: 14c66014ab421254e83850e2c9d09a04, type: 3}
+  - Key: icon_honbul_off
+    Sprite: {fileID: 21300000, guid: cc4b7a46d5534294289385691516cbfb, type: 3}
+  - Key: icon_honbul_on
+    Sprite: {fileID: 21300000, guid: 1a2a81313a1e64847b2852498c5f29ce, type: 3}
+  - Key: icon_yeopjeon
+    Sprite: {fileID: 21300000, guid: 5c11a6bd46a3b7c42bb3d8af75514885, type: 3}
+  - Key: panel_hanji
+    Sprite: {fileID: 21300000, guid: 84b8f95b17950a1428be2beb7f90ff33, type: 3}
+  - Key: vignette_edge
+    Sprite: {fileID: 21300000, guid: 7b09421b23eb2c740858b491759c5fdb, type: 3}
+  BackgroundEntries:
+  - Key: blanket_green
+    Sprite: {fileID: 21300000, guid: fd71f8828dcb95542b2003bb8f2fba78, type: 3}
+  - Key: hanji_dark
+    Sprite: {fileID: 21300000, guid: 192be41c9008786448fbfa31fe425cef, type: 3}
+  - Key: hanji_light
+    Sprite: {fileID: 21300000, guid: f53405f4f263a1040bf13f35c2ceb7e9, type: 3}
   BackSprite: {fileID: 21300000, guid: 0b766a4d134c77043a2a1d12c8a1d236, type: 3}

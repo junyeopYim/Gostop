@@ -7,6 +7,7 @@ namespace Hwatu.View.Screens
     public sealed class TitleScreen : ScreenBase
     {
         protected override string ScreenName => "TitleScreen";
+        protected override string BackgroundId => "hanji_light";
 
         protected override void Build(Transform canvasRoot)
         {

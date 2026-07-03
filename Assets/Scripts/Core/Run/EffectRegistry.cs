@@ -11,26 +11,35 @@ namespace Hwatu.Run
     {
         private static readonly Dictionary<string, Func<IEffect>> Factories =
             new Dictionary<string, Func<IEffect>>();
+        private static readonly Dictionary<string, string> DisplayNames =
+            new Dictionary<string, string>();
 
         static EffectRegistry()
         {
             // 데모 효과 2종 (임시 콘텐츠 — 다음 지시서에서 실제 부적으로 교체 예정)
-            Register(DemoMultiplierPlusEffect.EffectId, () => new DemoMultiplierPlusEffect());
-            Register(DemoJjokNojatdonEffect.EffectId, () => new DemoJjokNojatdonEffect());
+            Register(DemoMultiplierPlusEffect.EffectId, () => new DemoMultiplierPlusEffect(), "시범부적 — 배수 +1");
+            Register(DemoJjokNojatdonEffect.EffectId, () => new DemoJjokNojatdonEffect(), "시범부적 — 쪽 노잣돈");
 
             // 대왕 기믹 3종 — "음(-)의 부적". BossRegistry.EffectId가 이 id들을 참조한다
-            Register(HwatangBossEffect.EffectId, () => new HwatangBossEffect());
-            Register(EopchingBossEffect.EffectId, () => new EopchingBossEffect());
-            Register(EopgyeongdaeBossEffect.EffectId, () => new EopgyeongdaeBossEffect());
+            Register(HwatangBossEffect.EffectId, () => new HwatangBossEffect(), "화탕 — 끓는 가마");
+            Register(EopchingBossEffect.EffectId, () => new EopchingBossEffect(), "업칭 — 업의 저울");
+            Register(EopgyeongdaeBossEffect.EffectId, () => new EopgyeongdaeBossEffect(), "업경대 — 업의 거울");
         }
 
-        public static void Register(string id, Func<IEffect> factory)
+        public static void Register(string id, Func<IEffect> factory, string displayName = null)
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("효과 id가 비어 있습니다.", nameof(id));
             Factories[id] = factory ?? throw new ArgumentNullException(nameof(factory));
+            if (!string.IsNullOrEmpty(displayName)) DisplayNames[id] = displayName;
         }
 
         public static bool IsRegistered(string id) => Factories.ContainsKey(id);
+
+        public static string GetDisplayName(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return "";
+            return DisplayNames.TryGetValue(id, out var displayName) ? displayName : id;
+        }
 
         public static IEffect Create(string id)
         {

@@ -34,6 +34,10 @@ namespace Hwatu.View.Screens
         private readonly EffectSystem _effects = new EffectSystem();
         private GameObject _hubPanel;
         private TextMeshProUGUI _statusText;
+        private RectTransform _honbulRow;
+        private TextMeshProUGUI _nojatdonText;
+        private RectTransform _relicRow;
+        private RectTransform _judgmentRow;
         private RectTransform _actionZone;      // 오늘 노드별 행동 영역 (매 갱신 재구성)
         private RectTransform _choicesRow;      // 내일 갈림길 버튼들 (매 갱신 재구성)
         private GameObject _resultPanel;
@@ -55,8 +59,58 @@ namespace Hwatu.View.Screens
             UIBuilder.Stretch((RectTransform)_hubPanel.transform, 0f, 0f);
 
             var column = BuildCenterColumn(_hubPanel.transform, "저승길");
-            _statusText = AddBody(column, "", 26);
-            UIBuilder.SetPreferred(_statusText.gameObject, 900f, 140f); // 액션/갈림길 영역 공간 확보
+            var infoPanel = UIStyles.CreatePanel(column, "RunInfoPanel", new Vector2(900f, 170f));
+            var infoLayout = infoPanel.gameObject.AddComponent<VerticalLayoutGroup>();
+            infoLayout.padding = new RectOffset(24, 24, 18, 14);
+            infoLayout.spacing = 8f;
+            infoLayout.childAlignment = TextAnchor.MiddleCenter;
+            infoLayout.childControlWidth = true;
+            infoLayout.childControlHeight = true;
+            infoLayout.childForceExpandWidth = false;
+            infoLayout.childForceExpandHeight = false;
+
+            _statusText = UIStyles.CreateText(infoPanel.transform, "Status", UITextPreset.Body, "", 24,
+                UIStyles.Ink, TextAnchor.MiddleCenter);
+            UIBuilder.SetPreferred(_statusText.gameObject, 850f, 34f);
+
+            var resourceRow = new GameObject("ResourceRow", typeof(RectTransform));
+            resourceRow.transform.SetParent(infoPanel.transform, false);
+            var resourceLayout = resourceRow.AddComponent<HorizontalLayoutGroup>();
+            resourceLayout.spacing = 22f;
+            resourceLayout.childAlignment = TextAnchor.MiddleCenter;
+            resourceLayout.childControlWidth = true;
+            resourceLayout.childControlHeight = true;
+            resourceLayout.childForceExpandWidth = false;
+            resourceLayout.childForceExpandHeight = false;
+            UIBuilder.SetPreferred(resourceRow, 850f, 38f);
+
+            var honbulGo = new GameObject("HonbulIcons", typeof(RectTransform));
+            honbulGo.transform.SetParent(resourceRow.transform, false);
+            var honbulLayout = honbulGo.AddComponent<HorizontalLayoutGroup>();
+            honbulLayout.spacing = 2f;
+            honbulLayout.childAlignment = TextAnchor.MiddleCenter;
+            honbulLayout.childControlWidth = false;
+            honbulLayout.childControlHeight = false;
+            honbulLayout.childForceExpandWidth = false;
+            honbulLayout.childForceExpandHeight = false;
+            _honbulRow = (RectTransform)honbulGo.transform;
+
+            var nojatdonGo = new GameObject("Nojatdon", typeof(RectTransform));
+            nojatdonGo.transform.SetParent(resourceRow.transform, false);
+            var nojatdonLayout = nojatdonGo.AddComponent<HorizontalLayoutGroup>();
+            nojatdonLayout.spacing = 5f;
+            nojatdonLayout.childAlignment = TextAnchor.MiddleCenter;
+            nojatdonLayout.childControlWidth = false;
+            nojatdonLayout.childControlHeight = false;
+            nojatdonLayout.childForceExpandWidth = false;
+            nojatdonLayout.childForceExpandHeight = false;
+            UIStyles.CreateIcon(nojatdonGo.transform, "yeopjeon", new Vector2(32f, 32f));
+            _nojatdonText = UIStyles.CreateText(nojatdonGo.transform, "NojatdonText", UITextPreset.Numeral,
+                "0", 24, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UIBuilder.SetPreferred(_nojatdonText.gameObject, 70f, 34f);
+
+            _relicRow = CreateChipRow(infoPanel.transform, "RelicRow");
+            _judgmentRow = CreateChipRow(infoPanel.transform, "JudgmentRow");
 
             var actionGo = new GameObject("ActionZone", typeof(RectTransform));
             actionGo.transform.SetParent(column, false);
@@ -140,17 +194,13 @@ namespace Hwatu.View.Screens
             // 재 의식은 심판일 "입장" 시 1회 — 직렬화된 플래그가 재입장 중복 회복을 막는다
             if (node.kind == NodeKind.Judgment) Run.TryJaetnalHeal();
 
-            // 활성 효과 표시 줄: 부적 + (심판일이면) 대왕명·지옥명·기믹 한 줄 병기
-            string effectsLine =
-                $"부적: {(s.relicIds.Count == 0 ? "(없음)" : string.Join(", ", s.relicIds))}" +
-                (s.dayAttempt > 0 ? $"  ·  오늘 재도전 {s.dayAttempt}회" : "");
-            if (node.kind == NodeKind.Judgment)
-                effectsLine += $"\n심판: {JudgmentLine(node.day)}";
-
             _statusText.text =
-                $"{s.currentDay}일차 / {RunController.FinalDay}일 — 오늘: {KindLabel(node.kind)}\n" +
-                $"혼불 {s.honbul}/{s.honbulMax}  ·  노잣돈 {s.nojatdon}\n" +
-                effectsLine;
+                $"{s.currentDay}일차 / {RunController.FinalDay}일 — 오늘: {KindLabel(node.kind)}"
+                + (s.dayAttempt > 0 ? $"  ·  오늘 재도전 {s.dayAttempt}회" : "");
+            RebuildHonbul(s.honbul, s.honbulMax);
+            _nojatdonText.text = s.nojatdon.ToString();
+            RebuildEffectChips(_relicRow, s.relicIds, "부적 없음");
+            RebuildJudgmentChips(node);
 
             RebuildActionZone(node);
             RebuildChoices();
@@ -162,6 +212,76 @@ namespace Hwatu.View.Screens
             var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(day));
             return $"{king.KingName}({king.HellName})"
                 + (king.HasGimmick ? $" — {king.GimmickLine}" : "");
+        }
+
+        private static RectTransform CreateChipRow(Transform parent, string name)
+        {
+            var rowGo = new GameObject(name, typeof(RectTransform));
+            rowGo.transform.SetParent(parent, false);
+            var layout = rowGo.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            UIBuilder.SetPreferred(rowGo, 850f, 30f);
+            return (RectTransform)rowGo.transform;
+        }
+
+        private void RebuildHonbul(int current, int max)
+        {
+            ClearChildren(_honbulRow);
+            for (int i = 0; i < max; i++)
+                UIStyles.CreateIcon(_honbulRow, i < current ? "honbul_on" : "honbul_off", new Vector2(30f, 30f));
+        }
+
+        private void RebuildEffectChips(RectTransform row, IReadOnlyList<string> ids, string emptyText)
+        {
+            ClearChildren(row);
+            row.gameObject.SetActive(true);
+            if (ids == null || ids.Count == 0)
+            {
+                var empty = UIStyles.CreateText(row, "Empty", UITextPreset.Body, emptyText, 18,
+                    UIStyles.Ash, TextAnchor.MiddleCenter);
+                UIBuilder.SetPreferred(empty.gameObject, 180f, 28f);
+                return;
+            }
+
+            foreach (var id in ids)
+                CreateEffectChip(row, EffectRegistry.GetDisplayName(id));
+        }
+
+        private void RebuildJudgmentChips(NodeSpec node)
+        {
+            ClearChildren(_judgmentRow);
+            bool isJudgment = node.kind == NodeKind.Judgment;
+            _judgmentRow.gameObject.SetActive(isJudgment);
+            if (!isJudgment) return;
+
+            var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
+            var label = UIStyles.CreateText(_judgmentRow, "King", UITextPreset.Body,
+                $"{king.KingName}({king.HellName})", 18, UIStyles.Ink, TextAnchor.MiddleCenter);
+            UIBuilder.SetPreferred(label.gameObject, 230f, 28f);
+            if (king.HasGimmick)
+                CreateEffectChip(_judgmentRow, EffectRegistry.GetDisplayName(king.EffectId));
+        }
+
+        private static void CreateEffectChip(Transform row, string label)
+        {
+            var chip = new GameObject("EffectChip", typeof(RectTransform));
+            chip.transform.SetParent(row, false);
+            var layout = chip.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 4f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            UIStyles.CreateIcon(chip.transform, "bujeok", new Vector2(48f, 24f));
+            var text = UIStyles.CreateText(chip.transform, "Label", UITextPreset.Body, label, 17,
+                UIStyles.Ink, TextAnchor.MiddleLeft);
+            UIBuilder.SetPreferred(text.gameObject, Mathf.Clamp(label.Length * 17f, 120f, 330f), 28f);
         }
 
         private void RebuildActionZone(NodeSpec node)
@@ -227,14 +347,14 @@ namespace Hwatu.View.Screens
             if (choices.Count == 0)
             {
                 // 49일차 — 갈 곳이 없다. 완료 = 여정의 끝(환생)
-                UIBuilder.CreateButton(_choicesRow, "FinishJourneyButton", "여정의 끝",
+                UIStyles.CreateButton(_choicesRow, "FinishJourneyButton", "여정의 끝",
                     new Vector2(280f, 64f), 26, () => ChooseNextNode(0));
                 return;
             }
             foreach (var choice in choices)
             {
                 int index = choice.indexInDay;
-                UIBuilder.CreateButton(_choicesRow, $"ChoiceButton_{index}",
+                UIStyles.CreateButton(_choicesRow, $"ChoiceButton_{index}",
                     $"내일: {KindLabel(choice.kind)}", new Vector2(240f, 64f), 24,
                     () => ChooseNextNode(index));
             }
@@ -255,6 +375,7 @@ namespace Hwatu.View.Screens
                 && node.kind != NodeKind.Judgment) return;
 
             _hubPanel.SetActive(false);
+            SetScreenBackgroundVisible(false);
 
             var go = new GameObject("EmbeddedGame");
             EmbeddedGame = go.AddComponent<GameController>(); // Awake에서 자체 캔버스(sortingOrder 0) 생성
@@ -386,6 +507,7 @@ namespace Hwatu.View.Screens
             else
             {
                 RefreshHub();
+                SetScreenBackgroundVisible(true);
                 _hubPanel.SetActive(true);
             }
         }
@@ -404,11 +526,11 @@ namespace Hwatu.View.Screens
         private GameObject BuildOverlayPanel(Transform canvasRoot, string name, out TextMeshProUGUI bodyText,
                                              string buttonName, string buttonLabel, System.Action onClick)
         {
-            var dim = UIBuilder.CreatePanel(canvasRoot, name, new Color(0f, 0f, 0f, 0.55f));
+            var dim = UIBuilder.CreatePanel(canvasRoot, name, WithAlpha(UIStyles.Ink, 0.55f));
             dim.raycastTarget = true; // 아래(임베드 게임/허브) 입력 차단
             UIBuilder.Stretch((RectTransform)dim.transform, 0f, 0f);
 
-            var box = UIBuilder.CreatePanel(dim.transform, "Box", new Color(0.14f, 0.14f, 0.18f, 0.98f));
+            var box = UIBuilder.CreatePanel(dim.transform, "Box", UIStyles.Paper);
             var boxRt = (RectTransform)box.transform;
             boxRt.anchorMin = boxRt.anchorMax = new Vector2(0.5f, 0f);
             boxRt.pivot = new Vector2(0.5f, 0f);
@@ -416,14 +538,14 @@ namespace Hwatu.View.Screens
             boxRt.anchoredPosition = new Vector2(0f, 40f);
 
             bodyText = UIStyles.CreateText(box.transform, "Body", UITextPreset.Body, "", 26,
-                UIStyles.Gold, TextAnchor.MiddleCenter);
+                UIStyles.Ink, TextAnchor.MiddleCenter);
             var textRt = (RectTransform)bodyText.transform;
             textRt.anchorMin = new Vector2(0f, 0f);
             textRt.anchorMax = new Vector2(1f, 1f);
             textRt.offsetMin = new Vector2(20f, 90f);
             textRt.offsetMax = new Vector2(-20f, -16f);
 
-            var button = UIBuilder.CreateButton(box.transform, buttonName, buttonLabel,
+            var button = UIStyles.CreateButton(box.transform, buttonName, buttonLabel,
                 new Vector2(260f, 60f), 26, onClick);
             var buttonRt = (RectTransform)button.transform;
             buttonRt.anchorMin = buttonRt.anchorMax = new Vector2(0.5f, 0f);
@@ -443,13 +565,19 @@ namespace Hwatu.View.Screens
 
         private void AddZoneButton(string name, string label, System.Action onClick)
         {
-            UIBuilder.CreateButton(_actionZone, name, label, new Vector2(420f, 64f), 26, onClick);
+            UIStyles.CreateButton(_actionZone, name, label, new Vector2(420f, 64f), 26, onClick);
         }
 
         private static void ClearChildren(Transform parent)
         {
             for (int i = parent.childCount - 1; i >= 0; i--)
                 Object.DestroyImmediate(parent.GetChild(i).gameObject);
+        }
+
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            color.a = alpha;
+            return color;
         }
 
         private static string KindLabel(NodeKind kind)

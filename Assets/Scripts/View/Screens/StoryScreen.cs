@@ -10,7 +10,7 @@ namespace Hwatu.View.Screens
         protected override void Build(Transform canvasRoot)
         {
             var column = BuildCenterColumn(canvasRoot, "스토리");
-            AddBody(column,
+            AddBodyPanel(column,
                 "노름으로 삶을 탕진하고 빚 대신 목숨을 저당 잡힌 밤, 차사가 문턱에 섰다.\n" +
                 "\"갚을 것이 남았으니 따라오너라.\" 그렇게 저승길 마흔아홉 날이 시작되었다.\n\n" +
                 "(임시 스토리 스텁)");

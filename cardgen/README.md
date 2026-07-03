@@ -17,7 +17,9 @@ node render.mjs all                # 전 카드+뒷면 → out/cards/*.png (300x
 node render.mjs card m08_gwang     # 1장만 재렌더
 node render.mjs back               # 뒷면만 → out/cards/card_back.png
 node render.mjs overlays           # frames/·badges/ → out/overlays/*.png
-node render.mjs all --copy <dir>   # 렌더 후 out/cards→<dir>/Base, out/overlays→<dir>/Overlays 복사
+node render.mjs ui                 # ui/*.svg → out/ui/*.png
+node render.mjs all --copy <dir>   # 렌더 후 카드/오버레이/낙관 복사
+node render.mjs ui --copy ../Assets/Art/Cards  # UI는 형제 폴더 ../Assets/Art/UI로 복사
 node prep-illust.mjs <파일|폴더>    # 래스터 일러스트 전처리 (중앙 cover 크롭 + 종이톤 정규화)
 node prep-illust.mjs <파일|폴더> --no-normalize  # 정규화 없이 크롭만 (전후 비교용)
 node prep-illust.mjs --selftest    # 전처리 자가 검증

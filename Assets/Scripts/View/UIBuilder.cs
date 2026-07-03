@@ -9,6 +9,9 @@ namespace Hwatu.View
     public sealed class UiRefs
     {
         public Canvas Canvas;
+        public GameObject DevTopBar;
+        public GameObject LogPanel;
+        public TextMeshProUGUI MiniHudText;
         public TMP_InputField SeedField;
         public TMP_InputField TargetField;
         public TextMeshProUGUI ExpectedText;
@@ -62,8 +65,22 @@ namespace Hwatu.View
             canvasGo.AddComponent<GraphicRaycaster>();
             var root = canvasGo.transform;
 
+            UIStyles.CreateBackground(root, "blanket_green", UIStyles.Blanket, false);
+            UIStyles.CreateVignette(root);
+
+            var miniHud = UIStyles.CreateText(root, "MiniHud", UITextPreset.Hwaje, "",
+                30, UIStyles.Paper, TextAnchor.MiddleCenter, FontStyle.Bold);
+            var miniHudRt = (RectTransform)miniHud.transform;
+            miniHudRt.anchorMin = new Vector2(0f, 1f);
+            miniHudRt.anchorMax = new Vector2(1f, 1f);
+            miniHudRt.pivot = new Vector2(0.5f, 1f);
+            miniHudRt.sizeDelta = new Vector2(0f, 54f);
+            miniHudRt.anchoredPosition = new Vector2(0f, -10f);
+            refs.MiniHudText = miniHud;
+
             // ── 상단바 ──────────────────────────────────────────────
-            var topBar = CreatePanel(root, "TopBar", new Color(0.12f, 0.12f, 0.14f, 0.95f));
+            var topBar = CreatePanel(root, "TopBar", UIStyles.Paper);
+            refs.DevTopBar = topBar.gameObject;
             var topRt = (RectTransform)topBar.transform;
             topRt.anchorMin = new Vector2(0f, 1f);
             topRt.anchorMax = new Vector2(1f, 1f);
@@ -79,25 +96,26 @@ namespace Hwatu.View
             topLayout.childForceExpandWidth = false;
             topLayout.childForceExpandHeight = false;
 
-            var seedLabel = CreateText(topBar.transform, "SeedLabel", "시드", 24, Color.white, TextAnchor.MiddleLeft);
+            var seedLabel = CreateText(topBar.transform, "SeedLabel", "시드", 24, UIStyles.Ink, TextAnchor.MiddleLeft);
             SetPreferred(seedLabel.gameObject, 56f, 40f);
             refs.SeedField = CreateInputField(topBar.transform, "SeedField", "비우면 랜덤", new Vector2(190f, 40f));
-            var targetLabel = CreateText(topBar.transform, "TargetLabel", "목표", 24, Color.white, TextAnchor.MiddleLeft);
+            var targetLabel = CreateText(topBar.transform, "TargetLabel", "목표", 24, UIStyles.Ink, TextAnchor.MiddleLeft);
             SetPreferred(targetLabel.gameObject, 56f, 40f);
             string defaultTarget = new Hwatu.Core.RoundConfig().TargetScore.ToString();
             refs.TargetField = CreateInputField(topBar.transform, "TargetField", defaultTarget, new Vector2(90f, 40f));
             refs.TargetField.text = defaultTarget;
             refs.NewRoundButton = CreateButton(topBar.transform, "NewRoundButton", "새 판", new Vector2(120f, 44f), 24, onNewRound);
-            refs.TurnText = CreateText(topBar.transform, "TurnText", "턴 - / -", 24, Color.white, TextAnchor.MiddleLeft);
+            refs.TurnText = CreateText(topBar.transform, "TurnText", "턴 - / -", 24, UIStyles.Ink, TextAnchor.MiddleLeft);
             SetPreferred(refs.TurnText.gameObject, 130f, 40f);
-            refs.DeckText = CreateText(topBar.transform, "DeckText", "더미 -장", 24, Color.white, TextAnchor.MiddleLeft);
+            refs.DeckText = CreateText(topBar.transform, "DeckText", "더미 -장", 24, UIStyles.Ink, TextAnchor.MiddleLeft);
             SetPreferred(refs.DeckText.gameObject, 130f, 40f);
             refs.ExpectedText = CreateText(topBar.transform, "ExpectedText", "", 24,
-                new Color(1f, 0.95f, 0.6f), TextAnchor.MiddleLeft);
+                UIStyles.Gold, TextAnchor.MiddleLeft);
             SetPreferred(refs.ExpectedText.gameObject, 560f, 40f);
 
             // ── 좌측 이벤트 로그 ─────────────────────────────────────
-            var logPanel = CreatePanel(root, "EventLog", new Color(0.10f, 0.10f, 0.12f, 0.85f));
+            var logPanel = CreatePanel(root, "EventLog", UIStyles.Paper);
+            refs.LogPanel = logPanel.gameObject;
             var logRt = (RectTransform)logPanel.transform;
             logRt.anchorMin = new Vector2(0f, 0f);
             logRt.anchorMax = new Vector2(0f, 1f);
@@ -105,7 +123,7 @@ namespace Hwatu.View
             logRt.sizeDelta = new Vector2(360f, -64f);
             logRt.anchoredPosition = new Vector2(180f, 0f);
 
-            var logTitle = CreateText(logPanel.transform, "Title", "로그", 22, Color.white, TextAnchor.MiddleLeft, FontStyle.Bold);
+            var logTitle = CreateText(logPanel.transform, "Title", "로그", 22, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             var logTitleRt = (RectTransform)logTitle.transform;
             logTitleRt.anchorMin = new Vector2(0f, 1f);
             logTitleRt.anchorMax = new Vector2(1f, 1f);
@@ -141,7 +159,7 @@ namespace Hwatu.View
             refs.LogScroll.content = contentRt;
 
             // ── 우측 획득 패널 ───────────────────────────────────────
-            var captured = CreatePanel(root, "CapturedPanel", new Color(0.10f, 0.12f, 0.10f, 0.85f));
+            var captured = CreatePanel(root, "CapturedPanel", UIStyles.Paper);
             var capRt = (RectTransform)captured.transform;
             capRt.anchorMin = new Vector2(1f, 0f);
             capRt.anchorMax = new Vector2(1f, 1f);
@@ -164,7 +182,7 @@ namespace Hwatu.View
             for (int i = 0; i < 4; i++)
             {
                 refs.CapturedHeaders[i] = CreateText(captured.transform, $"Header_{rowNames[i]}",
-                    $"{rowNames[i]} 0", 20, Color.white, TextAnchor.MiddleLeft, FontStyle.Bold);
+                    $"{rowNames[i]} 0", 20, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
                 SetPreferred(refs.CapturedHeaders[i].gameObject, -1f, 24f);
 
                 var gridGo = new GameObject($"Grid_{rowNames[i]}", typeof(RectTransform));
@@ -177,10 +195,10 @@ namespace Hwatu.View
                 refs.CapturedGrids[i] = (RectTransform)gridGo.transform;
             }
 
-            var bdHeader = CreateText(captured.transform, "BreakdownHeader", "끗수", 20, Color.white, TextAnchor.MiddleLeft, FontStyle.Bold);
+            var bdHeader = CreateText(captured.transform, "BreakdownHeader", "끗수", 20, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
             SetPreferred(bdHeader.gameObject, -1f, 24f);
             refs.BreakdownText = CreateText(captured.transform, "BreakdownText", "합계 0", 20,
-                new Color(1f, 0.95f, 0.6f), TextAnchor.UpperLeft);
+                UIStyles.Ink, TextAnchor.UpperLeft);
             var bdLe = refs.BreakdownText.gameObject.AddComponent<LayoutElement>();
             bdLe.flexibleHeight = 1f;
 
@@ -196,7 +214,7 @@ namespace Hwatu.View
             flipAreaRt.anchoredPosition = new Vector2(-20f, -76f);
 
             var flipLabel = CreateText(flipArea.transform, "Label", "더미 / 마지막 뒤집힘", 18,
-                new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleCenter);
+                UIStyles.MutedPaper, TextAnchor.MiddleCenter);
             var flipLabelRt = (RectTransform)flipLabel.transform;
             flipLabelRt.anchorMin = new Vector2(0f, 1f);
             flipLabelRt.anchorMax = new Vector2(1f, 1f);
@@ -204,17 +222,17 @@ namespace Hwatu.View
             flipLabelRt.sizeDelta = new Vector2(0f, 24f);
             flipLabelRt.anchoredPosition = Vector2.zero;
 
-            var deckBack = CreatePanel(flipArea.transform, "DeckBack", new Color(0.18f, 0.18f, 0.22f));
+            var deckBack = CreateDeckBackStack(flipArea.transform, "DeckBack", deckSlotSize);
             var deckBackRt = (RectTransform)deckBack.transform;
             deckBackRt.anchorMin = deckBackRt.anchorMax = new Vector2(0f, 0f);
             deckBackRt.pivot = new Vector2(0f, 0f);
             deckBackRt.sizeDelta = deckSlotSize;
             deckBackRt.anchoredPosition = new Vector2(20f, 8f);
             refs.DeckBackRect = deckBackRt;
-            refs.DeckBackText = CreateText(deckBack.transform, "Count", "더미\n-", 20, Color.white, TextAnchor.MiddleCenter);
+            refs.DeckBackText = CreateText(deckBack.transform, "Count", "더미\n-", 20, UIStyles.Paper, TextAnchor.MiddleCenter);
             Stretch((RectTransform)refs.DeckBackText.transform, 4f, 4f);
 
-            var flipSlot = CreatePanel(flipArea.transform, "FlipSlot", new Color(0.1f, 0.1f, 0.1f, 0.6f));
+            var flipSlot = CreateSlot(flipArea.transform, "FlipSlot");
             var flipSlotRt = (RectTransform)flipSlot.transform;
             flipSlotRt.anchorMin = flipSlotRt.anchorMax = new Vector2(1f, 0f);
             flipSlotRt.pivot = new Vector2(1f, 0f);
@@ -249,17 +267,17 @@ namespace Hwatu.View
             Stretch(refs.CardLayer, 0f, 0f);
 
             // ── 고/스톱 모달 ─────────────────────────────────────────
-            var goStopOverlay = CreatePanel(root, "GoStopModal", new Color(0f, 0f, 0f, 0.6f));
+            var goStopOverlay = CreatePanel(root, "GoStopModal", WithAlpha(UIStyles.Ink, 0.60f));
             var goStopRt = (RectTransform)goStopOverlay.transform;
             Stretch(goStopRt, 0f, 0f);
             goStopOverlay.raycastTarget = true; // 표시 중 다른 입력 잠금
             refs.GoStopModal = goStopOverlay.gameObject;
 
-            var goStopBox = CreatePanel(goStopOverlay.transform, "Box", new Color(0.16f, 0.16f, 0.20f, 0.98f));
+            var goStopBox = CreatePanel(goStopOverlay.transform, "Box", UIStyles.Paper);
             var goStopBoxRt = (RectTransform)goStopBox.transform;
             goStopBoxRt.sizeDelta = new Vector2(540f, 400f);
 
-            var goStopTitle = CreateText(goStopBox.transform, "Title", "고 / 스톱?", 36, Color.white,
+            var goStopTitle = CreateText(goStopBox.transform, "Title", "고 / 스톱?", 36, UIStyles.Ink,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
             var goStopTitleRt = (RectTransform)goStopTitle.transform;
             goStopTitleRt.anchorMin = new Vector2(0f, 1f);
@@ -268,7 +286,7 @@ namespace Hwatu.View
             goStopTitleRt.sizeDelta = new Vector2(0f, 60f);
             goStopTitleRt.anchoredPosition = new Vector2(0f, -12f);
 
-            refs.GoStopBody = CreateText(goStopBox.transform, "Body", "", 26, Color.white, TextAnchor.UpperCenter);
+            refs.GoStopBody = CreateText(goStopBox.transform, "Body", "", 26, UIStyles.Ink, TextAnchor.UpperCenter);
             var goStopBodyRt = (RectTransform)refs.GoStopBody.transform;
             goStopBodyRt.anchorMin = new Vector2(0f, 0f);
             goStopBodyRt.anchorMax = new Vector2(1f, 1f);
@@ -276,7 +294,7 @@ namespace Hwatu.View
             goStopBodyRt.offsetMax = new Vector2(-24f, -80f);
 
             refs.GoStopWarn = CreateText(goStopBox.transform, "Warn", "", 24,
-                new Color(1f, 0.45f, 0.4f), TextAnchor.MiddleCenter, FontStyle.Bold);
+                UIStyles.Vermilion, TextAnchor.MiddleCenter, FontStyle.Bold);
             var warnRt = (RectTransform)refs.GoStopWarn.transform;
             warnRt.anchorMin = new Vector2(0f, 0f);
             warnRt.anchorMax = new Vector2(1f, 0f);
@@ -284,7 +302,7 @@ namespace Hwatu.View
             warnRt.sizeDelta = new Vector2(0f, 34f);
             warnRt.anchoredPosition = new Vector2(0f, 96f);
 
-            var goStopButtons = new GameObject("Buttons", typeof(RectTransform));
+            var goStopButtons = new GameObject("GoStopActions", typeof(RectTransform));
             goStopButtons.transform.SetParent(goStopBox.transform, false);
             var goStopButtonsRt = (RectTransform)goStopButtons.transform;
             goStopButtonsRt.anchorMin = new Vector2(0f, 0f);
@@ -300,17 +318,15 @@ namespace Hwatu.View
             goStopRow.childForceExpandWidth = false;
             goStopRow.childForceExpandHeight = false;
             var stopButton = CreateButton(goStopButtons.transform, "StopButton", "스톱", new Vector2(230f, 56f), 24, onStop);
-            stopButton.image.color = new Color(0.70f, 0.30f, 0.28f);
             refs.StopButton = stopButton;
             refs.StopButtonLabel = stopButton.GetComponentInChildren<TextMeshProUGUI>();
             var goButton = CreateButton(goStopButtons.transform, "GoButton", "고", new Vector2(230f, 56f), 24, onGo);
-            goButton.image.color = new Color(0.28f, 0.55f, 0.32f);
             refs.GoButtonLabel = goButton.GetComponentInChildren<TextMeshProUGUI>();
 
             refs.GoStopModal.SetActive(false);
 
             // ── 라운드 종료 패널 ─────────────────────────────────────
-            var overlay = CreatePanel(root, "RoundOverPanel", new Color(0f, 0f, 0f, 0.72f));
+            var overlay = CreatePanel(root, "RoundOverPanel", WithAlpha(UIStyles.Ink, 0.72f));
             var overlayRt = (RectTransform)overlay.transform;
             Stretch(overlayRt, 0f, 0f);
             overlayRt.anchorMin = Vector2.zero;
@@ -318,11 +334,11 @@ namespace Hwatu.View
             overlay.raycastTarget = true; // 하위 UI 입력 차단
             refs.RoundOverPanel = overlay.gameObject;
 
-            var box = CreatePanel(overlay.transform, "Box", new Color(0.15f, 0.15f, 0.18f, 0.98f));
+            var box = CreatePanel(overlay.transform, "Box", UIStyles.Paper);
             var boxRt = (RectTransform)box.transform;
             boxRt.sizeDelta = new Vector2(620f, 560f);
 
-            refs.RoundOverTitle = CreateText(box.transform, "Title", "판 종료", 40, Color.white,
+            refs.RoundOverTitle = CreateText(box.transform, "Title", "판 종료", 40, UIStyles.Ink,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
             var titleRt = (RectTransform)refs.RoundOverTitle.transform;
             titleRt.anchorMin = new Vector2(0f, 1f);
@@ -331,7 +347,7 @@ namespace Hwatu.View
             titleRt.sizeDelta = new Vector2(0f, 70f);
             titleRt.anchoredPosition = new Vector2(0f, -16f);
 
-            refs.RoundOverBody = CreateText(box.transform, "Body", "", 26, new Color(1f, 0.95f, 0.7f),
+            refs.RoundOverBody = CreateText(box.transform, "Body", "", 26, UIStyles.Ink,
                 TextAnchor.UpperCenter);
             var bodyRt = (RectTransform)refs.RoundOverBody.transform;
             bodyRt.anchorMin = new Vector2(0f, 0f);
@@ -339,7 +355,7 @@ namespace Hwatu.View
             bodyRt.offsetMin = new Vector2(30f, 100f);
             bodyRt.offsetMax = new Vector2(-30f, -100f);
 
-            var buttonRow = new GameObject("Buttons", typeof(RectTransform));
+            var buttonRow = new GameObject("RoundOverActions", typeof(RectTransform));
             buttonRow.transform.SetParent(box.transform, false);
             var buttonRowRt = (RectTransform)buttonRow.transform;
             buttonRowRt.anchorMin = new Vector2(0f, 0f);
@@ -361,7 +377,7 @@ namespace Hwatu.View
             refs.RoundOverPanel.SetActive(false);
 
             // ── 특수 이벤트 배너 (맨 마지막 sibling → 종료 패널 위에도 보인다) ──
-            refs.BannerText = CreateText(root, "Banner", "", 84, new Color(1f, 0.9f, 0.2f),
+            refs.BannerText = CreateText(root, "Banner", "", 84, UIStyles.Gold,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
             var bannerRt = (RectTransform)refs.BannerText.transform;
             bannerRt.anchorMin = bannerRt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -370,18 +386,52 @@ namespace Hwatu.View
             refs.BannerText.gameObject.SetActive(false);
 
             // ── 딜 입력 잠금 + 클릭 스킵 (맨 위 sibling — 전체 입력을 가로챈다) ──
-            var blocker = CreatePanel(root, "DealBlocker", Color.clear);
-            blocker.raycastTarget = true;
-            Stretch((RectTransform)blocker.transform, 0f, 0f);
-            var blockerButton = blocker.gameObject.AddComponent<Button>();
-            blockerButton.transition = Selectable.Transition.None;
-            refs.DealBlocker = blocker.gameObject;
+            var blockerButton = UIStyles.CreateInvisibleButton(root, "DealBlocker");
+            Stretch((RectTransform)blockerButton.transform, 0f, 0f);
+            refs.DealBlocker = blockerButton.gameObject;
             refs.DealBlocker.SetActive(false);
+
+            refs.DevTopBar.SetActive(false);
+            refs.LogPanel.SetActive(false);
 
             return refs;
         }
 
         // ── 공용 헬퍼 ───────────────────────────────────────────────
+
+        private static Image CreateDeckBackStack(Transform parent, string name, Vector2 size)
+        {
+            var root = UIStyles.CreateSolidImage(parent, name, Color.clear);
+            var rootRt = (RectTransform)root.transform;
+            rootRt.sizeDelta = size;
+            root.raycastTarget = false;
+            var sprite = CardArtDatabase.Instance != null ? CardArtDatabase.Instance.BackSprite : null;
+
+            for (int i = 0; i < 3; i++)
+            {
+                var card = UIStyles.CreateSolidImage(root.transform, $"Back_{i}", UIStyles.Vermilion);
+                var rt = (RectTransform)card.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = size;
+                rt.anchoredPosition = new Vector2(i * 5f, -i * 4f);
+                rt.localRotation = Quaternion.Euler(0f, 0f, -2f + i * 2f);
+                card.sprite = sprite;
+                card.color = sprite != null ? Color.white : UIStyles.Vermilion;
+                card.preserveAspect = true;
+            }
+
+            return root;
+        }
+
+        private static Image CreateSlot(Transform parent, string name)
+        {
+            var slot = UIStyles.CreateSolidImage(parent, name, WithAlpha(UIStyles.Ink, 0.12f));
+            slot.sprite = UIStyles.GetUiSprite("btn_ink_disabled");
+            slot.type = Image.Type.Sliced;
+            slot.color = slot.sprite != null ? Color.white : WithAlpha(UIStyles.Ink, 0.12f);
+            return slot;
+        }
 
         private static TextMeshProUGUI CreateText(Transform parent, string name, string content, int fontSize,
             Color color, TextAnchor anchor, FontStyle style = FontStyle.Normal)
@@ -398,30 +448,17 @@ namespace Hwatu.View
 
         public static Image CreatePanel(Transform parent, string name, Color color)
         {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            var image = go.AddComponent<Image>();
-            image.color = color;
-            image.raycastTarget = false;
-            return image;
+            if (color.a < 0.90f || name.Contains("Overlay") || name.Contains("Modal")
+                || name.Contains("Blocker") || name.Contains("PaintWash") || name.Contains("Slot"))
+                return UIStyles.CreateSolidImage(parent, name, color);
+
+            return UIStyles.CreatePanel(parent, name);
         }
 
         public static Button CreateButton(Transform parent, string name, string label, Vector2 size,
             int fontSize, Action onClick)
         {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            ((RectTransform)go.transform).sizeDelta = size;
-            SetPreferred(go, size.x, size.y);
-            var image = go.AddComponent<Image>();
-            image.color = new Color(0.25f, 0.45f, 0.75f);
-            var button = go.AddComponent<Button>();
-            button.targetGraphic = image;
-            if (onClick != null)
-                button.onClick.AddListener(() => onClick());
-            var text = CreateText(go.transform, "Label", label, fontSize, Color.white, TextAnchor.MiddleCenter);
-            Stretch((RectTransform)text.transform, 4f, 4f);
-            return button;
+            return UIStyles.CreateButton(parent, name, label, size, fontSize, onClick);
         }
 
         public static TMP_InputField CreateInputField(Transform parent, string name, string placeholderText, Vector2 size)
@@ -431,7 +468,9 @@ namespace Hwatu.View
             ((RectTransform)go.transform).sizeDelta = size;
             SetPreferred(go, size.x, size.y);
             var bg = go.AddComponent<Image>();
-            bg.color = new Color(0.92f, 0.92f, 0.92f);
+            bg.sprite = UIStyles.GetUiSprite("panel_hanji");
+            bg.type = Image.Type.Sliced;
+            bg.color = Color.white;
 
             var viewportGo = new GameObject("InputViewport", typeof(RectTransform));
             viewportGo.transform.SetParent(go.transform, false);
@@ -470,6 +509,12 @@ namespace Hwatu.View
             if (le == null) le = go.AddComponent<LayoutElement>();
             if (width > 0f) le.preferredWidth = width;
             if (height > 0f) le.preferredHeight = height;
+        }
+
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            color.a = alpha;
+            return color;
         }
     }
 }

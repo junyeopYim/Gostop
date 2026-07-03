@@ -8,6 +8,7 @@
     "preview": "node render.mjs preview",
     "render": "node render.mjs all",
     "stamps": "node render.mjs stamps",
+    "ui": "node render.mjs ui",
     "prep": "node prep-illust.mjs"
   },
   "dependencies": {

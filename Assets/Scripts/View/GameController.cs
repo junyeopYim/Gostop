@@ -45,6 +45,7 @@ namespace Hwatu.View
         private bool _uiDeferredCapApplied;
         private float _uiDeferredSince;
         private bool _roundOverPending;
+        private bool _roundOverStampPending;
 
         private void Awake()
         {
@@ -73,6 +74,7 @@ namespace Hwatu.View
 
         private void LateUpdate()
         {
+            HandleDevUiToggle();
             if (_dirty)
             {
                 _dirty = false;
@@ -93,10 +95,7 @@ namespace Hwatu.View
                     _uiDeferredCapApplied = true;
                     RedrawGoStopModal();
                     if (_roundOverPending)
-                    {
-                        _roundOverPending = false;
-                        _ui.RoundOverPanel.SetActive(true);
-                    }
+                        ShowRoundOverPanel();
                 }
             }
         }
@@ -134,6 +133,21 @@ namespace Hwatu.View
             _ui.RoundOverButtons.SetActive(!embedded);
             _ui.SeedField.interactable = !embedded;
             _ui.TargetField.interactable = !embedded;
+        }
+
+        private void HandleDevUiToggle()
+        {
+            bool pressed;
+#if ENABLE_INPUT_SYSTEM
+            pressed = UnityEngine.InputSystem.Keyboard.current != null
+                && UnityEngine.InputSystem.Keyboard.current.f1Key.wasPressedThisFrame;
+#else
+            pressed = Input.GetKeyDown(KeyCode.F1);
+#endif
+            if (!pressed || _ui == null) return;
+            bool show = _ui.DevTopBar != null && !_ui.DevTopBar.activeSelf;
+            if (_ui.DevTopBar != null) _ui.DevTopBar.SetActive(show);
+            if (_ui.LogPanel != null) _ui.LogPanel.SetActive(show);
         }
 
         private void StartRoundCore(List<Card> deck, int seed, RoundConfig config)
@@ -308,7 +322,7 @@ namespace Hwatu.View
             if (result.EndReason == EndReason.GoBak) title += " «고박!»";
             else if (result.EndReason == EndReason.Chongtong) title += " 총통!";
             _ui.RoundOverTitle.text = title;
-            _ui.RoundOverTitle.color = result.Success ? new Color(0.5f, 1f, 0.55f) : new Color(1f, 0.5f, 0.45f);
+            _ui.RoundOverTitle.color = result.Success ? UIStyles.Gold : UIStyles.Vermilion;
 
             var body = new StringBuilder();
             body.AppendLine($"종료 사유: {reason}");
@@ -328,6 +342,7 @@ namespace Hwatu.View
             body.AppendLine($"고 {result.GoCount}회 / {result.TurnCount}턴 / 시드 {_currentSeed}");
             _ui.RoundOverBody.text = body.ToString();
             _roundOverPending = true; // 진행 중 트윈이 끝난 뒤 표시
+            _roundOverStampPending = result.Success;
             _dirty = true;
 
             RoundFinished?.Invoke(result); // [임베드 이음매 ②]
@@ -415,6 +430,13 @@ namespace Hwatu.View
                 $"끗수 {_engine.CurrentBreakdown.Total} x 배수 {_engine.CurrentMultiplier}"
                 + $" = 예상 {_engine.StopScoreNow}점 / 목표 {_engine.Config.TargetScore}"
                 + (_engine.GoCount > 0 ? $" ({_engine.GoCount}고)" : "");
+            if (_ui.MiniHudText != null)
+            {
+                int turn = !_started ? 0 : Mathf.Min(_engine.TurnCount + 1, handSize);
+                _ui.MiniHudText.text =
+                    $"{turn}턴 · 끗수 {_engine.CurrentBreakdown.Total} x 배수 {_engine.CurrentMultiplier}"
+                    + $" = 예상 {_engine.StopScoreNow} / 목표 {_engine.Config.TargetScore}";
+            }
 
             _table.ReconcileIfIdle(); // 연출 중이면 정산 스텝이 대신 재조정한다
 
@@ -441,10 +463,16 @@ namespace Hwatu.View
             RedrawCaptured();
             RedrawGoStopModal();
             if (_roundOverPending)
-            {
-                _roundOverPending = false;
-                _ui.RoundOverPanel.SetActive(true);
-            }
+                ShowRoundOverPanel();
+        }
+
+        private void ShowRoundOverPanel()
+        {
+            _roundOverPending = false;
+            _ui.RoundOverPanel.SetActive(true);
+            if (!_roundOverStampPending) return;
+            _roundOverStampPending = false;
+            SealStampEffect.Play((RectTransform)_ui.RoundOverTitle.transform, SealStampKind.Red);
         }
 
         private void RedrawGoStopModal()
@@ -535,7 +563,7 @@ namespace Hwatu.View
             go.tag = "MainCamera";
             var cam = go.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.09f, 0.22f, 0.13f);
+            cam.backgroundColor = UIStyles.Blanket;
             cam.orthographic = true;
             cam.cullingMask = 0;
         }

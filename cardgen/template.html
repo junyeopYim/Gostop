@@ -17,7 +17,7 @@
       background: var(--ash);
     }
     /* 단일 카드 / 오버레이 캡처 모드: 페이지 배경 투명 */
-    body.single-mode, body.overlay-mode, body.stamp-mode { background: transparent; }
+    body.single-mode, body.overlay-mode, body.stamp-mode, body.ui-mode { background: transparent; }
 
     /* ── 격자 프리뷰 ─────────────────────────────── */
     #stage.grid {
@@ -134,6 +134,15 @@
       background: transparent;
     }
     .stamp-box > svg { display: block; width: 100%; height: 100%; }
+
+    .ui-box {
+      position: relative;
+      width: var(--ui-w);
+      height: var(--ui-h);
+      background: transparent;
+      overflow: visible;
+    }
+    .ui-box > svg { display: block; width: 100%; height: 100%; }
   </style>
 </head>
 <body>
@@ -261,6 +270,18 @@
       return box;
     }
 
+    async function buildUi(name) {
+      const manifest = await (await fetch("ui/manifest.json")).json();
+      const item = manifest.items.find((x) => x.id === name);
+      if (!item) throw new Error(`ui item not found: ${name}`);
+      document.documentElement.style.setProperty("--ui-w", `${item.width}px`);
+      document.documentElement.style.setProperty("--ui-h", `${item.height}px`);
+      const box = el("div", "ui-box");
+      box.id = `ui-${name}`;
+      box.append(await inlineSvgCached(`ui/${item.source || `${name}.svg`}`));
+      return box;
+    }
+
     async function main() {
       const data = await (await fetch("cards.json")).json();
 
@@ -275,8 +296,12 @@
       const cardId = params.get("card");
       const overlayName = params.get("overlay");
       const stampName = params.get("stamp");
+      const uiName = params.get("ui");
 
-      if (stampName) {
+      if (uiName) {
+        document.body.classList.add("ui-mode");
+        stage.append(await buildUi(uiName));
+      } else if (stampName) {
         document.body.classList.add("stamp-mode");
         stage.append(await buildStamp(stampName));
       } else if (overlayName) {

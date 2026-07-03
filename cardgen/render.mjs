@@ -1,5 +1,5 @@
 // 카드/오버레이 렌더러.
-// 사용법: node render.mjs <all | card <id> | back | overlays | stamps | preview> [--copy <dir>]
+// 사용법: node render.mjs <all | card <id> | back | overlays | stamps | ui | preview> [--copy <dir>]
 // Node 내장 http로 cardgen/을 서빙하고 playwright chromium으로 캡처한다.
 import http from "node:http";
 import path from "node:path";
@@ -11,6 +11,7 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const OUT_CARDS = path.join(ROOT, "out", "cards");
 const OUT_OVERLAYS = path.join(ROOT, "out", "overlays");
 const OUT_STAMPS = path.join(ROOT, "out", "stamps");
+const OUT_UI = path.join(ROOT, "out", "ui");
 const READY_TIMEOUT_MS = 30000;
 
 const MIME = {
@@ -101,6 +102,14 @@ async function captureStamp(page, base, name) {
   return out;
 }
 
+async function captureUi(page, base, name) {
+  await page.goto(`${base}/template.html?ui=${encodeURIComponent(name)}`);
+  await waitReady(page);
+  const out = path.join(OUT_UI, `${name}.png`);
+  await page.locator(`#ui-${name}`).screenshot({ omitBackground: true, path: out });
+  return out;
+}
+
 // frames/*.svg → frame_<이름>, badges/*.svg → badge_<이름>
 async function listOverlays() {
   const found = [];
@@ -126,6 +135,11 @@ async function listStamps() {
     .map((f) => f.slice(0, -4));
 }
 
+async function listUiAssets() {
+  const manifest = JSON.parse(await readFile(path.join(ROOT, "ui", "manifest.json"), "utf8"));
+  return manifest.items.map((item) => item.id);
+}
+
 async function withBrowser(fn) {
   const { server, base } = await startServer();
   const browser = await chromium.launch();
@@ -144,10 +158,18 @@ async function withBrowser(fn) {
 // out/cards → <dir>/Base, out/overlays → <dir>/Overlays
 async function copyOut(dir) {
   const target = path.resolve(process.cwd(), dir);
+  const targetName = path.basename(target).toLowerCase();
+  const cardTarget = targetName === "art" ? path.join(target, "Cards") : target;
+  const uiTarget = targetName === "cards"
+    ? path.join(path.dirname(target), "UI")
+    : targetName === "ui"
+      ? target
+      : path.join(target, "UI");
   const jobs = [
-    [OUT_CARDS, path.join(target, "Base")],
-    [OUT_OVERLAYS, path.join(target, "Overlays")],
-    [OUT_STAMPS, path.join(target, "Stamps")],
+    [OUT_CARDS, path.join(cardTarget, "Base")],
+    [OUT_OVERLAYS, path.join(cardTarget, "Overlays")],
+    [OUT_STAMPS, path.join(cardTarget, "Stamps")],
+    [OUT_UI, uiTarget],
   ];
   for (const [src, dst] of jobs) {
     try {
@@ -159,10 +181,16 @@ async function copyOut(dir) {
     await cp(src, dst, { recursive: true, force: true });
     console.log(`복사: ${src} → ${dst}`);
   }
+  try {
+    await mkdir(uiTarget, { recursive: true });
+    await cp(path.join(ROOT, "ui", "manifest.json"), path.join(uiTarget, "manifest.json"), { force: true });
+  } catch {
+    // UI manifest is copied only when the ui asset source exists.
+  }
 }
 
 function usage() {
-  console.error("사용법: node render.mjs <all | card <id> | back | overlays | stamps | preview> [--copy <dir>]");
+  console.error("사용법: node render.mjs <all | card <id> | back | overlays | stamps | ui | preview> [--copy <dir>]");
   process.exit(1);
 }
 
@@ -262,6 +290,23 @@ switch (cmd) {
       for (const name of stamps) {
         await captureStamp(page, base, name);
         console.log(`${name}.png`);
+      }
+    });
+    if (copyDir) await copyOut(copyDir);
+    break;
+  }
+
+  case "ui": {
+    const assets = await listUiAssets();
+    if (assets.length === 0) {
+      console.error("ui/manifest.json has no items");
+      process.exit(1);
+    }
+    await mkdir(OUT_UI, { recursive: true });
+    await withBrowser(async (page, base) => {
+      for (const name of assets) {
+        await captureUi(page, base, name);
+        console.log(`ui ${name}.png`);
       }
     });
     if (copyDir) await copyOut(copyDir);

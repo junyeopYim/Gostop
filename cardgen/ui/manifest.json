@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    { "id": "btn_ink_normal", "source": "btn_ink_normal.svg", "width": 384, "height": 96, "border": { "left": 34, "right": 34, "top": 28, "bottom": 28 } },
+    { "id": "btn_ink_hover", "source": "btn_ink_hover.svg", "width": 384, "height": 96, "border": { "left": 34, "right": 34, "top": 28, "bottom": 28 } },
+    { "id": "btn_ink_pressed", "source": "btn_ink_pressed.svg", "width": 384, "height": 96, "border": { "left": 34, "right": 34, "top": 28, "bottom": 28 } },
+    { "id": "btn_ink_disabled", "source": "btn_ink_disabled.svg", "width": 384, "height": 96, "border": { "left": 34, "right": 34, "top": 28, "bottom": 28 } },
+    { "id": "panel_hanji", "source": "panel_hanji.svg", "width": 512, "height": 512, "border": { "left": 72, "right": 72, "top": 72, "bottom": 72 } },
+    { "id": "divider_stroke", "source": "divider_stroke.svg", "width": 512, "height": 32, "border": { "left": 0, "right": 0, "top": 0, "bottom": 0 } },
+    { "id": "icon_honbul_on", "source": "icon_honbul_on.svg", "width": 96, "height": 96, "border": { "left": 0, "right": 0, "top": 0, "bottom": 0 } },
+    { "id": "icon_honbul_off", "source": "icon_honbul_off.svg", "width": 96, "height": 96, "border": { "left": 0, "right": 0, "top": 0, "bottom": 0 } },
+    { "id": "icon_yeopjeon", "source": "icon_yeopjeon.svg", "width": 96, "height": 96, "border": { "left": 0, "right": 0, "top": 0, "bottom": 0 } },
+    { "id": "icon_bujeok", "source": "icon_bujeok.svg", "width": 128, "height": 64, "border": { "left": 0, "right": 0, "top": 0, "bottom": 0 } },
+    { "id": "vignette_edge", "source": "vignette_edge.svg", "width": 1024, "height": 1024, "border": { "left": 0, "right": 0, "top": 0, "bottom": 0 } }
+  ]
+}

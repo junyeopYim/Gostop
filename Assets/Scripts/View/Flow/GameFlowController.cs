@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Hwatu.Run;
+using Hwatu.View;
 using Hwatu.View.Screens;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -146,7 +147,7 @@ namespace Hwatu.View.Flow
             go.tag = "MainCamera";
             var cam = go.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.09f, 0.09f, 0.11f);
+            cam.backgroundColor = UIStyles.Ash;
             cam.orthographic = true;
             cam.cullingMask = 0;
         }
