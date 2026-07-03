@@ -52,6 +52,9 @@ yarn-error.log*
 /.agents/
 /.codex/
 
+# Local visual QA captures
+/Captures/CodexLayoutPreview/
+
 # Gradle cache directory
 .gradle/
 
