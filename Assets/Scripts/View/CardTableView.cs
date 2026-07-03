@@ -637,7 +637,7 @@ namespace Hwatu.View
 
         private Vector2 DeckPos() => ToLayer(_ui.DeckBackRect, _ui.DeckBackRect.rect.center);
         private Vector2 FlipSlotPos() => ToLayer(_ui.FlipSlotRect, _ui.FlipSlotRect.rect.center);
-        private Vector2 FloorCenter() => ToLayer(_ui.FloorArea, Vector2.zero);
+        private Vector2 FloorCenter() => DeckPos() + ViewTuning.FloorScatterCenterOffset;
         private Vector2 CapturedRowPos(int row) => ToLayer(_ui.CapturedGrids[row], Vector2.zero);
 
         private static Vector2 BoundOffset(int i) => new Vector2(-13.5f + i * 13.5f, 27f - i * 13.5f);
@@ -652,7 +652,7 @@ namespace Hwatu.View
             return new FloorTarget
             {
                 Position = FloorCellPosition(index, count) + sample.Offset,
-                Rotation = sample.RotationDegrees
+                Rotation = FloorCellRotation(index, count) + sample.RotationDegrees
             };
         }
 
@@ -678,20 +678,29 @@ namespace Hwatu.View
 
         private Vector2 FloorCellPosition(int index, int count)
         {
-            float cw = ViewTuning.CardSize.x * ViewTuning.FloorScale;
-            float ch = ViewTuning.CardSize.y * ViewTuning.FloorScale;
-            float sp = 15f;
-            const int maxCols = 7;
-            int cols = Mathf.Clamp(count, 1, maxCols);
-            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)maxCols));
-            float w = cols * cw + (cols - 1) * sp;
-            float h = rows * ch + (rows - 1) * sp;
-            int col = index % maxCols;
-            int row = index / maxCols;
-            var c = FloorCenter();
-            return new Vector2(
-                c.x - w * 0.5f + col * (cw + sp) + cw * 0.5f,
-                c.y + h * 0.5f - row * (ch + sp) - ch * 0.5f);
+            count = Mathf.Max(1, count);
+            float angle = FloorCellAngle(index, count);
+            float rad = angle * Mathf.Deg2Rad;
+            float crowded = Mathf.Max(0, count - 8);
+            float radiusX = ViewTuning.FloorScatterRadiusX + Mathf.Min(crowded, 4f) * 18f;
+            float radiusY = ViewTuning.FloorScatterRadiusY + Mathf.Min(crowded, 4f) * 10f;
+            var slot = new Vector2(Mathf.Cos(rad) * radiusX, Mathf.Sin(rad) * radiusY);
+            var wobble = new Vector2(
+                Mathf.Sin((index + 1) * 2.17f) * 18f,
+                Mathf.Cos((index + 1) * 1.73f) * 12f);
+            return FloorCenter() + slot + wobble;
+        }
+
+        private static float FloorCellAngle(int index, int count)
+        {
+            if (count <= 1) return -95f;
+            return ViewTuning.FloorScatterStartAngle + 360f * index / count;
+        }
+
+        private static float FloorCellRotation(int index, int count)
+        {
+            float angle = FloorCellAngle(index, Mathf.Max(1, count)) * Mathf.Deg2Rad;
+            return Mathf.Sin(angle * 1.7f + index * 0.37f) * ViewTuning.FloorScatterSlotRotationDegrees;
         }
 
         private void FanTarget(int i, int n, out Vector2 pos, out float rot)

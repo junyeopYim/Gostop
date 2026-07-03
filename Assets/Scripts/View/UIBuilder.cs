@@ -164,10 +164,11 @@ namespace Hwatu.View
             capRt.anchorMin = new Vector2(1f, 0f);
             capRt.anchorMax = new Vector2(1f, 1f);
             capRt.pivot = new Vector2(0.5f, 0f);
-            capRt.sizeDelta = new Vector2(400f, -64f);
-            capRt.anchoredPosition = new Vector2(-200f, 0f);
+            capRt.sizeDelta = new Vector2(420f, -64f);
+            capRt.anchoredPosition = new Vector2(-210f, 0f);
+            captured.gameObject.AddComponent<RectMask2D>();
             var capLayout = captured.gameObject.AddComponent<VerticalLayoutGroup>();
-            capLayout.padding = new RectOffset(12, 12, 12, 12);
+            capLayout.padding = new RectOffset(74, 30, 28, 24);
             capLayout.spacing = 6f;
             capLayout.childAlignment = TextAnchor.UpperLeft;
             capLayout.childControlWidth = true;
@@ -183,6 +184,8 @@ namespace Hwatu.View
             {
                 refs.CapturedHeaders[i] = CreateText(captured.transform, $"Header_{rowNames[i]}",
                     $"{rowNames[i]} 0", 20, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+                refs.CapturedHeaders[i].overflowMode = TextOverflowModes.Ellipsis;
+                refs.CapturedHeaders[i].margin = new Vector4(2f, 0f, 2f, 0f);
                 SetPreferred(refs.CapturedHeaders[i].gameObject, -1f, 24f);
 
                 var gridGo = new GameObject($"Grid_{rowNames[i]}", typeof(RectTransform));
@@ -196,9 +199,13 @@ namespace Hwatu.View
             }
 
             var bdHeader = CreateText(captured.transform, "BreakdownHeader", "끗수", 20, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+            bdHeader.overflowMode = TextOverflowModes.Ellipsis;
+            bdHeader.margin = new Vector4(2f, 0f, 2f, 0f);
             SetPreferred(bdHeader.gameObject, -1f, 24f);
             refs.BreakdownText = CreateText(captured.transform, "BreakdownText", "합계 0", 20,
                 UIStyles.Ink, TextAnchor.UpperLeft);
+            refs.BreakdownText.overflowMode = TextOverflowModes.Ellipsis;
+            refs.BreakdownText.margin = new Vector4(2f, 0f, 2f, 0f);
             var bdLe = refs.BreakdownText.gameObject.AddComponent<LayoutElement>();
             bdLe.flexibleHeight = 1f;
 
@@ -211,7 +218,7 @@ namespace Hwatu.View
             flipAreaRt.anchorMax = new Vector2(0.5f, 1f);
             flipAreaRt.pivot = new Vector2(0.5f, 1f);
             flipAreaRt.sizeDelta = new Vector2(deckSlotSize.x * 2f + 60f, deckSlotSize.y + 46f);
-            flipAreaRt.anchoredPosition = new Vector2(-20f, -76f);
+            flipAreaRt.anchoredPosition = new Vector2(-120f, -215f);
 
             var flipLabel = CreateText(flipArea.transform, "Label", "더미 / 마지막 뒤집힘", 18,
                 UIStyles.MutedPaper, TextAnchor.MiddleCenter);
@@ -247,7 +254,7 @@ namespace Hwatu.View
             refs.FloorArea.anchorMin = refs.FloorArea.anchorMax = new Vector2(0.5f, 0.5f);
             refs.FloorArea.pivot = new Vector2(0.5f, 0.5f);
             refs.FloorArea.sizeDelta = new Vector2(800f, 460f);
-            refs.FloorArea.anchoredPosition = new Vector2(-20f, -40f);
+            refs.FloorArea.anchoredPosition = new Vector2(-120f, 80f);
             // 바닥 배치는 CardTableView가 수동 계산한다 (레이아웃 그룹 없음)
 
             // ── 하단 손패 ────────────────────────────────────────────
@@ -257,7 +264,7 @@ namespace Hwatu.View
             refs.HandArea.anchorMin = refs.HandArea.anchorMax = new Vector2(0.5f, 0f);
             refs.HandArea.pivot = new Vector2(0.5f, 0f);
             refs.HandArea.sizeDelta = new Vector2(1120f, 220f);
-            refs.HandArea.anchoredPosition = new Vector2(-20f, 10f);
+            refs.HandArea.anchoredPosition = new Vector2(-20f, 0f);
             // 손패는 CardTableView가 부채꼴로 수동 배치한다 (레이아웃 그룹 없음)
 
             // ── 카드 레이어 (모든 테이블 카드 뷰의 부모, 모달 아래·판 위) ──

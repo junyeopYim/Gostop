@@ -17,18 +17,23 @@ namespace Hwatu.View
         public static float CaptureEndScale = 45f / 156f;
 
         // ── 바닥 자연 산포 (딜 시드 + 카드 Id에서 무상태 파생) ─────────────
-        public static float FloorJitterMaxX = 12f;
-        public static float FloorJitterMaxY = 8f;
-        public static float FloorJitterRotationDegrees = 3f;
-        public static float FloorJitterPitchFraction = 0.25f;
+        public static float FloorJitterMaxX = 22f;
+        public static float FloorJitterMaxY = 16f;
+        public static float FloorJitterRotationDegrees = 4.5f;
+        public static float FloorJitterPitchFraction = 0.35f;
         public static float BoundStackRotationJitterDegrees = 1.25f;
+        public static Vector2 FloorScatterCenterOffset = new Vector2(50f, -55f);
+        public static float FloorScatterRadiusX = 470f;
+        public static float FloorScatterRadiusY = 260f;
+        public static float FloorScatterStartAngle = 218f;
+        public static float FloorScatterSlotRotationDegrees = 7f;
 
         // ── 부채꼴 손패 ─────────────────────────────────────────────
         public static float FanRadius = 1600f;
         public static float FanAnglePerCard = 4.5f;  // 도 (인접 카드 간격)
         public static float FanMaxAngle = 40f;       // 도 (총각 = min(최대, 장당 x (n-1)))
-        public static float FanApexY = 240f;         // HandArea 로컬 기준 꼭대기 카드 중심 높이
-                                                     // (가장자리 카드의 호 낙차 ~96px가 화면 밖으로 잘리지 않는 값)
+        public static float FanApexY = 125f;         // HandArea 로컬 기준 꼭대기 카드 중심 높이
+                                                     // (기본 손패가 화면 아래로 살짝 들어가 보이도록 낮춘 값)
 
         // ── 호버 부양 ───────────────────────────────────────────────
         public static float HoverLift = 60f;
