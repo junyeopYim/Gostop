@@ -51,6 +51,7 @@ namespace Hwatu.View
         private bool _roundOverPending;
         private bool _roundOverStampPending;
         private GameObject _worldOverlay; // [B] 월드 모드에서 스크린에 남는 것(비네트)의 오버레이 캔버스
+        private ShuffleHand _shuffleHand; // [E] 셔플의 차사 손 (월드 모드 전용, _worldOverlay 소속)
 
         private void Awake()
         {
@@ -165,10 +166,19 @@ namespace Hwatu.View
             var scaler = canvas.GetComponent<CanvasScaler>();
             if (scaler != null) scaler.dynamicPixelsPerUnit = 3f; // 월드 UI 텍스트 라스터 선명도
 
+            // [A] 판 캔버스 배경 담요를 끈다 — 무대 담요(felt)가 단일 평면이 되게(이중 담요 단차 제거).
+            //     HwatuPrototype 단독 씬은 이 경로를 타지 않아 스크린 배경 담요를 유지한다.
+            var bg = canvas.transform.Find("Background");
+            if (bg != null) bg.gameObject.SetActive(false);
+
             RelocateVignetteToScreen();
         }
 
-        /// <summary>[B] 스크린 스페이스였던 판의 비네트를 스크린에 유지한다: 판 위·HUD 아래 오버레이로 이전.</summary>
+        /// <summary>
+        /// [B] 스크린 스페이스였던 판의 비네트를 스크린에 유지한다: 판 위·HUD 아래 오버레이로 이전.
+        /// 같은 오버레이에 판 긴장 비네트(TensionVignette)를 얹고, [D] 점수식·턴 정보(미니 HUD)를
+        /// 테이블(월드)에서 걷어 이 스크린 HUD로 이주한다.
+        /// </summary>
         private void RelocateVignetteToScreen()
         {
             if (_worldOverlay != null) return;
@@ -185,6 +195,16 @@ namespace Hwatu.View
             var vignette = _ui.Canvas.transform.Find("Vignette");
             if (vignette != null) vignette.SetParent(go.transform, false);
             else UIStyles.CreateVignette(go.transform);
+
+            // [B] 판 긴장 비네트(먹 침식) — 정적 비네트 위 전면. 카메라 셰이크 대체.
+            TensionVignette.Attach(go.transform, _engine);
+
+            // [D] 점수식·턴 정보(미니 HUD)를 스크린 HUD 상단 한 줄로 이주 (테이블 위 상시 텍스트 0).
+            if (_ui.MiniHudText != null)
+                _ui.MiniHudText.transform.SetParent(go.transform, false);
+
+            // [E] 셔플의 차사 손 — 비네트 아래(첫 형제)의 스크린 레이어에 얹는다.
+            _shuffleHand = ShuffleHand.Attach(go.transform);
         }
 
         private void HandleDevUiToggle()
@@ -232,6 +252,7 @@ namespace Hwatu.View
 
             _table.SetJitterSeed(seed);
             _table.BeginRound(); // 셔플·딜 연출 (같은 시드 → 동일 재현)
+            if (_shuffleHand != null) _shuffleHand.Play(); // [E] 셔플 손 등장
 
             _logLines.Insert(0, $"시드 {seed} — 새 판 시작"
                 + (reshuffles > 0 ? $" (무효 딜 {reshuffles}회 재셔플)" : ""));
@@ -240,7 +261,11 @@ namespace Hwatu.View
         }
 
         /// <summary>딜 연출을 즉시 완료 상태로 스킵한다 (딜 중 화면 클릭과 동일).</summary>
-        public void SkipDeal() => _table.SkipDeal();
+        public void SkipDeal()
+        {
+            if (_shuffleHand != null) _shuffleHand.Skip(); // [E] 손도 즉시 퇴장
+            _table.SkipDeal();
+        }
 
         /// <summary>진행 중인 모든 연출을 즉시 완료한다 (테스트용).</summary>
         public void CompleteAnimations() => _table.Flush();
@@ -553,7 +578,7 @@ namespace Hwatu.View
         private void RedrawCaptured()
         {
             var byRow = new List<Card>[] { new List<Card>(), new List<Card>(), new List<Card>(), new List<Card>() };
-            int piSum = 0;
+            int piSum = 0, godori = 0, hong = 0, cheong = 0, cho = 0;
             foreach (var card in _engine.Captured)
             {
                 int row = card.Type == CardType.Gwang ? 0
@@ -561,32 +586,47 @@ namespace Hwatu.View
                     : card.Type == CardType.Tti ? 2 : 3;
                 byRow[row].Add(card);
                 if (card.Type == CardType.Pi) piSum += card.PiValue;
+                if (card.Type == CardType.Yeol && card.IsGodoriBird) godori++;
+                if (card.Type == CardType.Tti)
+                {
+                    if (card.RibbonColor == RibbonColor.Hong) hong++;
+                    else if (card.RibbonColor == RibbonColor.Cheong) cheong++;
+                    else if (card.RibbonColor == RibbonColor.Cho) cho++;
+                }
             }
 
-            _ui.CapturedHeaders[0].text = $"광 {byRow[0].Count}장";
-            _ui.CapturedHeaders[1].text = $"열끗 {byRow[1].Count}장";
-            _ui.CapturedHeaders[2].text = $"띠 {byRow[2].Count}장";
-            _ui.CapturedHeaders[3].text = $"피 {piSum} (총 {byRow[3].Count}장)";
-
+            // [D] 실물 더미: 종류별로 최근 카드 스프레드 + 초과분 맨 아래 겹침
             for (int i = 0; i < 4; i++)
+                RedrawPile(i, byRow[i]);
+
+            // [D].3 툴팁: 장수 + 관련 족보 진행 (끗수 합계는 스크린 HUD가 담당 — 중복 표기 금지)
+            _ui.CapturePileTooltips[0].text = $"광 {byRow[0].Count}장 · 3광 {Mathf.Min(byRow[0].Count, 3)}/3";
+            _ui.CapturePileTooltips[1].text = $"열끗 {byRow[1].Count}장 · 고도리 {godori}/3";
+            _ui.CapturePileTooltips[2].text =
+                $"띠 {byRow[2].Count}장 · 홍단 {hong}/3 · 청단 {cheong}/3 · 초단 {cho}/3";
+            _ui.CapturePileTooltips[3].text = $"피 {piSum} ({byRow[3].Count}장) · 10피 {Mathf.Min(piSum, 10)}/10";
+        }
+
+        /// <summary>[D] 한 더미의 겹침 스프레드: 최근 CapturePileVisibleMax장만 어긋나게, 초과분은 맨 아래 겹침.</summary>
+        private void RedrawPile(int row, List<Card> cards)
+        {
+            var pile = _ui.CapturePileRects[row];
+            for (int i = pile.childCount - 1; i >= 0; i--) // 스프레드 카드만 제거 (툴팁·캐처 유지)
             {
-                ClearChildren(_ui.CapturedGrids[i]);
-                foreach (var card in byRow[i])
-                    CardView.Create(_ui.CapturedGrids[i], card, new Vector2(45f, 66f), null);
+                var child = pile.GetChild(i);
+                if (child.GetComponent<CardView>() != null) Destroy(child.gameObject);
             }
 
-            var breakdown = _engine.CurrentBreakdown;
-            if (breakdown.Entries.Count == 0)
+            int n = cards.Count;
+            int visible = Mathf.Max(1, ViewTuning.CapturePileVisibleMax);
+            var cardSize = ViewTuning.CardSize * ViewTuning.CapturePileScale;
+            for (int i = 0; i < n; i++) // 오래된 것부터 생성 → 최근 카드가 맨 위(마지막 형제)
             {
-                _ui.BreakdownText.text = "합계 0";
-            }
-            else
-            {
-                var sb = new StringBuilder();
-                foreach (var e in breakdown.Entries)
-                    sb.Append($"{e.Name} {e.Score} / ");
-                sb.Append($"합계 {breakdown.Total}");
-                _ui.BreakdownText.text = sb.ToString();
+                int fromTop = n - 1 - i; // 0 = 가장 최근
+                int step = Mathf.Min(fromTop, visible - 1); // 초과분은 맨 아래(step 고정) 겹침
+                var cv = CardView.Create(pile, cards[i], cardSize, null);
+                var rt = (RectTransform)cv.transform;
+                rt.anchoredPosition = ViewTuning.CapturePileSpread * step;
             }
         }
 
@@ -600,12 +640,6 @@ namespace Hwatu.View
                 Canvas.ForceUpdateCanvases();
                 _ui.LogScroll.verticalNormalizedPosition = 0f;
             }
-        }
-
-        private static void ClearChildren(Transform parent)
-        {
-            for (int i = parent.childCount - 1; i >= 0; i--)
-                DestroyImmediate(parent.GetChild(i).gameObject);
         }
 
         // ── 부트스트랩 보조 (카메라/이벤트시스템도 코드 생성) ────────

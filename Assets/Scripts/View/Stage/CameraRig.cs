@@ -7,8 +7,10 @@ namespace Hwatu.View.Stage
     /// [A] 원근 카메라를 소유하고 이름 붙은 "포즈" 사이를 회전 트윈으로 이동한다 (컷 금지).
     /// 판을 내려다보는 TableView, 차사 정면 FrontView를 등록하며, 이후 WalkView 추가가
     /// 쉽도록 포즈는 데이터(CameraPose)로 관리한다. 카메라의 최종 로컬 변환은
-    /// 매 LateUpdate에서 (기본 포즈) + (호흡 노이즈) + (긴장 셰이크 오프셋)으로 합성되므로
-    /// 트윈·호흡·셰이크가 서로의 값을 덮어쓰지 않는다 (단일 기록자 원칙).
+    /// 매 LateUpdate에서 (기본 포즈) + (호흡 노이즈)로 합성된다.
+    /// [B] 판(TableView)에 앉으면 카메라는 죽은 듯 고정된다 — 호흡을 포함한 모든 회전
+    /// 노이즈가 꺼진다. 호흡은 포즈의 AllowBreathing 플래그로 켜지고(FrontView 전용),
+    /// 긴장은 더 이상 카메라를 흔들지 않고 화면 가장자리 먹(TensionVignette)으로만 말한다.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CameraRig : MonoBehaviour
@@ -20,12 +22,13 @@ namespace Hwatu.View.Stage
         public const float MaxTransitionSeconds = 0.9f;
         /// <summary>최대 각속도(도/초). 요청 전환이 이보다 빠르면 시간을 늘려 캡을 지킨다.</summary>
         public const float MaxAngularSpeedDegPerSec = 90f;
-        /// <summary>상시 호흡 노이즈 진폭(도) — 미세 회전 ±0.3도.</summary>
-        public const float BreathingAmplitudeDegrees = 0.3f;
+        /// <summary>[B] 상시 호흡 노이즈 진폭(도) — 미세 회전 ±0.2도 (기본값 축소, FrontView 전용).</summary>
+        public const float BreathingAmplitudeDegrees = 0.2f;
 
         // ── 튜닝 노브 (런타임 생성이라 기본값 사용, 인스펙터 배치 시 조정 가능) ──
         [SerializeField] private float _breathingPeriodSeconds = 5f;   // 4~6초 권장
-        [SerializeField] private bool _breathingEnabled = true;
+        // [B] 호흡 허용 여부는 현재 포즈의 AllowBreathing으로 결정한다 (TableView=false).
+        [SerializeField] private bool _breathingEnabled = false;
         [SerializeField] private Color _clearColor = new Color(0.05f, 0.045f, 0.04f, 1f);
 
         public Camera Camera { get; private set; }
@@ -34,12 +37,11 @@ namespace Hwatu.View.Stage
 
         private readonly Dictionary<string, CameraPose> _poses = new Dictionary<string, CameraPose>();
 
-        // 트윈/스냅이 쓰는 "기본 포즈" — 호흡·셰이크는 그 위에 얹는 오프셋 레이어
+        // 트윈/스냅이 쓰는 "기본 포즈" — 호흡은 그 위에 얹는 오프셋 레이어
         private Vector3 _basePos;
         private Quaternion _baseRot = Quaternion.identity;
         private float _baseFov = 50f;
 
-        private Vector3 _shakeEuler;   // TensionShake가 매 프레임 밀어 넣는 가산 회전
         private float _breathSeedX, _breathSeedY;
 
         public static CameraRig Create(Transform parent, int cameraDepth)
@@ -82,6 +84,7 @@ namespace Hwatu.View.Stage
             _basePos = pose.Position;
             _baseRot = pose.Rotation;
             _baseFov = pose.Fov;
+            _breathingEnabled = pose.AllowBreathing; // [B] 포즈가 호흡 허용 여부를 결정 (TableView=정지)
             CurrentPoseId = poseId;
             Compose();
         }
@@ -111,6 +114,8 @@ namespace Hwatu.View.Stage
             if (angle > 0f && angle / duration > MaxAngularSpeedDegPerSec)
                 duration = angle / MaxAngularSpeedDegPerSec;
 
+            // [B] 호흡은 목표 포즈를 따른다 — TableView로 내려가면 즉시 정지, FrontView로 서면 다시 숨.
+            _breathingEnabled = target.AllowBreathing;
             CurrentPoseId = poseId;
             Tween.Custom(this, "pose", duration, Ease.InOutQuad, t =>
             {
@@ -119,9 +124,6 @@ namespace Hwatu.View.Stage
                 _baseFov = Mathf.LerpUnclamped(fromFov, toFov, t);
             }, onComplete);
         }
-
-        /// <summary>TensionShake 등 외부가 매 프레임 밀어 넣는 가산 회전 오프셋(도).</summary>
-        public void SetShakeEuler(Vector3 euler) => _shakeEuler = euler;
 
         public void SetBreathingEnabled(bool on) => _breathingEnabled = on;
 
@@ -133,7 +135,7 @@ namespace Hwatu.View.Stage
             Vector3 breath = _breathingEnabled ? BreathingEuler() : Vector3.zero;
             var t = Camera.transform;
             t.localPosition = _basePos;
-            t.localRotation = _baseRot * Quaternion.Euler(breath + _shakeEuler);
+            t.localRotation = _baseRot * Quaternion.Euler(breath);
             Camera.fieldOfView = _baseFov;
         }
 

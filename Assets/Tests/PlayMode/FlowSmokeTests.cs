@@ -309,11 +309,13 @@ namespace Hwatu.View.Tests
             yield return WaitFor(() => Settled<RunScreen>(flow), "런 진입");
             var runScreen = (RunScreen)flow.Screens.Current;
 
-            // 오늘의 판 진입 (먹 와이프 이후 딜) → 딜 스킵 → 내기 대기
+            // 오늘의 판 진입 (먹 와이프 → 앉기 시선 이동 → 딜) → 딜 스킵 → 내기 대기.
+            // [A] 진입은 FrontView 눈맞춤(0.3s) → TableView 하강(0.6s) 뒤에야 딜이 시작하므로
+            // 프레임 예산이 아니라 실시간으로 기다린다 (일어서기 대기와 같은 패턴).
             runScreen.PlayTodaysRound();
-            yield return WaitFor(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
+            yield return WaitForRealtime(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
                 && (runScreen.EmbeddedGame.Engine.Phase != Phase.RoundOver || runScreen.IsResultVisible),
-                "임베드 판 시작 (와이프 이후 딜)");
+                "임베드 판 시작 (와이프 이후 앉기·딜)", 8f);
             var game = runScreen.EmbeddedGame;
             game.SkipDeal();
             yield return null;
@@ -389,17 +391,18 @@ namespace Hwatu.View.Tests
 
         /// <summary>
         /// 오늘의 판을 승리할 때까지 최대 8판 (봇: 첫 카드/첫 후보/목표 미달이면 고).
-        /// [A] 판 진입·재도전·복귀가 전부 먹 와이프를 거치므로 각 경계를 기다린다
-        /// (실패 확인은 재도전 와이프로 같은 날 새 딜에 직행한다 — 재진입 호출 불필요).
+        /// [A] 첫 진입은 먹 와이프 → 앉기 시선 이동(눈맞춤 0.3s → 하강 0.6s) 뒤에 딜이 시작하고,
+        /// 실패 재도전은 와이프·시선 이동 없이 같은 무대에서 딜만 재생한다 (재진입 호출 불필요).
+        /// 진입 시선 이동은 시간 기반이라 프레임이 아니라 실시간으로 기다린다.
         /// </summary>
         private static IEnumerator WinTodaysBattle(GameFlowController flow, RunScreen runScreen, RunController run)
         {
             runScreen.PlayTodaysRound();
             for (int attempt = 0; attempt < 8 && !run.TodayNodeCleared; attempt++)
             {
-                yield return WaitFor(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
+                yield return WaitForRealtime(() => !flow.IsTransitioning && runScreen.EmbeddedGame != null
                     && (runScreen.EmbeddedGame.Engine.Phase != Phase.RoundOver || runScreen.IsResultVisible),
-                    "임베드 판 시작 (와이프 이후 딜)");
+                    "임베드 판 시작 (와이프 이후 앉기·딜)", 8f);
                 var engine = runScreen.EmbeddedGame.Engine;
                 runScreen.EmbeddedGame.SkipDeal();
                 yield return null;

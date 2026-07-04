@@ -25,7 +25,15 @@ namespace Hwatu.View.Flow
         public RunController CurrentRun { get; private set; }
         /// <summary>화면 전환 코루틴 실행 중 여부 (중복 내비게이션 차단).</summary>
         public bool IsTransitioning { get; private set; }
+        /// <summary>[테스트 전용] 전환 주입 훅. 실제 플레이는 null → 먹 와이프(InkWipeTransition).</summary>
         public static Func<ITransition> DefaultTransitionFactory { get; set; }
+
+        // [환경 안전] Enter Play Mode Options가 DisableDomainReload면 static이 세션 간 남는다.
+        // 중간에 끊긴 PlayMode 테스트가 남긴 DefaultTransitionFactory(예: InstantTransition)가
+        // 실제 플레이의 먹 와이프를 없애는 걸 막으려, 매 플레이 진입 시 초기화한다.
+        // 테스트는 각자 SetUp에서 이 시점 이후 다시 지정하므로 영향받지 않는다.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetTestHooksOnPlay() => DefaultTransitionFactory = null;
 
         private ITransition _transition;
         private int _pendingRunSeed;

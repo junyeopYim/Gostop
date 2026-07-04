@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,15 +18,19 @@ namespace Hwatu.View.Stage
         public const float NodDurationSeconds = 0.5f;
 
         // ── 판 캔버스 배치 (테이블) ─────────────────────────────────
-        // eulerX = 90 - (수평에서 세운 각). 기본 38 = 수평에서 52도 세움 (요구 50~60 범위).
+        // [A] eulerX = 90 - (수평에서 세운 각). 85 = 수평에서 5도 = 거의 눕힘.
+        //     카메라를 이 평면 정면(법선)에 정렬(TableView 피치 85)하면 face-on → 카드가
+        //     왜곡 없는 진짜 탑다운으로 보인다. (완전 평평+정수직은 UI 캔버스 패리티로
+        //     상하/좌우가 뒤집히므로 5도 남겨 face-on 방향을 유지한다.)
         [SerializeField] private Vector3 _canvasPosition = new Vector3(0f, 0.02f, 0.35f);
-        [SerializeField] private Vector3 _canvasEuler = new Vector3(38f, 0f, 0f);
+        [SerializeField] private Vector3 _canvasEuler = new Vector3(85f, 0f, 0f);
         [SerializeField] private float _canvasWidthUnits = 6.6f;   // 1920px 폭이 차지할 월드 폭
         private const float CanvasPixelWidth = 1920f;
         private const float CanvasPixelHeight = 1080f;
 
-        // ── 담요 테이블 (판 캔버스를 프레임할 만큼만 — 너무 크면 차사·배경을 가린다) ──
-        [SerializeField] private Vector2 _feltSize = new Vector2(8.6f, 5.3f);
+        // ── 담요 테이블 ([A] 단일 평면 — 탑다운 프러스텀을 화면 가장자리까지 덮는다.
+        //    판 캔버스 배경 담요는 월드 모드에서 끄므로(GameController) 이 담요가 유일한 평면이다.) ──
+        [SerializeField] private Vector2 _feltSize = new Vector2(26f, 17f);
         [SerializeField] private Vector3 _feltOffset = new Vector3(0f, -0.05f, 0.15f);
 
         // ── 차사 (테이블 건너편 착석 — 담요 먼 가장자리 위로 상반신이 보이게) ──
@@ -52,6 +57,8 @@ namespace Hwatu.View.Stage
 
         private Transform _chasa;
         private Quaternion _chasaBaseRot;
+        // [A] TableView(탑다운)에선 담요만 보이도록 끄고, FrontView·시선 전환 중에만 켜는 배경 요소들(차사+깊이 레이어).
+        private readonly List<SpriteRenderer> _scenery = new List<SpriteRenderer>();
         private static Sprite _whiteSprite;
 
         public static TableStage Create(Transform parent)
@@ -73,8 +80,8 @@ namespace Hwatu.View.Stage
                 // 뒤로 갈수록 살짝 더 어둡게 (깊이감)
                 float shade = Mathf.Lerp(0.30f, 0.15f, layers <= 1 ? 0f : (float)i / (layers - 1));
                 var fallback = new Color(shade, shade * 0.96f, shade * 0.9f, 1f);
-                MakeSprite("BgLayer_" + i, bgSprite, fallback, _bgLayerSizes[i],
-                    _bgLayerPositions[i], FaceCameraRot(), -20 + i);
+                _scenery.Add(MakeSprite("BgLayer_" + i, bgSprite, fallback, _bgLayerSizes[i],
+                    _bgLayerPositions[i], FaceCameraRot(), -20 + i));
             }
 
             // 담요 테이블
@@ -88,8 +95,17 @@ namespace Hwatu.View.Stage
             if (chasaSprite == null) chasaSprite = BuildChasaSilhouette();
             var chasaSr = MakeSprite("Chasa", chasaSprite, new Color(0.09f, 0.08f, 0.07f, 1f),
                 _chasaSize, _chasaPosition, FaceCameraRot(), 0);
+            _scenery.Add(chasaSr);
             _chasa = chasaSr.transform;
             _chasaBaseRot = _chasa.localRotation;
+        }
+
+        /// <summary>[A] 차사·깊이 배경 표시 토글. TableView에선 끄고(담요만), FrontView·시선 전환 중엔 켠다.
+        /// 담요(felt)는 항상 유지된다.</summary>
+        public void SetSceneryVisible(bool on)
+        {
+            foreach (var sr in _scenery)
+                if (sr != null) sr.enabled = on;
         }
 
         /// <summary>[B] 판 캔버스를 월드 스페이스 테이블로 눕혀 배치한다 (지오메트리 단일 출처).</summary>

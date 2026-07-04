@@ -22,11 +22,22 @@ namespace Hwatu.View
         private int _jitterSeed;
 
         private readonly Dictionary<int, CardView> _views = new Dictionary<int, CardView>();
-        private readonly HashSet<int> _flying = new HashSet<int>();     // 획득 패널로 비행 중
+        private readonly HashSet<int> _flying = new HashSet<int>();     // 획득 더미로 비행 중
         private readonly List<GameObject> _badges = new List<GameObject>();
         private readonly HashSet<int> _choiceIds = new HashSet<int>();  // 바닥 선택 후보
         private int _waitingCardId = -1;                                // 바닥 선택 동안 떠 있는 낸 카드
         private int _previewSourceId = -1;                              // 매치 프리뷰 중인 손패 카드
+
+        // [C] 고정 산포 앵커 — 바닥 카드는 배정된 앵커에서 절대 움직이지 않는다 (리플로우 폐지).
+        // 앵커 세트·배정은 시드 결정론적이다 (같은 시드 → 같은 배치).
+        private struct Anchor { public Vector2 Pos; public float Rot; }
+        private struct Placed { public int Index; public Vector2 Pos; public float Rot; }
+        private const int AnchorSalt = 100000;
+        private readonly List<Anchor> _anchors = new List<Anchor>();
+        private readonly Dictionary<int, Placed> _cardAnchor = new Dictionary<int, Placed>();  // 개별 바닥 카드 Id
+        private readonly Dictionary<int, Placed> _stackAnchor = new Dictionary<int, Placed>(); // 묶임 스택 키
+        private readonly HashSet<int> _occTmp = new HashSet<int>();
+        private readonly List<int> _pruneTmp = new List<int>();
 
         // 엔진 호출 중 동기 수신한 턴 이벤트 기록 (PrepareCommand→엔진 호출→CommitTurn)
         private Card _played;
@@ -121,6 +132,10 @@ namespace Hwatu.View
                 return;
             }
 
+            // [C] 겹쳐 때리기: 낸/뒤집은 카드가 짝 위에 포개졌는가 (바닥 단독이 아니면 매칭 → 겹침).
+            bool overlapHit = (!awaiting && played != null && !IsFloorCard(played.Id))
+                           || (flipped != null && !IsFloorCard(flipped.Id));
+
             float t = 0f;
             if (played != null)
             {
@@ -132,13 +147,12 @@ namespace Hwatu.View
             if (flipped != null)
             {
                 var f = flipped;
+                // DeckFlipTo가 들어올림→제자리 플립(앞면 전환)→내려놓기를 한 번에 재생한다.
                 Schedule(t, () => FireFlipMove(f));
-                Schedule(t + ViewTuning.FlipMoveDuration, () =>
-                {
-                    if (_views.TryGetValue(f.Id, out var v) && v != null) v.SetFaceUp(true, true);
-                });
                 t += ViewTuning.FlipStepDuration;
             }
+            // 포개진 상태를 0.15~0.25초 보여준 뒤에 두 장이 함께 획득 더미로 쓸려간다.
+            if (overlapHit) t += ViewTuning.OverlapHitDwell;
             Schedule(t, () => ReconcileNow(false));
             t += Mathf.Max(ViewTuning.ReflowDuration, ViewTuning.CaptureFlyDuration);
             SortSchedule();
@@ -170,31 +184,29 @@ namespace Hwatu.View
             _flipped = null;
             ResetTimeline();
 
-            // 딜 대상과 최종 목표 (존 배치와 같은 수식 공유)
+            // 딜 대상과 최종 목표 ([C] 고정 산포 앵커 — 재조정과 같은 배정 규약 공유)
+            BuildAnchors();
             var deals = new List<DealTarget>();
-            int cellCount = FloorCellCount();
-            int cell = 0;
             foreach (var stack in _engine.BoundStacks)
             {
-                var cellPos = BoundStackPosition(stack, cell++, cellCount);
-                float rot = BoundStackRotation(stack);
+                var place = AnchorForStack(stack);
                 for (int i = 0; i < stack.Cards.Count; i++)
                     deals.Add(new DealTarget
                     {
                         Card = stack.Cards[i],
-                        Pos = cellPos + BoundOffset(i),
-                        Rot = rot,
+                        Pos = place.Pos + BoundOffset(i),
+                        Rot = place.Rot,
                         Scale = ViewTuning.BoundScale
                     });
             }
             foreach (var card in _engine.FloorCards)
             {
-                var target = FloorJitteredPosition(card.Id, cell++, cellCount);
+                var place = AnchorForCard(card.Id);
                 deals.Add(new DealTarget
                 {
                     Card = card,
-                    Pos = target.Position,
-                    Rot = target.Rotation,
+                    Pos = place.Pos,
+                    Rot = place.Rot,
                     Scale = ViewTuning.FloorScale
                 });
             }
@@ -202,7 +214,7 @@ namespace Hwatu.View
             for (int i = 0; i < hand.Count; i++)
             {
                 FanTarget(i, hand.Count, out var pos, out float rot);
-                deals.Add(new DealTarget { Card = hand[i], Pos = pos, Rot = rot, Scale = 1f });
+                deals.Add(new DealTarget { Card = hand[i], Pos = pos, Rot = rot, Scale = ViewTuning.HandCardScale });
             }
 
             // 더미 자리에 뒷면 스택으로 생성
@@ -287,54 +299,45 @@ namespace Hwatu.View
             view.SetInteractable(false);
             view.SetDim(false);
             view.SetHighlight(false);
+            view.SetShadow(false);
             view.transform.SetAsLastSibling();
 
-            Vector2 pos;
-            float rot = 0f;
-            float scale = ViewTuning.FloorScale;
-            int cellCount = FloorCellCount();
-            int floorIndex = IndexInFloor(played.Id);
             if (awaiting)
             {
-                // 바닥 선택 대기: 바닥과 손패 사이에 떠 있는다
-                pos = FloorCenter() + ViewTuning.PlayWaitOffset;
-                scale = 1f;
+                // 바닥 선택 대기: 내려치지 않고 바닥과 손패 사이에 부드럽게 떠올려 제시한다 (회전 없음)
+                view.SetBaseTarget(FloorCenter() + ViewTuning.PlayWaitOffset, 0f, ViewTuning.HandCardScale,
+                    ViewTuning.PlayStepDuration, Ease.OutCubic);
+                return;
             }
-            else if (floorIndex >= 0)
-            {
-                // 단독 배치(짝 없음/뻑 전 단계 아님) — 최종 바닥 자리로
-                var target = FloorJitteredPosition(played.Id, _engine.BoundStacks.Count + floorIndex, cellCount);
-                pos = target.Position;
-                rot = target.Rotation;
-            }
-            else if (TryFindMonthPos(played, out var monthPos))
-            {
-                // 짝/묶임 스택 위로 겹쳐 놓는다 (정산 스텝에서 함께 비행/재배치)
-                pos = monthPos + new Vector2(12f, -12f);
-            }
-            else
-            {
-                // 쪽 등: 바닥에 혼자 놓였다 곧 잡히는 카드 — 가상의 다음 칸으로
-                var target = FloorJitteredPosition(played.Id, cellCount, cellCount + 1);
-                pos = target.Position;
-                rot = target.Rotation;
-            }
-            view.SetBaseTarget(pos, rot, scale, ViewTuning.PlayStepDuration, Ease.OutCubic);
+            ResolveLanding(played, out var pos, out float rot, out float scale);
+            view.SlamTo(pos, rot, scale); // [C] 내려치기 (빈 앵커 or 짝 위 겹쳐 때리기)
         }
 
         private void FireFlipMove(Card flipped)
         {
             var view = GetOrCreate(flipped); // 더미 위치에 뒷면으로 생성됨
+            view.SetShadow(false);
             view.transform.SetAsLastSibling();
-            view.SetBaseTarget(FlipSlotPos(), 0f, ViewTuning.FlipSlotScale, ViewTuning.FlipMoveDuration, Ease.OutCubic);
+            ResolveLanding(flipped, out var pos, out float rot, out float scale);
+            view.DeckFlipTo(pos, scale, rot); // [C] 들어올림→제자리 플립→(빈 앵커 or 짝 위) 내려놓기
         }
 
-        private int IndexInFloor(int cardId)
+        /// <summary>
+        /// [C] 낸/뒤집은 카드의 착지 지점: 짝과 매칭되어 곧 획득/묶임될 카드는 짝 위에 겹쳐 때리고
+        /// (빈 앵커 아님), 그 외 단독 카드는 배정된 빈 앵커에 던진다. 기존 카드는 절대 밀리지 않는다.
+        /// </summary>
+        private void ResolveLanding(Card card, out Vector2 pos, out float rot, out float scale)
         {
-            var floor = _engine.FloorCards;
-            for (int i = 0; i < floor.Count; i++)
-                if (floor[i].Id == cardId) return i;
-            return -1;
+            scale = ViewTuning.FloorScale;
+            if (!IsFloorCard(card.Id) && TryFindMonthPos(card, out var monthPos))
+            {
+                pos = monthPos + ViewTuning.OverlapHitOffset; // 짝 위 어긋난 겹침
+                rot = 0f;
+                return;
+            }
+            var place = AnchorForCard(card.Id);
+            pos = place.Pos;
+            rot = place.Rot;
         }
 
         private bool TryFindMonthPos(Card played, out Vector2 pos)
@@ -463,16 +466,14 @@ namespace Hwatu.View
             var phase = _engine.Phase;
             bool choosing = phase == Phase.AwaitingFloorChoice;
             if (_waitingCardId >= 0 && !choosing) _waitingCardId = -1;
+            PruneAnchors();   // 없어진 바닥 카드·스택의 앵커 반납 (새 카드가 재사용)
             _placed.Clear();
             int sibling = 0;
-            int cellCount = FloorCellCount();
-            int cell = 0;
 
-            // 1) 바닥: 묶임 스택 → 개별 카드 (기존 GridLayout 순서 재현)
+            // 1) 바닥: 묶임 스택 → 개별 카드 (고정 앵커 — 존재하는 카드는 절대 밀지 않는다)
             foreach (var stack in _engine.BoundStacks)
             {
-                var cellPos = BoundStackPosition(stack, cell++, cellCount);
-                float rot = BoundStackRotation(stack);
+                var place = AnchorForStack(stack);
                 for (int i = 0; i < stack.Cards.Count; i++)
                 {
                     var v = GetOrCreate(stack.Cards[i]);
@@ -480,7 +481,8 @@ namespace Hwatu.View
                     v.SetInteractable(false);
                     v.SetHighlight(false);
                     v.SetDim(false);
-                    v.SetBaseTarget(cellPos + BoundOffset(i), rot, ViewTuning.BoundScale, dur);
+                    v.SetShadow(false);
+                    v.SetBaseTarget(place.Pos + BoundOffset(i), place.Rot, ViewTuning.BoundScale, dur);
                     v.SetBaseSibling(sibling++);
                     _placed.Add(stack.Cards[i].Id);
                 }
@@ -488,18 +490,19 @@ namespace Hwatu.View
             foreach (var card in _engine.FloorCards)
             {
                 var v = GetOrCreate(card);
-                var target = FloorJitteredPosition(card.Id, cell++, cellCount);
+                var place = AnchorForCard(card.Id);
                 bool candidate = choosing && _choiceIds.Contains(card.Id);
                 v.SetFaceUp(true, !instant);
                 v.SetInteractable(candidate);
                 v.SetHighlight(candidate);
                 v.SetDim(choosing && !candidate);
-                v.SetBaseTarget(target.Position, target.Rotation, ViewTuning.FloorScale, dur);
+                v.SetShadow(false);
+                v.SetBaseTarget(place.Pos, place.Rot, ViewTuning.FloorScale, dur);
                 v.SetBaseSibling(sibling++);
                 _placed.Add(card.Id);
             }
 
-            // 2) 손패 부채꼴
+            // 2) 손패 부채꼴 ([B] 바닥 대비 확대 + 그림자 = 들고 있는 손)
             var hand = _engine.Hand;
             bool playable = phase == Phase.AwaitingPlay;
             for (int i = 0; i < hand.Count; i++)
@@ -510,7 +513,8 @@ namespace Hwatu.View
                 v.SetInteractable(playable);
                 v.SetHighlight(false);
                 v.SetDim(!playable);
-                v.SetBaseTarget(pos, rot, 1f, dur);
+                v.SetShadow(true);
+                v.SetBaseTarget(pos, rot, ViewTuning.HandCardScale, dur);
                 v.SetBaseSibling(sibling++);
                 _placed.Add(hand[i].Id);
             }
@@ -522,7 +526,8 @@ namespace Hwatu.View
                 waiting.SetInteractable(false);
                 waiting.SetHighlight(false);
                 waiting.SetDim(false);
-                waiting.SetBaseTarget(FloorCenter() + ViewTuning.PlayWaitOffset, 0f, 1f, dur);
+                waiting.SetShadow(false);
+                waiting.SetBaseTarget(FloorCenter() + ViewTuning.PlayWaitOffset, 0f, ViewTuning.HandCardScale, dur);
                 waiting.SetBaseSibling(sibling++);
                 _placed.Add(_waitingCardId);
             }
@@ -547,7 +552,7 @@ namespace Hwatu.View
                 }
             }
 
-            RebuildBadges(cellCount);
+            RebuildBadges();
 
             // 형제 순서 재할당·뱃지 재생성 뒤에도 호버 카드는 맨앞을 유지한다
             foreach (var kv in _views)
@@ -560,16 +565,19 @@ namespace Hwatu.View
         private void StartCaptureFly(int id, CardView v)
         {
             _flying.Add(id);
+            var rt = (RectTransform)v.transform;
+            Tween.Cancel(v);   // 내려치기/뒤집기(CardView 키) 중단 — 획득 비행이 인수한다
+            Tween.Cancel(rt);  // move/rotate/scale(rt 키) 중단
             v.SetInteractable(false);
             v.SetHighlight(false);
             v.SetDim(false);
-            v.SetFaceUp(true, true);
+            v.SetFaceUp(true, false);
             v.transform.SetAsLastSibling();
-            var rt = (RectTransform)v.transform;
+            rt.localRotation = Quaternion.identity; // [C].3 출발 시 회전 0도 정렬 후 직선 비행
             var target = CapturedRowPos(RowOf(v.Card));
             Tween.Move(rt, target, ViewTuning.CaptureFlyDuration, Ease.InOutQuad, () => FinishFly(id));
-            Tween.Rotate(rt, 0f, ViewTuning.CaptureFlyDuration, Ease.InOutQuad);
-            Tween.Scale(rt, Vector3.one * ViewTuning.CaptureEndScale, ViewTuning.CaptureFlyDuration, Ease.InOutQuad);
+            // [C].3/[D].4 회전 보간 금지 — 실물 더미로 직선 비행
+            Tween.Scale(rt, Vector3.one * ViewTuning.CapturePileScale, ViewTuning.CaptureFlyDuration, Ease.InOutQuad);
         }
 
         private void FinishFly(int id)
@@ -582,20 +590,38 @@ namespace Hwatu.View
             }
         }
 
-        private void RebuildBadges(int cellCount)
+        /// <summary>[C].3 묶임 안내 라벨은 상시 노출 금지 — 사물 라벨 호버 문법(기본 알파 0, 스택 호버 시 노출).</summary>
+        private void RebuildBadges()
         {
             foreach (var b in _badges) if (b != null) Destroy(b);
             _badges.Clear();
-            int cell = 0;
             foreach (var stack in _engine.BoundStacks)
             {
-                var pos = BoundStackPosition(stack, cell++, cellCount) + new Vector2(0f, -87f);
-                var badge = UIStyles.CreateText(_layer, $"Badge_{stack.Month}", UITextPreset.Hwaje,
+                var place = AnchorForStack(stack);
+
+                // 라벨 (기본 숨김)
+                var back = UIStyles.CreateSolidImage(_layer, $"BoundBadge_{stack.Month}",
+                    new Color(UIStyles.Ink.r, UIStyles.Ink.g, UIStyles.Ink.b, 0.55f));
+                back.raycastTarget = false;
+                var backRt = (RectTransform)back.transform;
+                backRt.sizeDelta = new Vector2(150f, 30f);
+                backRt.anchoredPosition = place.Pos + new Vector2(0f, -87f);
+                var label = UIStyles.CreateText(back.transform, "Label", UITextPreset.Hwaje,
                     $"묶임 x{stack.Cards.Count}", 20, UIStyles.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
-                var rt = (RectTransform)badge.transform;
-                rt.sizeDelta = new Vector2(150f, 30f);
-                rt.anchoredPosition = pos;
-                _badges.Add(badge.gameObject);
+                label.raycastTarget = false;
+                UIBuilder.Stretch((RectTransform)label.transform, 4f, 2f);
+                var group = back.gameObject.AddComponent<CanvasGroup>();
+                group.alpha = 0f;
+                _badges.Add(back.gameObject);
+
+                // 스택 영역 호버 캐처 → 라벨 페이드인
+                var catcher = UIStyles.CreateSolidImage(_layer, $"BoundHover_{stack.Month}", Color.clear);
+                catcher.raycastTarget = true;
+                var catchRt = (RectTransform)catcher.transform;
+                catchRt.sizeDelta = new Vector2(130f, 150f);
+                catchRt.anchoredPosition = place.Pos;
+                HoverReveal.Attach(catcher.gameObject, 0.15f, group);
+                _badges.Add(catcher.gameObject);
             }
         }
 
@@ -636,34 +662,12 @@ namespace Hwatu.View
             => _layer.InverseTransformPoint(zone.TransformPoint(local));
 
         private Vector2 DeckPos() => ToLayer(_ui.DeckBackRect, _ui.DeckBackRect.rect.center);
-        private Vector2 FlipSlotPos() => ToLayer(_ui.FlipSlotRect, _ui.FlipSlotRect.rect.center);
-        private Vector2 FloorCenter() => DeckPos() + ViewTuning.FloorScatterCenterOffset;
-        private Vector2 CapturedRowPos(int row) => ToLayer(_ui.CapturedGrids[row], Vector2.zero);
+        // [수정] 바닥 산포 중심을 더미와 분리 — 더미 위에 카드가 겹쳐 깔리던 문제 해소.
+        private Vector2 FloorCenter() => ToLayer(_ui.FloorArea, _ui.FloorArea.rect.center);
+        private Vector2 CapturedRowPos(int row)
+            => ToLayer(_ui.CapturePileRects[row], _ui.CapturePileRects[row].rect.center);
 
         private static Vector2 BoundOffset(int i) => new Vector2(-13.5f + i * 13.5f, 27f - i * 13.5f);
-
-        private int FloorCellCount() => _engine.BoundStacks.Count + _engine.FloorCards.Count;
-
-        private struct FloorTarget { public Vector2 Position; public float Rotation; }
-
-        private FloorTarget FloorJitteredPosition(int cardId, int index, int count)
-        {
-            var sample = FloorJitter.ForCard(_jitterSeed, cardId, FloorCellPitch());
-            return new FloorTarget
-            {
-                Position = FloorCellPosition(index, count) + sample.Offset,
-                Rotation = FloorCellRotation(index, count) + sample.RotationDegrees
-            };
-        }
-
-        private Vector2 BoundStackPosition(BoundStack stack, int index, int count)
-        {
-            int key = BoundStackKey(stack);
-            return FloorCellPosition(index, count) + FloorJitter.ForCard(_jitterSeed, key, FloorCellPitch()).Offset;
-        }
-
-        private float BoundStackRotation(BoundStack stack)
-            => FloorJitter.ForBoundStackRotation(_jitterSeed, BoundStackKey(stack));
 
         private static int BoundStackKey(BoundStack stack)
             => stack.Cards.Count > 0 ? stack.Cards[0].Id : stack.Month;
@@ -676,31 +680,128 @@ namespace Hwatu.View
             return new Vector2(cw + sp, ch + sp);
         }
 
-        private Vector2 FloorCellPosition(int index, int count)
+        // ── [C] 고정 산포 앵커: 생성·배정·반납 (리플로우 폐지) ──────────
+
+        /// <summary>바닥 영역에 FloorAnchorCount개의 고정 앵커를 시드 결정론적으로 깐다 (골든앵글 나선 + 시드 지터).</summary>
+        private void BuildAnchors()
         {
-            count = Mathf.Max(1, count);
-            float angle = FloorCellAngle(index, count);
-            float rad = angle * Mathf.Deg2Rad;
-            float crowded = Mathf.Max(0, count - 8);
-            float radiusX = ViewTuning.FloorScatterRadiusX + Mathf.Min(crowded, 4f) * 18f;
-            float radiusY = ViewTuning.FloorScatterRadiusY + Mathf.Min(crowded, 4f) * 10f;
-            var slot = new Vector2(Mathf.Cos(rad) * radiusX, Mathf.Sin(rad) * radiusY);
-            var wobble = new Vector2(
-                Mathf.Sin((index + 1) * 2.17f) * 18f,
-                Mathf.Cos((index + 1) * 1.73f) * 12f);
-            return FloorCenter() + slot + wobble;
+            _anchors.Clear();
+            _cardAnchor.Clear();
+            _stackAnchor.Clear();
+            var center = FloorCenter();
+            var pitch = FloorCellPitch();
+            int n = Mathf.Max(1, ViewTuning.FloorAnchorCount);
+            const float golden = 2.3999632f; // 137.5도 (라디안)
+            for (int i = 0; i < n; i++)
+            {
+                float t = (i + 0.5f) / n;
+                float r = Mathf.Sqrt(t);           // 균등 면적 분포
+                float ang = i * golden;
+                var p = center + new Vector2(
+                    Mathf.Cos(ang) * ViewTuning.FloorScatterRadiusX * r,
+                    Mathf.Sin(ang) * ViewTuning.FloorScatterRadiusY * r);
+                var jit = FloorJitter.ForCard(_jitterSeed, AnchorSalt + i, pitch); // 시드별 앵커 변주
+                _anchors.Add(new Anchor { Pos = p + jit.Offset, Rot = jit.RotationDegrees });
+            }
         }
 
-        private static float FloorCellAngle(int index, int count)
+        /// <summary>개별 바닥 카드의 앵커 (없으면 "빈 앵커 중 기존과 가장 먼 곳"을 배정하고 고정).</summary>
+        private Placed AnchorForCard(int cardId)
         {
-            if (count <= 1) return -95f;
-            return ViewTuning.FloorScatterStartAngle + 360f * index / count;
+            if (_cardAnchor.TryGetValue(cardId, out var p)) return p;
+            p = ClaimAnchor();
+            _cardAnchor[cardId] = p;
+            return p;
         }
 
-        private static float FloorCellRotation(int index, int count)
+        /// <summary>묶임 스택의 앵커 (없으면 배정하고 고정).</summary>
+        private Placed AnchorForStack(BoundStack stack)
         {
-            float angle = FloorCellAngle(index, Mathf.Max(1, count)) * Mathf.Deg2Rad;
-            return Mathf.Sin(angle * 1.7f + index * 0.37f) * ViewTuning.FloorScatterSlotRotationDegrees;
+            int key = BoundStackKey(stack);
+            if (_stackAnchor.TryGetValue(key, out var p)) return p;
+            p = ClaimAnchor();
+            _stackAnchor[key] = p;
+            return p;
+        }
+
+        /// <summary>빈 앵커 중 점유 앵커에서 가장 먼 것. 전부 차면 가장 덜 쌓인 앵커에 겹쳐 얹는다(오버플로우).</summary>
+        private Placed ClaimAnchor()
+        {
+            _occTmp.Clear();
+            foreach (var p in _cardAnchor.Values) _occTmp.Add(p.Index);
+            foreach (var p in _stackAnchor.Values) _occTmp.Add(p.Index);
+
+            int best = -1; float bestDist = -1f;
+            for (int i = 0; i < _anchors.Count; i++)
+            {
+                if (_occTmp.Contains(i)) continue;
+                float d = MinDistToOccupied(i);
+                if (d > bestDist) { bestDist = d; best = i; }
+            }
+            if (best >= 0)
+                return new Placed { Index = best, Pos = _anchors[best].Pos, Rot = _anchors[best].Rot };
+
+            // 오버플로우(모든 앵커 점유): 가장 덜 쌓인 앵커에 겹쳐 얹는다
+            int idx = 0, min = int.MaxValue;
+            for (int i = 0; i < _anchors.Count; i++)
+            {
+                int c = CountOnIndex(i);
+                if (c < min) { min = c; idx = i; }
+            }
+            int depth = CountOnIndex(idx);
+            return new Placed
+            {
+                Index = idx,
+                Pos = _anchors.Count > 0 ? _anchors[idx].Pos + ViewTuning.OverlapHitOffset * (depth * 0.5f) : FloorCenter(),
+                Rot = _anchors.Count > 0 ? _anchors[idx].Rot : 0f
+            };
+        }
+
+        private float MinDistToOccupied(int i)
+        {
+            if (_occTmp.Count == 0) return float.MaxValue; // 첫 배정 → 결정론적으로 앵커 0
+            float min = float.MaxValue;
+            var a = _anchors[i].Pos;
+            foreach (int o in _occTmp)
+                min = Mathf.Min(min, (a - _anchors[o].Pos).sqrMagnitude);
+            return min;
+        }
+
+        private int CountOnIndex(int i)
+        {
+            int c = 0;
+            foreach (var p in _cardAnchor.Values) if (p.Index == i) c++;
+            foreach (var p in _stackAnchor.Values) if (p.Index == i) c++;
+            return c;
+        }
+
+        /// <summary>없어진 바닥 카드·스택의 앵커를 반납한다 (남아 있는 것은 그대로 — 절대 밀지 않는다).</summary>
+        private void PruneAnchors()
+        {
+            _pruneTmp.Clear();
+            foreach (var id in _cardAnchor.Keys) if (!IsFloorCard(id)) _pruneTmp.Add(id);
+            foreach (var id in _pruneTmp) _cardAnchor.Remove(id);
+            _pruneTmp.Clear();
+            foreach (var key in _stackAnchor.Keys) if (!IsStackKey(key)) _pruneTmp.Add(key);
+            foreach (var key in _pruneTmp) _stackAnchor.Remove(key);
+        }
+
+        private bool IsFloorCard(int cardId)
+        {
+            foreach (var c in _engine.FloorCards) if (c.Id == cardId) return true;
+            return false;
+        }
+
+        private bool IsStackKey(int key)
+        {
+            foreach (var s in _engine.BoundStacks) if (BoundStackKey(s) == key) return true;
+            return false;
+        }
+
+        private bool IsCaptured(int cardId)
+        {
+            foreach (var c in _engine.Captured) if (c.Id == cardId) return true;
+            return false;
         }
 
         private void FanTarget(int i, int n, out Vector2 pos, out float rot)

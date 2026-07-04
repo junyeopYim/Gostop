@@ -31,6 +31,10 @@ namespace Hwatu.View
         private Image _badge;
         private GameObject _back;
         private Color _baseColor;
+        private RectTransform _shadowRt;  // [B] 바닥 평면에 남는 그림자 층 (손패 높이 단서)
+        private Image _shadow;
+        private bool _shadowOn;
+        private static Sprite _shadowSprite;
 
         // 기본 레이아웃 목표 (레이아웃 소유), 호버는 그 위의 레이어
         private Vector2 _basePos;
@@ -60,6 +64,9 @@ namespace Hwatu.View
             view._hitImage = go.AddComponent<Image>();
             view._hitImage.color = Color.clear;
             view._hitImage.raycastTarget = onClick != null;
+
+            // [B] 그림자 층 — 비주얼보다 먼저 만들어 뒤에 깔린다 (손패에서만 켜짐). 미니 카드는 생략.
+            if (withBack) view.CreateShadow(go.transform, size);
 
             // 비주얼 컨테이너 (호버 오프셋 레이어). 자체 이미지 = 선택 하이라이트 테두리 (평소 꺼 둠)
             var visualGo = new GameObject("Visual", typeof(RectTransform));
@@ -158,17 +165,23 @@ namespace Hwatu.View
             Tween.Cancel(rt);
             Tween.Cancel(this);
             Tween.Cancel(_visualRt);
+            if (_shadowRt != null) Tween.Cancel(_shadowRt);
+            if (_shadow != null) Tween.Cancel(_shadow); // 그림자 알파 채널("shadow-a")도 끊어 스냅 계약 완성
             rt.anchoredPosition = _basePos;
             rt.localRotation = Quaternion.Euler(0f, 0f, _baseRot);
             rt.localScale = new Vector3(_baseScale, _baseScale, 1f);
             _visualRt.anchoredPosition = _hovered ? new Vector2(0f, ViewTuning.HoverLift) : Vector2.zero;
             _visualRt.localScale = _hovered ? new Vector3(ViewTuning.HoverScale, ViewTuning.HoverScale, 1f) : Vector3.one;
+            ApplyShadow(false);
             ApplyFace();
         }
 
         /// <summary>기본 목표로 트윈. 값이 이미 같고 진행 중 트윈도 없는 채널은 건드리지 않는다.</summary>
         private void RetargetLayout(float duration, Ease ease)
         {
+            // [C] 내려치기(slam)·더미 뒤집기(deckflip)가 트랜스폼을 소유하는 동안엔 레이아웃 트윈을
+            // 얹지 않는다. 이 연출들은 완료 시 최신 base로 착지하므로 base만 갱신되면 충분하다.
+            if (Tween.IsActive(this, "slam") || Tween.IsActive(this, "deckflip")) return;
             var rt = (RectTransform)transform;
             if ((rt.anchoredPosition - _basePos).sqrMagnitude > 0.0001f || Tween.IsActive(rt, "move"))
                 Tween.Move(rt, _basePos, duration, ease);
@@ -185,7 +198,242 @@ namespace Hwatu.View
             float s = _hovered ? ViewTuning.HoverScale : 1f;
             Tween.Move(_visualRt, pos, ViewTuning.HoverDuration, ease);
             Tween.Scale(_visualRt, new Vector3(s, s, 1f), ViewTuning.HoverDuration, ease);
+            ApplyShadow(true); // 더 떠오를수록 그림자가 아래로·크게
         }
+
+        // ── [B] 손패 그림자 (바닥 평면에 남는 높이 단서) ──────────────
+
+        private void CreateShadow(Transform root, Vector2 cardSize)
+        {
+            var go = new GameObject("Shadow", typeof(RectTransform));
+            go.transform.SetParent(root, false);
+            go.transform.SetAsFirstSibling(); // 카드 비주얼 뒤에 깔린다
+            _shadowRt = (RectTransform)go.transform;
+            _shadowRt.sizeDelta = new Vector2(cardSize.x * ViewTuning.HandShadowScale * 1.12f,
+                                              cardSize.y * ViewTuning.HandShadowScale * 0.5f);
+            _shadowRt.anchoredPosition = ViewTuning.HandShadowOffset;
+            _shadow = go.AddComponent<Image>();
+            _shadow.sprite = ShadowSprite();
+            _shadow.raycastTarget = false;
+            var c = UIStyles.Ink; c.a = 0f;
+            _shadow.color = c; // 기본 꺼짐 (손패에서만 켜진다)
+        }
+
+        /// <summary>손패 등 "들고 있는" 카드에서만 그림자를 켠다 (바닥/묶임/미니 카드는 끔).</summary>
+        public void SetShadow(bool on)
+        {
+            if (_shadow == null) return;
+            _shadowOn = on;
+            ApplyShadow(false);
+        }
+
+        private void ApplyShadow(bool animate)
+        {
+            if (_shadow == null) return;
+            float dur = animate ? ViewTuning.HoverDuration : 0f;
+            float a = _shadowOn ? ViewTuning.HandShadowAlpha : 0f;
+            Vector2 pos = (_shadowOn && _hovered)
+                ? new Vector2(0f, ViewTuning.HandShadowHoverOffsetY) : ViewTuning.HandShadowOffset;
+            float s = (_shadowOn && _hovered) ? ViewTuning.HandShadowHoverScale : 1f;
+            if (dur <= 0f)
+            {
+                SetShadowAlpha(a);
+                _shadowRt.anchoredPosition = pos;
+                _shadowRt.localScale = new Vector3(s, s, 1f);
+                return;
+            }
+            float fromA = _shadow.color.a;
+            Tween.Custom(_shadow, "shadow-a", dur, Ease.OutCubic,
+                t => { if (_shadow != null) SetShadowAlpha(Mathf.Lerp(fromA, a, t)); });
+            Tween.Move(_shadowRt, pos, dur, Ease.OutCubic);
+            Tween.Scale(_shadowRt, new Vector3(s, s, 1f), dur, Ease.OutCubic);
+        }
+
+        /// <summary>[B] 내려치기: 그림자가 카드 착지와 함께 수렴·소멸.</summary>
+        private void ConvergeShadow(float dur)
+        {
+            if (_shadow == null || !_shadowOn) return;
+            _shadowOn = false;
+            float fromA = _shadow.color.a;
+            Tween.Custom(_shadow, "shadow-a", dur, Ease.OutCubic,
+                t => { if (_shadow != null) SetShadowAlpha(Mathf.Lerp(fromA, 0f, t)); });
+            Tween.Move(_shadowRt, Vector2.zero, dur, Ease.OutCubic);
+            Tween.Scale(_shadowRt, new Vector3(0.6f, 0.6f, 1f), dur, Ease.OutCubic);
+        }
+
+        private void SetShadowAlpha(float a)
+        {
+            var c = UIStyles.Ink; c.a = a;
+            _shadow.color = c;
+        }
+
+        private static Sprite ShadowSprite()
+        {
+            if (_shadowSprite != null) return _shadowSprite;
+            const int S = 96;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - c) / c, dy = (y - c) / c;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(1f - r);
+                    a = a * a; // 부드러운 방사형 감쇠
+                    px[y * S + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255f));
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            _shadowSprite = Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), 100f);
+            _shadowSprite.hideFlags = HideFlags.HideAndDontSave;
+            return _shadowSprite;
+        }
+
+        // ── [C] 내려치기 / 더미 뒤집기 (비행 중 회전 금지) ──────────────
+
+        /// <summary>
+        /// [C] 내려치기 (손패 → 바닥) 3박자: ① 집기(0도 정렬 + 부양) ② 비행(회전·스케일 고정,
+        /// 가속 이동) ③ 착지(산포 회전 스냅 + 스케일 펀치 1.06→0.94→1.0). 최종 목표를 base로
+        /// 확정하므로 진행 중 재조정이 base를 바꿔도 최신 목표로 착지한다.
+        /// </summary>
+        public void SlamTo(Vector2 pos, float rotZ, float scale)
+        {
+            _basePos = pos;
+            _baseRot = rotZ;
+            _baseScale = scale;
+            var rt = (RectTransform)transform;
+            Tween.Cancel(rt);              // 진행 중 레이아웃 채널(move/rotate/scale) 정리
+            Tween.Cancel(this, "flip");
+            Tween.Cancel(this, "deckflip");
+            transform.SetAsLastSibling();  // 집는 순간 맨앞
+
+            Vector2 fromPos = rt.anchoredPosition;
+            float fromRot = rt.localEulerAngles.z;
+            float fromScale = rt.localScale.y;
+            float pick = ViewTuning.SlamPickDuration;
+            float flight = ViewTuning.SlamFlightDuration;
+            ConvergeShadow(pick + flight); // [B] 던지는 순간 그림자가 착지와 함께 수렴·소멸
+            float punch = ViewTuning.SlamPunchDuration;
+            float total = pick + flight + punch;
+            if (total <= 0f) { SnapToBase(rt); return; }
+
+            Tween.Custom(this, "slam", total, Ease.Linear, t =>
+            {
+                if (this == null) return;
+                var r = (RectTransform)transform;
+                float e = t * total;
+                if (e <= pick)
+                {
+                    // ① 집기: 스케일 1.0→1.06, 위치 고정, 회전 0으로 정렬
+                    float u = pick > 0f ? EaseOut(e / pick) : 1f;
+                    float s = Mathf.Lerp(fromScale, _baseScale * ViewTuning.SlamPickScale, u);
+                    r.localScale = new Vector3(s, s, 1f);
+                    r.anchoredPosition = fromPos;
+                    r.localRotation = Quaternion.Euler(0f, 0f, Mathf.LerpAngle(fromRot, 0f, u));
+                }
+                else if (e <= pick + flight)
+                {
+                    // ② 비행: 목표로 가속 이동(ease-in), 회전·스케일 고정
+                    float u = flight > 0f ? EaseIn((e - pick) / flight) : 1f;
+                    r.anchoredPosition = Vector2.LerpUnclamped(fromPos, _basePos, u);
+                    float s = _baseScale * ViewTuning.SlamPickScale;
+                    r.localScale = new Vector3(s, s, 1f);
+                    r.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    // ③ 착지: 산포 회전 스냅 + 스케일 펀치
+                    float u = punch > 0f ? (e - pick - flight) / punch : 1f;
+                    r.anchoredPosition = _basePos;
+                    r.localRotation = Quaternion.Euler(0f, 0f, _baseRot);
+                    float pk = _baseScale * ViewTuning.SlamPickScale;
+                    float un = _baseScale * ViewTuning.SlamPunchUnderScale;
+                    float s = u < 0.5f
+                        ? Mathf.Lerp(pk, un, u / 0.5f)
+                        : Mathf.Lerp(un, _baseScale, (u - 0.5f) / 0.5f);
+                    r.localScale = new Vector3(s, s, 1f);
+                }
+            }, () => { if (this != null) SnapToBase((RectTransform)transform); });
+        }
+
+        /// <summary>
+        /// [C] 더미 뒤집기 3박자: ① 들어올림(상승 + 확대) ② 제자리 플립(scaleX 1→0→1, 중간
+        /// 앞면 전환) ③ 목적지에 내려놓기(하강). 회전은 착지(내려놓기) 구간에만 rotZ로 스민다.
+        /// </summary>
+        public void DeckFlipTo(Vector2 slotPos, float slotScale, float rotZ = 0f)
+        {
+            var rt = (RectTransform)transform;
+            Tween.Cancel(rt);
+            Tween.Cancel(this, "flip");
+            Tween.Cancel(this, "slam");
+            transform.SetAsLastSibling();
+
+            Vector2 deckPos = rt.anchoredPosition;
+            float deckScale = rt.localScale.y;
+            Vector2 liftPos = deckPos + new Vector2(0f, ViewTuning.FlipLiftRise);
+            float liftScale = deckScale * ViewTuning.FlipLiftScale;
+            float b1 = ViewTuning.FlipLiftDuration;
+            float b2 = ViewTuning.FlipInPlaceDuration;
+            float b3 = ViewTuning.FlipSettleDuration;
+            float total = b1 + b2 + b3;
+            _basePos = slotPos;
+            _baseRot = rotZ;
+            _baseScale = slotScale;
+            if (total <= 0f) { _faceUp = true; ApplyFace(); SnapToBase(rt); return; }
+
+            bool swapped = false;
+            Tween.Custom(this, "deckflip", total, Ease.Linear, t =>
+            {
+                if (this == null) return;
+                var r = (RectTransform)transform;
+                float e = t * total;
+                if (e <= b1)
+                {
+                    // ① 들어올림
+                    float u = b1 > 0f ? EaseOut(e / b1) : 1f;
+                    r.anchoredPosition = Vector2.LerpUnclamped(deckPos, liftPos, u);
+                    float s = Mathf.Lerp(deckScale, liftScale, u);
+                    r.localScale = new Vector3(s, s, 1f);
+                    r.localRotation = Quaternion.identity;
+                }
+                else if (e <= b1 + b2)
+                {
+                    // ② 제자리 플립: scaleX 1→0→1, 중간(u=0.5)에 앞면 전환
+                    float u = b2 > 0f ? (e - b1) / b2 : 1f;
+                    if (!swapped && u >= 0.5f) { swapped = true; _faceUp = true; ApplyFace(); }
+                    float sx = Mathf.Abs(1f - 2f * u) * liftScale;
+                    r.anchoredPosition = liftPos;
+                    r.localScale = new Vector3(sx, liftScale, 1f);
+                    r.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    // ③ 목적지에 내려놓기 (회전은 이 착지 구간에만 rotZ로 스민다)
+                    float u = b3 > 0f ? EaseOut((e - b1 - b2) / b3) : 1f;
+                    r.anchoredPosition = Vector2.LerpUnclamped(liftPos, _basePos, u);
+                    float s = Mathf.Lerp(liftScale, _baseScale, u);
+                    r.localScale = new Vector3(s, s, 1f);
+                    r.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(0f, _baseRot, u));
+                }
+            }, () =>
+            {
+                if (this == null) return;
+                _faceUp = true;
+                ApplyFace();
+                SnapToBase((RectTransform)transform);
+            });
+        }
+
+        private void SnapToBase(RectTransform rt)
+        {
+            rt.anchoredPosition = _basePos;
+            rt.localRotation = Quaternion.Euler(0f, 0f, _baseRot);
+            rt.localScale = new Vector3(_baseScale, _baseScale, 1f);
+        }
+
+        private static float EaseOut(float t) { float u = 1f - t; return 1f - u * u * u; }
+        private static float EaseIn(float t) { return t * t * t; }
 
         // ── 호버 (클릭 가능 카드에서만) ─────────────────────────────
 

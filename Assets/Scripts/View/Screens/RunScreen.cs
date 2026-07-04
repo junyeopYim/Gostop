@@ -402,8 +402,9 @@ namespace Hwatu.View.Screens
         }
 
         /// <summary>
-        /// [A] 판 진입/재도전 공용 와이프: Hide → preSetup + 임베드 설치 → Reveal → 딜 시작.
-        /// 딜(셔플·비행) 연출은 와이프 Reveal 완료 이후에만 시작한다 (겹치면 둘 다 죽는다).
+        /// [A] 판 첫 진입 와이프 (저승길 → 무대): Hide → preSetup + 임베드 설치(FrontView 눈맞춤) →
+        /// Reveal → 앉기 시선 이동(눈맞춤 0.3초 → TableView 하강) → 하강이 끝나는 프레임에 딜 시작.
+        /// 와이프는 무대 진입에 1회만이며, 딜(셔플·비행)은 하강 완료 이후에만 시작한다 (겹침 금지).
         /// </summary>
         private IEnumerator EnterRoundWithWipe(NodeSpec node, System.Action preSetup)
         {
@@ -412,14 +413,19 @@ namespace Hwatu.View.Screens
             {
                 entered = true;
                 preSetup();
-                SetUpEmbeddedRound(node);
+                SetUpEmbeddedRound(node, gazeEntry: true);
             }, InkMaskKind.SweepDiag);
             if (!entered) yield break; // 와이프가 거부됨(중복 전환) — 딜을 시작하면 안 된다
+            if (_worldStage != null) yield return _worldStage.PlaySitDown();
             BeginEmbeddedDeal(node);
         }
 
-        /// <summary>임베드 생성 + 효과 부착 + (심판일) 효과 표기 — 딜은 시작하지 않는다.</summary>
-        private void SetUpEmbeddedRound(NodeSpec node)
+        /// <summary>
+        /// 임베드 생성 + 효과 부착 + (심판일) 효과 표기 — 딜은 시작하지 않는다.
+        /// gazeEntry=true면 카메라를 FrontView(차사와 눈맞춤)로 스냅한다 (첫 진입, 이후 PlaySitDown이
+        /// TableView로 하강). 재도전은 무대를 재사용하므로 이 경로를 다시 타지 않는다.
+        /// </summary>
+        private void SetUpEmbeddedRound(NodeSpec node, bool gazeEntry)
         {
             var go = new GameObject("EmbeddedGame");
             EmbeddedGame = go.AddComponent<GameController>(); // Awake에서 자체 캔버스 생성 (여기선 스크린 스페이스)
@@ -427,26 +433,20 @@ namespace Hwatu.View.Screens
             EmbeddedGame.RoundFinished += OnRoundFinished;
 
             // [B] 판 월드화: 무대(원근 카메라·테이블·차사·깊이 배경) 구성 →
-            //     판 캔버스를 월드 스페이스로 전환(이벤트 카메라 = StageCamera) → 테이블로 눕혀 배치 →
-            //     TableView로 스냅. TensionShake는 WorldStage.Create가 엔진에 물린다.
+            //     판 캔버스를 월드 스페이스로 전환(이벤트 카메라 = StageCamera) → 테이블로 눕혀 배치.
+            //     [A] 첫 진입은 FrontView(눈맞춤)로 스냅, 이후 PlaySitDown이 TableView로 내려간다.
             _worldStage = WorldStage.Create(EmbeddedGame.Engine);
             EmbeddedGame.ConfigureWorldCanvas(_worldStage.StageCamera);
-            _worldStage.EnterBoard(EmbeddedGame.BoardCanvas);
+            if (gazeEntry) _worldStage.EnterBoardWithGaze(EmbeddedGame.BoardCanvas);
+            else _worldStage.EnterBoard(EmbeddedGame.BoardCanvas);
 
             // 부적(+심판일이면 대왕 기믹) 부착은 딜 이전 — 딜 직후 총통 같은
             // 즉시 종료 이벤트도 관찰할 수 있어야 한다
-            var effectIds = new List<string>(Run.State.relicIds);
-            bool isJudgment = node.kind == NodeKind.Judgment;
-            if (isJudgment)
-            {
-                var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
-                if (king.HasGimmick) effectIds.Add(king.EffectId);
-            }
-            _effects.AttachAll(effectIds, new EffectContext(EmbeddedGame.Engine, Run));
+            AttachRoundEffects(node);
 
             // 판 중 활성 효과 표기: 대왕명 + 지옥명 + 기믹 한 줄 (텍스트 수준, 연출 없음).
             // 임베드 캔버스에 붙여 임베드 정리와 함께 사라진다.
-            if (isJudgment && EmbeddedGame.UiRoot != null)
+            if (node.kind == NodeKind.Judgment && EmbeddedGame.UiRoot != null)
             {
                 var line = UIStyles.CreateText(EmbeddedGame.UiRoot.transform, "JudgmentLine", UITextPreset.Hwaje,
                     $"심판: {JudgmentLine(node.day)}", 22,
@@ -458,6 +458,19 @@ namespace Hwatu.View.Screens
                 rt.sizeDelta = new Vector2(0f, 32f);
                 rt.anchoredPosition = new Vector2(0f, -100f);
             }
+        }
+
+        /// <summary>부적(+심판일이면 대왕 기믹) 효과를 엔진에 부착한다 (첫 진입·재도전 공용).
+        /// 판 종료 시 DetachAll로 해제되므로 재도전 재사용 시 다시 부착한다.</summary>
+        private void AttachRoundEffects(NodeSpec node)
+        {
+            var effectIds = new List<string>(Run.State.relicIds);
+            if (node.kind == NodeKind.Judgment)
+            {
+                var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
+                if (king.HasGimmick) effectIds.Add(king.EffectId);
+            }
+            _effects.AttachAll(effectIds, new EffectContext(EmbeddedGame.Engine, Run));
         }
 
         /// <summary>[A] Reveal 완료 후 딜 시작. 와이프 중 화면이 내려갔으면 아무것도 하지 않는다.</summary>
@@ -651,12 +664,21 @@ namespace Hwatu.View.Screens
             }
             else
             {
-                Flow.StartCoroutine(EnterRoundWithWipe(Run.CurrentNode, () =>
-                {
-                    _resultPanel.SetActive(false);
-                    TearDownEmbeddedGame();
-                }));
+                // [A] 실패 재도전: 와이프·시선 이동 없이 TableView를 유지한 채 딜만 재생한다.
+                RetryRoundDirect(Run.CurrentNode);
             }
+        }
+
+        /// <summary>
+        /// [A] 실패 재도전 직행: 기존 무대·임베드 판을 그대로 재사용해 카메라가 TableView에서 미동도
+        /// 하지 않게 하고, 판 종료 시 해제된 효과만 다시 붙여 새 dayAttempt 시드로 딜만 재생한다.
+        /// </summary>
+        private void RetryRoundDirect(NodeSpec node)
+        {
+            if (EmbeddedGame == null) return;
+            _resultPanel.SetActive(false);
+            AttachRoundEffects(node);
+            BeginEmbeddedDeal(node);
         }
 
         private void TearDownEmbeddedGame()

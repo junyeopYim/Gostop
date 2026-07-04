@@ -7,8 +7,8 @@ namespace Hwatu.View.Flow
 {
     public sealed class InkWipeTransition : ITransition
     {
-        private const float Duration = 0.45f;
-        private const float FallbackDuration = 0.3f; // [B] 셰이더 부재 시 단색(먹색) 페이드
+        private const float Duration = 0.6f;          // 먹 와이프 1회 길이 (조금 더 묵직하게)
+        private const float FallbackDuration = 0.4f;  // [B] 셰이더 부재 시 단색(먹색) 페이드
         private Canvas _canvas;
         private Image _image;
         private Material _material;

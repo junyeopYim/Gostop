@@ -19,7 +19,6 @@ namespace Hwatu.View
         public TextMeshProUGUI DeckText;
         public TextMeshProUGUI DeckBackText;
         public TextMeshProUGUI LogText;
-        public TextMeshProUGUI BreakdownText;
         public TextMeshProUGUI BannerText;
         public TextMeshProUGUI RoundOverTitle;
         public TextMeshProUGUI RoundOverBody;
@@ -29,8 +28,8 @@ namespace Hwatu.View
         public RectTransform DeckBackRect;
         public RectTransform FlipSlotRect;
         public GameObject DealBlocker;      // 딜 중 입력 잠금 + 클릭 스킵
-        public TextMeshProUGUI[] CapturedHeaders;      // 광/열끗/띠/피 순
-        public RectTransform[] CapturedGrids;
+        public RectTransform[] CapturePileRects;       // [D] 실물 획득 더미 4개 (광/열끗/띠/피 순)
+        public TextMeshProUGUI[] CapturePileTooltips;  // [D] 더미별 호버 툴팁 (장수·족보 진행)
         public GameObject RoundOverPanel;
         public Button NewRoundButton;       // 임베드 모드에서 숨김 (자체 재시작 UI)
         public GameObject RoundOverButtons; // 임베드 모드에서 숨김 (자체 재시작 UI)
@@ -158,56 +157,58 @@ namespace Hwatu.View
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             refs.LogScroll.content = contentRt;
 
-            // ── 우측 획득 패널 ───────────────────────────────────────
-            var captured = CreatePanel(root, "CapturedPanel", UIStyles.Paper);
-            var capRt = (RectTransform)captured.transform;
-            capRt.anchorMin = new Vector2(1f, 0f);
-            capRt.anchorMax = new Vector2(1f, 1f);
-            capRt.pivot = new Vector2(0.5f, 0f);
-            capRt.sizeDelta = new Vector2(420f, -64f);
-            capRt.anchoredPosition = new Vector2(-210f, 0f);
-            captured.gameObject.AddComponent<RectMask2D>();
-            var capLayout = captured.gameObject.AddComponent<VerticalLayoutGroup>();
-            capLayout.padding = new RectOffset(74, 30, 28, 24);
-            capLayout.spacing = 6f;
-            capLayout.childAlignment = TextAnchor.UpperLeft;
-            capLayout.childControlWidth = true;
-            capLayout.childControlHeight = true;
-            capLayout.childForceExpandWidth = true;
-            capLayout.childForceExpandHeight = false;
+            // ── [D] 실물 획득 더미 4개 (우하단, 손패 오른쪽 옆 — 담요 위) ──
+            //    패널 제거: 종류별 더미에 카드가 쌓이고, 정보는 호버 툴팁으로만 (상시 텍스트 0).
+            string[] pileNames = { "광", "열끗", "띠", "피" };
+            refs.CapturePileRects = new RectTransform[4];
+            refs.CapturePileTooltips = new TextMeshProUGUI[4];
+            var pileCluster = new GameObject("CapturePiles", typeof(RectTransform));
+            pileCluster.transform.SetParent(root, false);
+            var clusterRt = (RectTransform)pileCluster.transform;
+            clusterRt.anchorMin = clusterRt.anchorMax = new Vector2(1f, 0f);
+            clusterRt.pivot = new Vector2(1f, 0f);
+            clusterRt.sizeDelta = new Vector2(300f, 300f);
+            clusterRt.anchoredPosition = new Vector2(-44f, 44f);
 
-            string[] rowNames = { "광", "열끗", "띠", "피" };
-            float[] gridHeights = { 72f, 72f, 72f, 141f };
-            refs.CapturedHeaders = new TextMeshProUGUI[4];
-            refs.CapturedGrids = new RectTransform[4];
+            var pileCell = new Vector2(124f, 132f);
+            const float pileGap = 16f;
             for (int i = 0; i < 4; i++)
             {
-                refs.CapturedHeaders[i] = CreateText(captured.transform, $"Header_{rowNames[i]}",
-                    $"{rowNames[i]} 0", 20, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-                refs.CapturedHeaders[i].overflowMode = TextOverflowModes.Ellipsis;
-                refs.CapturedHeaders[i].margin = new Vector4(2f, 0f, 2f, 0f);
-                SetPreferred(refs.CapturedHeaders[i].gameObject, -1f, 24f);
+                int col = i % 2, gridRow = i / 2; // 0 광(좌상) 1 열끗(우상) 2 띠(좌하) 3 피(우하)
+                var pileGo = new GameObject($"Pile_{pileNames[i]}", typeof(RectTransform));
+                pileGo.transform.SetParent(pileCluster.transform, false);
+                var pileRt = (RectTransform)pileGo.transform;
+                pileRt.anchorMin = pileRt.anchorMax = new Vector2(1f, 0f);
+                pileRt.pivot = new Vector2(0.5f, 0.5f);
+                pileRt.sizeDelta = pileCell;
+                pileRt.anchoredPosition = new Vector2(
+                    -(pileCell.x * 0.5f) - (1 - col) * (pileCell.x + pileGap),
+                    (pileCell.y * 0.5f) + (1 - gridRow) * (pileCell.y + pileGap));
+                refs.CapturePileRects[i] = pileRt;
 
-                var gridGo = new GameObject($"Grid_{rowNames[i]}", typeof(RectTransform));
-                gridGo.transform.SetParent(captured.transform, false);
-                var grid = gridGo.AddComponent<GridLayoutGroup>();
-                grid.cellSize = new Vector2(45f, 66f);
-                grid.spacing = new Vector2(3f, 3f);
-                grid.childAlignment = TextAnchor.UpperLeft;
-                SetPreferred(gridGo, -1f, gridHeights[i]);
-                refs.CapturedGrids[i] = (RectTransform)gridGo.transform;
+                // 호버 툴팁 (기본 숨김) — 장수·족보 진행
+                var tipBack = UIStyles.CreateSolidImage(pileGo.transform, "Tooltip",
+                    new Color(UIStyles.Ink.r, UIStyles.Ink.g, UIStyles.Ink.b, 0.82f));
+                tipBack.raycastTarget = false;
+                var tipRt = (RectTransform)tipBack.transform;
+                tipRt.anchorMin = tipRt.anchorMax = new Vector2(0.5f, 1f);
+                tipRt.pivot = new Vector2(0.5f, 0f);
+                tipRt.sizeDelta = new Vector2(230f, 64f);
+                tipRt.anchoredPosition = new Vector2(0f, 8f);
+                refs.CapturePileTooltips[i] = CreateText(tipBack.transform, "Text", "", 18,
+                    UIStyles.Paper, TextAnchor.MiddleCenter);
+                refs.CapturePileTooltips[i].raycastTarget = false;
+                Stretch((RectTransform)refs.CapturePileTooltips[i].transform, 8f, 4f);
+                var tipGroup = tipBack.gameObject.AddComponent<CanvasGroup>();
+                tipGroup.alpha = 0f;
+
+                // 더미 영역 호버 캐처 (스프레드 카드는 비-레이캐스트라 통과)
+                var catcher = UIStyles.CreateSolidImage(pileGo.transform, "Hover", Color.clear);
+                catcher.raycastTarget = true;
+                Stretch((RectTransform)catcher.transform, 0f, 0f);
+                catcher.transform.SetAsLastSibling();
+                HoverReveal.Attach(catcher.gameObject, 0.15f, tipGroup);
             }
-
-            var bdHeader = CreateText(captured.transform, "BreakdownHeader", "끗수", 20, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
-            bdHeader.overflowMode = TextOverflowModes.Ellipsis;
-            bdHeader.margin = new Vector4(2f, 0f, 2f, 0f);
-            SetPreferred(bdHeader.gameObject, -1f, 24f);
-            refs.BreakdownText = CreateText(captured.transform, "BreakdownText", "합계 0", 20,
-                UIStyles.Ink, TextAnchor.UpperLeft);
-            refs.BreakdownText.overflowMode = TextOverflowModes.Ellipsis;
-            refs.BreakdownText.margin = new Vector4(2f, 0f, 2f, 0f);
-            var bdLe = refs.BreakdownText.gameObject.AddComponent<LayoutElement>();
-            bdLe.flexibleHeight = 1f;
 
             // ── 더미/뒤집힌 카드 슬롯 ────────────────────────────────
             var deckSlotSize = ViewTuning.CardSize * ViewTuning.DeckScale;
@@ -218,7 +219,7 @@ namespace Hwatu.View
             flipAreaRt.anchorMax = new Vector2(0.5f, 1f);
             flipAreaRt.pivot = new Vector2(0.5f, 1f);
             flipAreaRt.sizeDelta = new Vector2(deckSlotSize.x * 2f + 60f, deckSlotSize.y + 46f);
-            flipAreaRt.anchoredPosition = new Vector2(-120f, -215f);
+            flipAreaRt.anchoredPosition = new Vector2(-760f, -150f); // [수정] 더미를 좌측으로 — 바닥 산포와 겹치지 않게
 
             var deckBack = CreateDeckBackStack(flipArea.transform, "DeckBack", deckSlotSize);
             var deckBackRt = (RectTransform)deckBack.transform;
@@ -229,6 +230,10 @@ namespace Hwatu.View
             refs.DeckBackRect = deckBackRt;
             refs.DeckBackText = CreateText(deckBack.transform, "Count", "더미\n-", 20, UIStyles.Paper, TextAnchor.MiddleCenter);
             Stretch((RectTransform)refs.DeckBackText.transform, 4f, 4f);
+            refs.DeckBackText.raycastTarget = false;
+            // [D] 더미 수 라벨은 테이블 위 사물 라벨 — 기본 숨김, 더미/뒤집기 영역 호버 시만 노출.
+            var deckCountGroup = refs.DeckBackText.gameObject.AddComponent<CanvasGroup>();
+            deckCountGroup.alpha = 0f;
 
             var flipSlot = CreateSlot(flipArea.transform, "FlipSlot");
             var flipSlotRt = (RectTransform)flipSlot.transform;
@@ -245,7 +250,7 @@ namespace Hwatu.View
             refs.FloorArea.anchorMin = refs.FloorArea.anchorMax = new Vector2(0.5f, 0.5f);
             refs.FloorArea.pivot = new Vector2(0.5f, 0.5f);
             refs.FloorArea.sizeDelta = new Vector2(800f, 460f);
-            refs.FloorArea.anchoredPosition = new Vector2(-120f, 80f);
+            refs.FloorArea.anchoredPosition = new Vector2(0f, 150f); // 바닥 산포 중심(화면 중앙-상)
             // 바닥 배치는 CardTableView가 수동 계산한다 (레이아웃 그룹 없음)
 
             // ── 하단 손패 ────────────────────────────────────────────
@@ -265,16 +270,27 @@ namespace Hwatu.View
             Stretch(refs.CardLayer, 0f, 0f);
 
             // ── 더미/뒤집힘 라벨 — [C] 카드 위 정렬: 산포된 바닥 카드에 가려지지 않게
-            //    카드 레이어 위(모달 아래)에 먹색 배킹과 함께 그린다 ──
+            //    카드 레이어 위(모달 아래)에 먹색 배킹과 함께 그린다.
+            //    [D] 테이블 위 사물 라벨 — 기본 알파 0, 더미/뒤집기 영역 호버 시만 노출 ──
             var flipLabelBack = UIStyles.CreateSolidImage(root, "DeckFlipLabel", WithAlpha(UIStyles.Ink, 0.55f));
             var flipLabelBackRt = (RectTransform)flipLabelBack.transform;
             flipLabelBackRt.anchorMin = flipLabelBackRt.anchorMax = new Vector2(0.5f, 1f);
             flipLabelBackRt.pivot = new Vector2(0.5f, 1f);
             flipLabelBackRt.sizeDelta = new Vector2(236f, 30f);
-            flipLabelBackRt.anchoredPosition = new Vector2(-120f, -215f);
+            flipLabelBackRt.anchoredPosition = new Vector2(-760f, -150f); // 더미 이동에 맞춤
             var flipLabel = CreateText(flipLabelBack.transform, "Label", "더미 / 마지막 뒤집힘", 18,
                 UIStyles.Paper, TextAnchor.MiddleCenter);
+            flipLabel.raycastTarget = false;
             Stretch((RectTransform)flipLabel.transform, 6f, 2f);
+            var flipLabelGroup = flipLabelBack.gameObject.AddComponent<CanvasGroup>();
+            flipLabelGroup.alpha = 0f;
+
+            // [D] 더미·뒤집기 슬롯을 덮는 투명 호버 캐처(레이캐스트 영역) — 들어오면 두 라벨을 페이드인.
+            var deckHover = UIStyles.CreateSolidImage(flipArea.transform, "DeckHoverCatcher", Color.clear);
+            deckHover.raycastTarget = true;
+            Stretch((RectTransform)deckHover.transform, 0f, 0f);
+            deckHover.transform.SetAsLastSibling();
+            HoverReveal.Attach(deckHover.gameObject, 0.15f, deckCountGroup, flipLabelGroup);
 
             // ── 고/스톱 모달 ─────────────────────────────────────────
             var goStopOverlay = CreatePanel(root, "GoStopModal", WithAlpha(UIStyles.Ink, 0.60f));

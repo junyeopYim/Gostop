@@ -15,13 +15,17 @@ namespace Hwatu.View.Stage
         public Vector3 Position;
         public Vector3 Euler;
         public float Fov;
+        /// <summary>[B] 이 포즈에서 상시 호흡 노이즈를 허용할지. 판(TableView)은 죽은 듯 고정(false),
+        /// 차사 정면(FrontView)·비판 상황은 미세한 숨을 남긴다(true).</summary>
+        public bool AllowBreathing;
 
-        public CameraPose(string id, Vector3 position, Vector3 euler, float fov)
+        public CameraPose(string id, Vector3 position, Vector3 euler, float fov, bool allowBreathing = true)
         {
             Id = id;
             Position = position;
             Euler = euler;
             Fov = fov;
+            AllowBreathing = allowBreathing;
         }
 
         public Quaternion Rotation => Quaternion.Euler(Euler);
