@@ -162,6 +162,8 @@ MonoBehaviour:
   ElementEntries:
   - Key: branch_plum
     Sprite: {fileID: -5503723008399095931, guid: d02cb9db9ec26054eb2cb3d13f562d56, type: 3}
+  - Key: chasa_hand
+    Sprite: {fileID: 21300000, guid: e24370375bc53e548a8dab80e6996faf, type: 3}
   - Key: chasa_seated
     Sprite: {fileID: 21300000, guid: 4711b6d4c2cf33243bfff4bb578091ae, type: 3}
   - Key: gambler_portrait

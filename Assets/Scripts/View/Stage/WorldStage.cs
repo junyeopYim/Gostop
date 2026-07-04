@@ -25,13 +25,15 @@ namespace Hwatu.View.Stage
         // [A] TableView: 판 평면(캔버스 eulerX 85°)의 정면(법선)에 카메라를 정렬한 face-on 탑다운.
         //     face-on이라 카드가 왜곡(누움) 없이 진짜 위에서 내려다본 모양으로 보이고, 담요가
         //     화면을 가장자리까지 덮으며 차사·배경은 프러스텀 밖(WorldToViewportPoint로 수치 검증).
-        //     FrontView: 차사 정면 + 높이 +0.1 상승(호흡 허용).
+        //     FrontView: 건너편의 차사 정면 (3분할 구도 — 하단 테이블 전경 / 중단 차사 / 상단 배경 깊이).
+        //     낮은 눈높이·살짝 뒤로 물러난 위치·완만한 하향 피치로 담요 전경과 차사, 그 위 배경을
+        //     한 프레임에 담는다. 호흡 허용(true). (전환 시간·각속도 캡은 CameraRig 하드캡 유지.)
         [SerializeField] private Vector3 _tablePos = new Vector3(0f, 6.50f, -0.22f);
         [SerializeField] private Vector3 _tableEuler = new Vector3(85f, 0f, 0f);
         [SerializeField] private float _tableFov = 44f;
-        [SerializeField] private Vector3 _frontPos = new Vector3(0f, 4.4f, -4.7f); // +0.1 상승
-        [SerializeField] private Vector3 _frontEuler = new Vector3(19f, 0f, 0f);
-        [SerializeField] private float _frontFov = 44f;
+        [SerializeField] private Vector3 _frontPos = new Vector3(0f, 3.7f, -5.2f);
+        [SerializeField] private Vector3 _frontEuler = new Vector3(15f, 0f, 0f);
+        [SerializeField] private float _frontFov = 46f;
 
         public CameraRig Rig { get; private set; }
         public TableStage Table { get; private set; }

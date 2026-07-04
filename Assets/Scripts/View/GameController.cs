@@ -171,7 +171,7 @@ namespace Hwatu.View
             var bg = canvas.transform.Find("Background");
             if (bg != null) bg.gameObject.SetActive(false);
 
-            RelocateVignetteToScreen();
+            RelocateVignetteToScreen(eventCamera);
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Hwatu.View
         /// 같은 오버레이에 판 긴장 비네트(TensionVignette)를 얹고, [D] 점수식·턴 정보(미니 HUD)를
         /// 테이블(월드)에서 걷어 이 스크린 HUD로 이주한다.
         /// </summary>
-        private void RelocateVignetteToScreen()
+        private void RelocateVignetteToScreen(Camera stageCamera)
         {
             if (_worldOverlay != null) return;
             var go = new GameObject("HwatuScreenOverlay");
@@ -203,8 +203,9 @@ namespace Hwatu.View
             if (_ui.MiniHudText != null)
                 _ui.MiniHudText.transform.SetParent(go.transform, false);
 
-            // [E] 셔플의 차사 손 — 비네트 아래(첫 형제)의 스크린 레이어에 얹는다.
-            _shuffleHand = ShuffleHand.Attach(go.transform);
+            // [E] 셔플의 차사 손 — 비네트 아래(첫 형제)의 스크린 레이어에 얹고, 더미(월드 캔버스)를
+            //     무대 카메라로 투영해 그 위를 따라가게 한다.
+            _shuffleHand = ShuffleHand.Attach(go.transform, _ui.DeckBackRect, stageCamera);
         }
 
         private void HandleDevUiToggle()

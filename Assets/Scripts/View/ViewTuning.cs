@@ -94,9 +94,11 @@ namespace Hwatu.View
         public static Vector2 CapturePileSpread = new Vector2(11f, -7f); // 최근 카드 어긋난 겹침 스텝
         public static int CapturePileVisibleMax = 4;       // 스프레드로 보이는 최근 카드 수 (초과분은 맨 아래 겹침)
 
-        // ── [E] 셔플의 차사 손 (스크린 레이어) ──
+        // ── [E] 셔플의 차사 손 (스크린 레이어, 더미 스크린 투영 추적) ──
         public static float ShuffleHandEnterDuration = 0.22f; // 상단→더미 하강
         public static float ShuffleHandExitDuration = 0.22f;  // 더미→상단 퇴장
         public static float ShuffleHandSwayDegrees = 9f;      // 좌우 왕복 진폭
+        public static float ShuffleHandDeckWidthScale = 1.8f; // [C] 손 폭 = 더미 스크린 폭 × 1.6~2.0 상한
+        public static float ShuffleHandCoverFraction = 0.62f; // [C] 손(피벗=소매상단)을 더미 위로 올려 손끝이 더미를 덮는 비율
     }
 }
