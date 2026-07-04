@@ -22,11 +22,30 @@ namespace Hwatu.View
         /// <summary>[임베드 이음매 ②] 판 종료 시 결과를 외부(런 화면)에 돌려준다.</summary>
         public event Action<RoundResult> RoundFinished;
 
+        /// <summary>
+        /// [3단계·C] 임베드 판의 고/스톱 제시자. 설정되면(런/튜토리얼) 박스 모달 대신 차사의
+        /// 질문(먹 조임→대화→쪽지)으로 결정한다. 미설정·단독 씬(비임베드)은 기존 박스 모달 유지.
+        /// </summary>
+        public Action<GoStopContext> GoStopPresenter { get; set; }
+
+        // ── [3단계] 화제 힌트 앵커 (튜토리얼이 월드 판 요소를 스크린 투영해 지시선을 그릴 때 사용) ──
+        public RectTransform HandArea => _ui != null ? _ui.HandArea : null;
+        public RectTransform FloorArea => _ui != null ? _ui.FloorArea : null;
+        public RectTransform FlipSlotRect => _ui != null ? _ui.FlipSlotRect : null;
+        public RectTransform DeckBackRect => _ui != null ? _ui.DeckBackRect : null;
+        public RectTransform CapturePile(int row) => _ui != null && _ui.CapturePileRects != null
+            && row >= 0 && row < _ui.CapturePileRects.Length ? _ui.CapturePileRects[row] : null;
+        public RectTransform MiniHudRect => _ui != null && _ui.MiniHudText != null
+            ? (RectTransform)_ui.MiniHudText.transform : null;
+
         /// <summary>[임베드 이음매] 코드 생성된 UI 캔버스 루트 (임베드 측 정리용).</summary>
         public GameObject UiRoot => _ui != null && _ui.Canvas != null ? _ui.Canvas.gameObject : null;
 
         /// <summary>[임베드 이음매] 판 캔버스 (테스트/무대가 렌더 모드·이벤트 카메라를 검증·설정).</summary>
         public Canvas BoardCanvas => _ui != null ? _ui.Canvas : null;
+
+        /// <summary>[3단계·D] 딜/이동 연출이 진행 중인가 (튜토리얼이 딜 완료 후 힌트를 띄울 때 폴링).</summary>
+        public bool IsViewBusy => _table != null && _table.IsBusy;
 
         private RoundEngine _engine;
         private UiRefs _ui;
@@ -52,6 +71,8 @@ namespace Hwatu.View
         private bool _roundOverStampPending;
         private GameObject _worldOverlay; // [B] 월드 모드에서 스크린에 남는 것(비네트)의 오버레이 캔버스
         private ShuffleHand _shuffleHand; // [E] 셔플의 차사 손 (월드 모드 전용, _worldOverlay 소속)
+        private TensionVignette _tensionVignette; // [C] 고/스톱 순간 강조(Pulse) 대상
+        private bool _goStopPresented;    // [C] 이번 결정 국면에 차사 질문을 이미 띄웠는가 (1회 가드)
 
         private void Awake()
         {
@@ -197,7 +218,8 @@ namespace Hwatu.View
             else UIStyles.CreateVignette(go.transform);
 
             // [B] 판 긴장 비네트(먹 침식) — 정적 비네트 위 전면. 카메라 셰이크 대체.
-            TensionVignette.Attach(go.transform, _engine);
+            // [C] 참조를 보관해 고/스톱 질문 직전 순간 강조(Pulse)에 쓴다.
+            _tensionVignette = TensionVignette.Attach(go.transform, _engine);
 
             // [D] 점수식·턴 정보(미니 HUD)를 스크린 HUD 상단 한 줄로 이주 (테이블 위 상시 텍스트 0).
             if (_ui.MiniHudText != null)
@@ -521,7 +543,17 @@ namespace Hwatu.View
             _table.ReconcileIfIdle(); // 연출 중이면 정산 스텝이 대신 재조정한다
 
             // 모달 숨김은 즉시, 표시와 획득 패널 갱신은 진행 중 트윈이 끝난 뒤로 미룬다
-            if (_engine.Phase != Phase.GoStopDecision) _ui.GoStopModal.SetActive(false);
+            if (_engine.Phase != Phase.GoStopDecision)
+            {
+                _ui.GoStopModal.SetActive(false);
+                // [C] 결정 국면을 (선택이든 엔진 직접 호출이든) 벗어나면 띄웠던 차사 질문을 걷는다.
+                if (_goStopPresented)
+                {
+                    _goStopPresented = false;
+                    Dialogue.Dismiss();
+                    ChasaOffer.Dismiss();
+                }
+            }
             if (_table.IsBusy)
             {
                 // 명령마다 다시 그려지므로, 새 연출이 시작될 때마다 지연 시계를 재무장한다
@@ -558,6 +590,27 @@ namespace Hwatu.View
         private void RedrawGoStopModal()
         {
             bool deciding = _engine.Phase == Phase.GoStopDecision;
+
+            // [3단계·C] 임베드 판 + 제시자 설정 시: 박스 모달 대신 차사의 질문(1회)으로 결정한다.
+            //   현재 끗수·배수·손패는 스크린 HUD가 이미 보이므로 쪽지엔 다음 배수만 싣는다.
+            if (_embedded && GoStopPresenter != null)
+            {
+                if (deciding && !_goStopPresented)
+                {
+                    _goStopPresented = true;
+                    GoStopPresenter(new GoStopContext
+                    {
+                        NextMultiplier = ScoreCalculator.GetMultiplier(_engine.GoCount + 1),
+                        StopBlockReason = _engine.StopBlockReason,
+                        Go = OnGoClicked,
+                        Stop = OnStopClicked,
+                        EmphasizeTension = () => { if (_tensionVignette != null) _tensionVignette.Pulse(); },
+                    });
+                }
+                return; // 임베드+제시자: 박스 모달 미사용
+            }
+
+            // 단독 씬(비임베드) / 제시자 미설정: 기존 박스 모달 유지.
             _ui.GoStopModal.SetActive(deciding);
             if (!deciding) return;
 

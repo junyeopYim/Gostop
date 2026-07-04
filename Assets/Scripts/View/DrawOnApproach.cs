@@ -23,10 +23,22 @@ namespace Hwatu.View
         private PaintInEffect _paint;
         private bool _fired;
 
+        /// <summary>이미 그려짐이 발동됐는가 (스킵/즉시완성 오케스트레이션용).</summary>
+        public bool HasFired => _fired;
+
         private void Awake() => _paint = GetComponent<PaintInEffect>();
 
         /// <summary>발동 상태를 되돌린다 — 다시 반경 안으로 들어오면 또 그려진다.</summary>
         public void Reset() => _fired = false;
+
+        /// <summary>[4단계] 접근을 기다리지 않고 지금 즉시 그려짐을 발동한다 (걷기 스킵/디버그).</summary>
+        public void ForceNow()
+        {
+            if (_fired) return;
+            _fired = true;
+            if (_paint == null) _paint = GetComponent<PaintInEffect>();
+            if (_paint != null) _paint.PlayDrawn(inkDuration, colorDuration);
+        }
 
         private void Update()
         {

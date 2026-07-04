@@ -40,11 +40,15 @@ namespace Hwatu.View
         [SerializeField] private float _pulseFrequency = 0.75f; // 0.5~1Hz
         [SerializeField] private float _dampSeconds = 1f;       // 정산 진입 시 감쇠 시간
 
+        /// <summary>[C] 순간 강조(한 호흡 조여듦) 시간 — 고/스톱 질문 직전 1회.</summary>
+        public const float EmphasisSeconds = 0.7f;
+
         private RoundEngine _engine;
         private Image _image;
         private Material _material;
         private float _seed;
         private float _damp = 1f;   // 정산 진입 시 1 → 0
+        private float _emphasis;    // [C] 순간 강조 0→1→0 (Pulse), 기본 긴장 위에 얹힌다
         private bool _subscribed;
         private Color _inkRgb;
 
@@ -93,6 +97,14 @@ namespace Hwatu.View
                 t => _damp = Mathf.Lerp(from, 0f, t), () => _damp = 0f);
         }
 
+        /// <summary>[C] 순간 강조: 먹이 가장자리에서 한 호흡 조여들었다 풀린다 (고/스톱 질문 직전 1회).
+        /// 기본 긴장 위에 sin(0→π) 형태로 얹혀 최대 침식으로 한 번 조인 뒤 자연히 풀린다.</summary>
+        public void Pulse()
+        {
+            Tween.Custom(this, "emphasis", EmphasisSeconds, Ease.InOutQuad,
+                t => _emphasis = Mathf.Sin(t * Mathf.PI), () => _emphasis = 0f);
+        }
+
         private void Update()
         {
             if (_material == null || _engine == null) return;
@@ -104,7 +116,9 @@ namespace Hwatu.View
                 _damp = 1f;
             }
 
-            float tension = Progress() * LateGame() * _damp;
+            // 기본 긴장 위에 순간 강조(Pulse)를 얹는다. 하드캡(ThresholdCap/AlphaCap)은
+            // 아래 Clamp가 그대로 보장하므로 강조가 상한을 넘지 않는다.
+            float tension = Mathf.Clamp01(Progress() * LateGame() * _damp + _emphasis);
             if (tension <= 0.0001f)
             {
                 SetAlpha(0f);
@@ -144,6 +158,7 @@ namespace Hwatu.View
         private void OnDestroy()
         {
             Tween.Cancel(this, "damp");
+            Tween.Cancel(this, "emphasis");
             if (_subscribed && _engine != null) _engine.Events.RoundEnded -= OnRoundEnded;
             // CreateMaterial은 HideAndDontSave 인스턴스를 반환하므로 파괴 시 직접 정리한다
             // (InkBleedEffect/PaintInEffect와 동일 규약 — 판마다 오버레이가 새로 생성되므로 누수 방지).

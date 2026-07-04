@@ -117,6 +117,7 @@ namespace Hwatu.View
         private Material _originalMaterial;
         private bool _fallbackActive;
         private Color _fallbackOriginalColor;
+        private Texture _explicitMask; // [4단계] 코드 생성 요소(갈림길)용 런타임 잉크순서 마스크
 
         // 2단계 그려짐 진행 상태
         private bool _drawActive;
@@ -241,8 +242,14 @@ namespace Hwatu.View
             }
         }
 
+        /// <summary>[4단계] 베이크된 에셋 마스크가 없는 코드 생성 요소(갈림길 팻말·소품·길 획)가
+        /// 그려짐 2단계(먹→채색)를 쓰도록 런타임 잉크순서 마스크를 직접 지정한다. PlayDrawn 이전에 호출.
+        /// 기존 자산(InkMaskGenerator 사인 스윕/방사)을 잉크순서로 재사용 — 휘도 = 그려지는 순서.</summary>
+        public void SetDrawMask(InkMaskKind kind) => _explicitMask = InkEffectResources.Mask(kind);
+
         private Texture ResolveElementInkMask()
         {
+            if (_explicitMask != null) return _explicitMask; // 코드 생성 요소는 명시 마스크 우선
             var sprite = _image != null ? _image.sprite
                 : (_spriteRenderer != null ? _spriteRenderer.sprite : null);
             if (sprite == null || sprite.texture == null) return null;

@@ -41,6 +41,9 @@ namespace Hwatu.View.Tests
             // 판 도중 종료한 테스트가 남긴 월드 무대(캔버스가 아니라 루트 GO) 정리
             var worldStage = GameObject.Find("WorldStage");
             if (worldStage != null) Object.DestroyImmediate(worldStage);
+            // 걷기 도중 종료한 테스트가 남긴 여정 무대 정리
+            var journeyStage = GameObject.Find("JourneyStage");
+            if (journeyStage != null) Object.DestroyImmediate(journeyStage);
             foreach (var canvas in Object.FindObjectsByType<Canvas>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (canvas != null && canvas.transform.parent == null)
@@ -80,16 +83,23 @@ namespace Hwatu.View.Tests
             Assert.AreEqual(1, run.State.currentDay, "성공만으로는 날이 가지 않는다");
             Assert.GreaterOrEqual(run.State.nojatdon, 5, "성공 보상 +5");
 
-            // 갈림길 선택 → 하루 전진 → 밤 패널 (낮/밤 이음매)
+            // [4단계] 노드 완료 → 걷기 → 갈림길: 팻말 선택이 하루 전진 (밤 패널 철거).
+            // 걷기→선택→노드 진입을 API로 완주하고, 팻말 slot이 JourneyMap 인덱스와 정확히 대응하는지 검증.
             var choices = run.GetTodayChoices();
             Assert.That(choices.Count, Is.InRange(1, 3), "1일차의 내일 갈림길 = 2일차 노드 수 (역할에 따라 1~3)");
+            yield return WaitForRealtime(() => runScreen.IsWalking || runScreen.IsAtCrossroads, "걷기 진입", 8f);
+            runScreen.SkipWalkDebug();
+            yield return WaitForRealtime(() => runScreen.IsAtCrossroads, "갈림길 도착", 8f);
+            Assert.AreEqual(choices.Count, runScreen.CrossroadSlotCount, "팻말 수 = 갈림길 수");
+            for (int slot = 0; slot < choices.Count; slot++)
+                Assert.AreEqual(choices[slot].indexInDay, runScreen.CrossroadChoiceIndex(slot),
+                    "팻말 slot이 갈림길 인덱스와 정확히 대응 (결정론)");
             int chosen = choices[0].indexInDay;
-            runScreen.ChooseNextNode(chosen);
-            yield return WaitFor(() => runScreen.IsNightVisible, "밤 패널 표시");
-            Assert.AreEqual(2, run.State.currentDay, "갈림길 선택 = 하루 전진");
+            runScreen.SelectCrossroad(0);
+            yield return WaitForRealtime(() => !flow.IsTransitioning && run.State.currentDay == 2,
+                "갈림길 선택 = 하루 전진", 8f);
             Assert.AreEqual(chosen, run.State.currentNodeIndex, "선택한 노드로 이동");
             Assert.IsTrue(SaveSystem.Exists(), "하루 전진 시 자동 저장");
-            runScreen.ConfirmNight();
             yield return null;
 
             // 심판일(7일차) 재 의식 관찰: 혼불을 2로 낮춘 뒤 디버그 전진으로 도달
@@ -201,10 +211,10 @@ namespace Hwatu.View.Tests
             Assert.AreEqual(nojatdonBefore, run.State.nojatdon, "노잣돈 복원");
             Assert.AreEqual(honbulBefore, run.State.honbul, "혼불 복원");
 
-            // 갈림길 → 2일차, 이후 혼불 1로 낮춰 심판일 재 의식(1→2) 관찰
+            // 갈림길 → 2일차 (확정 API로 하루 전진, 밤 패널 없음), 이후 혼불 1로 낮춰 심판일 재 의식(1→2) 관찰
             runScreen.ChooseNextNode(run.GetTodayChoices()[0].indexInDay);
-            yield return WaitFor(() => runScreen.IsNightVisible, "밤 패널");
-            runScreen.ConfirmNight();
+            yield return WaitForRealtime(() => !flow.IsTransitioning && run.State.currentDay == 2,
+                "갈림길 선택 = 하루 전진", 8f);
             yield return null;
 
             run.State.honbul = 1;

@@ -11,86 +11,122 @@ using UnityEngine.UI;
 namespace Hwatu.View.Screens
 {
     /// <summary>
-    /// 런 화면 v2 — "오늘의 노드" 기반 여정 허브.
-    /// 상단: 일차/혼불/노잣돈/오늘 노드 종류. 중앙: 노드별 행동
-    /// (판 치기 / 지나가기 / 심판 받기). 하단: 내일 갈림길 선택 버튼
-    /// (오늘 노드 완료 후 활성화, 클릭 = CompleteNode).
+    /// [4단계] 런 화면 = 1인칭 여정 상태 컨트롤러. 박스 UI(오늘의 판 치기·갈림길 버튼·밤 패널)를
+    /// 전면 철거하고, 노드 사이의 이동을 "걷기"로, 갈림길을 월드의 "팻말 짚기"로 만든다.
     ///
-    /// 판 임베드 수명주기(뼈대와 동일):
-    ///   부적 Attach → 커브 목표점수로 딜 → RoundFinished → (다음 프레임)
-    ///   부적 Detach → ApplyRoundResult → 결과 패널 → [계속] → 임베드 정리.
-    /// CompleteNode 직후에는 "밤이 깊었다…" 패널이 낀다 — 이후 지시서의
-    /// 낮/밤 시스템이 꽂힐 이음매(연출 없음, 자리만).
+    /// 여정 단계:
+    ///   Node  — 오늘 노드 해결 (판/심판 = 무대 자동 진입, 주막/이벤트 = 기존 Push).
+    ///   Walk  — 노드 완료 후 JourneyStage에서 카메라가 앞으로 걷는다 ("N일째" 붓글씨 · HUD 갱신).
+    ///   Cross — 도착. 다음 날 선택지만큼 팻말이 다가온 순서로 그려진다. 팻말 클릭 = 선택 확정.
+    ///
+    /// 유지: 스크린 HUD(일차·혼불·노잣돈·부적 칩) · [타이틀로] · F1 디버그(하루 넘기기·걷기 스킵) ·
+    ///       판 결과 패널 · 먹 번짐(혼불 소모). 세이브는 노드 완료 시점 유지 — 걷기 중 저장 없음.
+    ///       이어하기는 todayNodeCleared로 자동 분기(true → 걷기 시작점 재개).
     /// </summary>
     public sealed class RunScreen : ScreenBase
     {
         protected override string ScreenName => "RunScreen";
 
+        private enum JourneyPhase { Node, Walk, Crossroads }
+
         /// <summary>테스트용: 임베드된 판 게임 (판 진행 중에만 non-null).</summary>
         public GameController EmbeddedGame { get; private set; }
         public bool IsRoundInProgress => EmbeddedGame != null;
         public bool IsResultVisible => _resultPanel != null && _resultPanel.activeSelf;
-        public bool IsNightVisible => _nightPanel != null && _nightPanel.activeSelf;
+
+        // ── [테스트/디버그] 여정 단계 introspection ─────────────────────
+        public bool IsWalking => _journeyStage != null && _journeyStage.IsWalking;
+        public bool IsAtCrossroads => _journeyStage != null && _journeyStage.Arrived;
+        public int CrossroadSlotCount => _journeyStage != null ? _journeyStage.SlotCount : 0;
+        /// <summary>팻말 slot이 확정 시 넘길 다음 날 노드 인덱스(indexInDay). 결정론 검증용.</summary>
+        public int CrossroadChoiceIndex(int slot) => _journeyStage != null ? _journeyStage.ChoiceIndexForSlot(slot) : -1;
 
         private readonly EffectSystem _effects = new EffectSystem();
-        private GameObject _hubPanel;
-        private TextMeshProUGUI _statusText;
+        private GameObject _hudRoot;
+        private TextMeshProUGUI _dayText;
         private RectTransform _honbulRow;
         private TextMeshProUGUI _nojatdonText;
         private RectTransform _relicRow;
-        private RectTransform _judgmentRow;
-        private RectTransform _actionZone;      // 오늘 노드별 행동 영역 (매 갱신 재구성)
-        private RectTransform _choicesRow;      // 내일 갈림길 버튼들 (매 갱신 재구성)
         private GameObject _resultPanel;
         private TextMeshProUGUI _resultText;
-        private GameObject _nightPanel;
-        private TextMeshProUGUI _nightText;
         private GameObject _devPanel;
+        private CanvasGroup _calligraphyGroup;
+        private TextMeshProUGUI _calligraphyText;
         private RoundResult _pendingResult;
         private RunController _trackedRun;
         private int _lastHonbul;
         private InkBleedEffect _inkBleed;
         private bool _jumakPushPending;
         private bool _eventPushPending;
-        private WorldStage _worldStage;   // [B] 판 월드 무대 (임베드 판과 수명 일치)
+        private WorldStage _worldStage;      // 판 무대 (임베드 판과 수명 일치)
+        private JourneyStage _journeyStage;  // [4단계] 걷기·갈림길 무대 (WalkPhase 동안만)
+        private JourneyPhase _phase = JourneyPhase.Node;
+        private bool _committing;            // 갈림길 확정 시퀀스 진행 중
 
         private RunController Run => Flow.CurrentRun;
 
         protected override void Build(Transform canvasRoot)
         {
-            // ── 허브 패널 (판이 없을 때 표시) ────────────────────
-            _hubPanel = new GameObject("HubPanel", typeof(RectTransform));
-            _hubPanel.transform.SetParent(canvasRoot, false);
-            UIBuilder.Stretch((RectTransform)_hubPanel.transform, 0f, 0f);
+            BuildHud(canvasRoot);
+            BuildTopRightTitleButton(canvasRoot);
+            BuildDebugPanel(canvasRoot);
+            BuildCalligraphy(canvasRoot);
+            Root.AddComponent<RunScreenHotkey>().Bind(ToggleDebugPanel);
+            Root.AddComponent<JumakAutoPush>().Bind(this);
+            Root.AddComponent<EventAutoPush>().Bind(this);
 
-            var column = BuildCenterColumn(_hubPanel.transform, "저승길");
-            var infoPanel = UIStyles.CreatePanel(column, "RunInfoPanel", new Vector2(900f, 290f));
-            var infoLayout = infoPanel.gameObject.AddComponent<VerticalLayoutGroup>();
-            infoLayout.padding = new RectOffset(24, 24, 36, 14);
-            infoLayout.spacing = 8f;
-            infoLayout.childAlignment = TextAnchor.UpperCenter;
-            infoLayout.childControlWidth = true;
-            infoLayout.childControlHeight = true;
-            infoLayout.childForceExpandWidth = false;
-            infoLayout.childForceExpandHeight = false;
+            // 판 결과 패널 (판 종료 후, 임베드 게임 캔버스 위) — 여정 박스가 아니므로 유지.
+            _resultPanel = BuildOverlayPanel(canvasRoot, "ResultPanel", out _resultText,
+                "ConfirmButton", "계속", ConfirmRoundResult);
+            _inkBleed = Root.AddComponent<InkBleedEffect>();
+            TrackRunResources();
 
-            _statusText = UIStyles.CreateText(infoPanel.transform, "Status", UITextPreset.Body, "", 24,
-                UIStyles.Ink, TextAnchor.MiddleCenter);
-            UIBuilder.SetPreferred(_statusText.gameObject, 850f, 38f);
+            // 여정 화면은 무대(걷기/판) 또는 Push 화면이 배경을 채운다 — 스크린 배경은 상시 숨긴다.
+            SetScreenBackgroundVisible(false);
+            RefreshHud();
 
-            var resourceRow = new GameObject("ResourceRow", typeof(RectTransform));
-            resourceRow.transform.SetParent(infoPanel.transform, false);
-            var resourceLayout = resourceRow.AddComponent<HorizontalLayoutGroup>();
-            resourceLayout.spacing = 22f;
-            resourceLayout.childAlignment = TextAnchor.MiddleCenter;
-            resourceLayout.childControlWidth = true;
-            resourceLayout.childControlHeight = true;
-            resourceLayout.childForceExpandWidth = false;
-            resourceLayout.childForceExpandHeight = false;
-            UIBuilder.SetPreferred(resourceRow, 850f, 38f);
+            // 진입 전환이 끝난 뒤 오늘 노드로 진입한다 (전환 중 와이프 중첩 방지).
+            Flow.StartCoroutine(FirstAdvanceRoutine());
+        }
+
+        private void BuildHud(Transform canvasRoot)
+        {
+            var hud = new GameObject("HudStrip", typeof(RectTransform));
+            hud.transform.SetParent(canvasRoot, false);
+            var rt = (RectTransform)hud.transform;
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, -18f);
+            rt.sizeDelta = new Vector2(1100f, 150f);
+            _hudRoot = hud;
+
+            var col = hud.AddComponent<VerticalLayoutGroup>();
+            col.spacing = 8f;
+            col.childAlignment = TextAnchor.UpperCenter;
+            col.childControlWidth = true;
+            col.childControlHeight = true;
+            col.childForceExpandWidth = false;
+            col.childForceExpandHeight = false;
+
+            var topRow = new GameObject("ResourceRow", typeof(RectTransform));
+            topRow.transform.SetParent(hud.transform, false);
+            var rowLayout = topRow.AddComponent<HorizontalLayoutGroup>();
+            rowLayout.spacing = 26f;
+            rowLayout.childAlignment = TextAnchor.MiddleCenter;
+            rowLayout.childControlWidth = true;
+            rowLayout.childControlHeight = true;
+            rowLayout.childForceExpandWidth = false;
+            rowLayout.childForceExpandHeight = false;
+            UIBuilder.SetPreferred(topRow, 1080f, 44f);
+
+            _dayText = UIStyles.CreateText(topRow.transform, "DayText", UITextPreset.Body, "", 26,
+                UIStyles.Paper, TextAnchor.MiddleCenter, FontStyle.Bold);
+            _dayText.enableWordWrapping = false;
+            UIBuilder.SetPreferred(_dayText.gameObject, 240f, 40f);
 
             var honbulGo = new GameObject("HonbulIcons", typeof(RectTransform));
-            honbulGo.transform.SetParent(resourceRow.transform, false);
+            honbulGo.transform.SetParent(topRow.transform, false);
             var honbulLayout = honbulGo.AddComponent<HorizontalLayoutGroup>();
             honbulLayout.spacing = 2f;
             honbulLayout.childAlignment = TextAnchor.MiddleCenter;
@@ -101,7 +137,7 @@ namespace Hwatu.View.Screens
             _honbulRow = (RectTransform)honbulGo.transform;
 
             var nojatdonGo = new GameObject("Nojatdon", typeof(RectTransform));
-            nojatdonGo.transform.SetParent(resourceRow.transform, false);
+            nojatdonGo.transform.SetParent(topRow.transform, false);
             var nojatdonLayout = nojatdonGo.AddComponent<HorizontalLayoutGroup>();
             nojatdonLayout.spacing = 5f;
             nojatdonLayout.childAlignment = TextAnchor.MiddleCenter;
@@ -109,54 +145,31 @@ namespace Hwatu.View.Screens
             nojatdonLayout.childControlHeight = false;
             nojatdonLayout.childForceExpandWidth = false;
             nojatdonLayout.childForceExpandHeight = false;
-            UIStyles.CreateIcon(nojatdonGo.transform, "yeopjeon", new Vector2(32f, 32f));
+            UIStyles.CreateIcon(nojatdonGo.transform, "yeopjeon", new Vector2(30f, 30f));
             _nojatdonText = UIStyles.CreateText(nojatdonGo.transform, "NojatdonText", UITextPreset.Numeral,
-                "0", 24, UIStyles.Ink, TextAnchor.MiddleLeft, FontStyle.Bold);
+                "0", 24, UIStyles.Gold, TextAnchor.MiddleLeft, FontStyle.Bold);
             UIBuilder.SetPreferred(_nojatdonText.gameObject, 70f, 34f);
 
-            _relicRow = CreateChipRow(infoPanel.transform, "RelicRow");
-            _judgmentRow = CreateChipRow(infoPanel.transform, "JudgmentRow");
+            _relicRow = CreateChipRow(hud.transform, "RelicRow");
+        }
 
-            var actionGo = new GameObject("ActionZone", typeof(RectTransform));
-            actionGo.transform.SetParent(column, false);
-            var actionLayout = actionGo.AddComponent<VerticalLayoutGroup>();
-            actionLayout.spacing = 14f;
-            actionLayout.childAlignment = TextAnchor.MiddleCenter;
-            actionLayout.childControlWidth = true;
-            actionLayout.childControlHeight = true;
-            actionLayout.childForceExpandWidth = false;
-            actionLayout.childForceExpandHeight = false;
-            UIBuilder.SetPreferred(actionGo, 900f, 250f);
-            _actionZone = (RectTransform)actionGo.transform;
-
-            var choicesGo = new GameObject("ChoicesRow", typeof(RectTransform));
-            choicesGo.transform.SetParent(column, false);
-            var choicesLayout = choicesGo.AddComponent<HorizontalLayoutGroup>();
-            choicesLayout.spacing = 16f;
-            choicesLayout.childAlignment = TextAnchor.MiddleCenter;
-            choicesLayout.childControlWidth = false;
-            choicesLayout.childControlHeight = false;
-            choicesLayout.childForceExpandWidth = false;
-            choicesLayout.childForceExpandHeight = false;
-            UIBuilder.SetPreferred(choicesGo, 900f, 80f);
-            _choicesRow = (RectTransform)choicesGo.transform;
-
-            BuildTopRightTitleButton(canvasRoot);
-            BuildDebugPanel(canvasRoot);
-            Root.AddComponent<RunScreenHotkey>().Bind(ToggleDebugPanel);
-            Root.AddComponent<JumakAutoPush>().Bind(this);
-            Root.AddComponent<EventAutoPush>().Bind(this);
-
-            // ── 결과 패널 (판 종료 후, 임베드 게임 캔버스 위) ────
-            _resultPanel = BuildOverlayPanel(canvasRoot, "ResultPanel", out _resultText,
-                "ConfirmButton", "계속", ConfirmRoundResult);
-            // ── 밤 패널 (CompleteNode 직후 — 낮/밤 시스템 이음매) ──
-            _nightPanel = BuildOverlayPanel(canvasRoot, "NightPanel", out _nightText,
-                "NightConfirmButton", "다음 날로", ConfirmNight);
-            _inkBleed = Root.AddComponent<InkBleedEffect>();
-            TrackRunResources();
-
-            RefreshHub();
+        private void BuildCalligraphy(Transform canvasRoot)
+        {
+            var go = new GameObject("NalCalligraphy", typeof(RectTransform));
+            go.transform.SetParent(canvasRoot, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, -260f);
+            rt.sizeDelta = new Vector2(900f, 160f);
+            _calligraphyGroup = go.AddComponent<CanvasGroup>();
+            _calligraphyGroup.alpha = 0f;
+            _calligraphyGroup.blocksRaycasts = false;
+            _calligraphyGroup.interactable = false;
+            _calligraphyText = UIStyles.CreateText(go.transform, "Text", UITextPreset.Jeho, "", 76,
+                UIStyles.Paper, TextAnchor.MiddleCenter, FontStyle.Bold);
+            UIBuilder.Stretch((RectTransform)_calligraphyText.transform, 0f, 0f);
         }
 
         private void TrackRunResources()
@@ -181,48 +194,212 @@ namespace Hwatu.View.Screens
             if (current < _lastHonbul)
                 _inkBleed?.Play();
             _lastHonbul = current;
+            RefreshHud();
         }
 
         protected override void OnExit()
         {
-            // 어떤 경로로 나가든 구독·임베드 잔재를 남기지 않는다
             UntrackRunResources();
             _effects.DetachAll();
+            DisposeJourneyStage();
             TearDownEmbeddedGame();
         }
 
-        // ── 허브 갱신 ───────────────────────────────────────────
+        // ── 여정 오케스트레이션 ─────────────────────────────────────────
 
-        private void RefreshHub()
+        private IEnumerator FirstAdvanceRoutine()
+        {
+            while (Flow.IsTransitioning) yield return null;
+            AdvanceJourney(fromEnter: true);
+        }
+
+        /// <summary>오늘 노드 상태에 따라 다음 동작을 결정한다. 완료 전 = 노드 진입, 완료 후 = 걷기.</summary>
+        private void AdvanceJourney(bool fromEnter)
+        {
+            if (Run == null || Run.IsOver) return;
+            var node = Run.CurrentNode;
+            if (node.kind == NodeKind.Judgment) Run.TryJaetnalHeal(); // 재 의식 (직렬화 플래그로 1회)
+            RefreshHud();
+
+            if (!Run.TodayNodeCleared)
+            {
+                _phase = JourneyPhase.Node;
+                ShowHud(true);
+                // 판/심판 = 무대 자동 진입 (박스 버튼 철거 — 노드 도착 = 자리에 앉는다).
+                // 주막/이벤트 = Auto-push 컴포넌트가 매 프레임 진입을 시도한다.
+                if (node.kind == NodeKind.Battle || node.kind == NodeKind.FinalBattle
+                    || node.kind == NodeKind.Judgment)
+                    PlayTodaysRound();
+            }
+            else
+            {
+                Flow.StartCoroutine(EnterWalk(needWipe: !fromEnter));
+            }
+        }
+
+        /// <summary>[A/B] 노드 완료 → 걷기 → 갈림길. 필요 시 먹 와이프로 무대 교체를 가린다.</summary>
+        private IEnumerator EnterWalk(bool needWipe)
+        {
+            if (_journeyStage != null) yield break; // 이미 걷는 중 (재진입 방지)
+            var slots = BuildSlots();
+
+            System.Action setup = () =>
+            {
+                DisposeJourneyStage();
+                _journeyStage = JourneyStage.Create(slots, SelectCrossroad);
+                ShowHud(true);
+                SetScreenBackgroundVisible(false);
+                _phase = JourneyPhase.Walk;
+                RefreshHud();
+            };
+
+            if (needWipe) yield return Flow.PlayWipe(setup, InkMaskKind.SweepHoriz);
+            else setup();
+
+            ShowNalCalligraphy(WalkTitle());
+            if (_journeyStage != null) _journeyStage.BeginWalk();
+        }
+
+        /// <summary>다음 날 갈림길(1~3) → 팻말 slot들. 마지막 날은 단일 "여정의 끝".</summary>
+        private List<JourneyCrossroads.Slot> BuildSlots()
+        {
+            var slots = new List<JourneyCrossroads.Slot>();
+            var choices = Run.GetTodayChoices();
+            if (choices.Count == 0)
+            {
+                slots.Add(new JourneyCrossroads.Slot
+                {
+                    Label = "여정의 끝",
+                    Kind = NodeKind.Battle,
+                    ChoiceIndex = 0,
+                    EndOfJourney = true,
+                });
+                return slots;
+            }
+            foreach (var c in choices)
+                slots.Add(new JourneyCrossroads.Slot
+                {
+                    Label = CrossroadLabel(c.kind),
+                    Kind = c.kind,
+                    ChoiceIndex = c.indexInDay,
+                    EndOfJourney = false,
+                });
+            return slots;
+        }
+
+        /// <summary>[B].4 팻말 클릭 = 선택 확정. 크로스로드 콜백/테스트 공용 진입점.</summary>
+        public void SelectCrossroad(int slot)
+        {
+            if (_committing || IsRoundInProgress || Run == null || Run.IsOver
+                || !Run.TodayNodeCleared || Flow.IsTransitioning) return;
+            int nextIndex = _journeyStage != null ? _journeyStage.ChoiceIndexForSlot(slot) : 0;
+            Flow.StartCoroutine(CommitChoiceRoutine(nextIndex, slot));
+        }
+
+        /// <summary>[호환/테스트] 다음 날 노드 인덱스로 직접 확정한다 (카메라 전진 없이 즉시 와이프).</summary>
+        public void ChooseNextNode(int nextIndex)
+        {
+            if (_committing || IsRoundInProgress || Run == null || Run.IsOver
+                || !Run.TodayNodeCleared || Flow.IsTransitioning) return;
+            Flow.StartCoroutine(CommitChoiceRoutine(nextIndex, slot: -1));
+        }
+
+        /// <summary>
+        /// 선택 확정 시퀀스: (팻말 선택 시) 그 길로 짧게 전진 → 먹 와이프 안에서 걷기 무대 철거 +
+        /// CompleteNode + 다음 노드 준비 → (판/심판) 앉기·딜, (주막/이벤트) Auto-push, (마지막) 엔딩.
+        /// </summary>
+        private IEnumerator CommitChoiceRoutine(int nextIndex, int slot)
+        {
+            _committing = true;
+            bool finalDay = Run.GetTodayChoices().Count == 0;
+
+            if (slot >= 0 && _journeyStage != null)
+                yield return _journeyStage.AdvanceOnChosenPath(slot);
+
+            bool committed = false;
+            yield return Flow.PlayWipe(() =>
+            {
+                committed = true;
+                DisposeJourneyStage();
+                Run.CompleteNode(finalDay ? 0 : nextIndex); // 하루 전진(자동 저장) 또는 마지막 날 환생
+                if (!Run.IsOver)
+                {
+                    _phase = JourneyPhase.Node; // 새 날의 노드로 진입 — HUD 일차 표기를 실제 currentDay로
+                    var node = Run.CurrentNode;
+                    if (node.kind == NodeKind.Judgment) Run.TryJaetnalHeal();
+                    if (node.kind == NodeKind.Battle || node.kind == NodeKind.FinalBattle
+                        || node.kind == NodeKind.Judgment)
+                    {
+                        ShowHud(false);
+                        SetUpEmbeddedRound(node, gazeEntry: true); // 무대 정면 진입 (하강은 아래)
+                    }
+                    else
+                    {
+                        ShowHud(true); // 주막/이벤트 = Push 화면이 곧 덮는다
+                    }
+                    RefreshHud();
+                }
+            }, InkMaskKind.SweepDiag);
+
+            _committing = false;
+            if (!committed)
+            {
+                // 와이프가 거부됐다(중복 전환). 노드/무대 상태는 그대로이므로 팻말 재선택이 가능하도록 되돌린다.
+                if (_journeyStage != null) _journeyStage.ReArmCrossroads();
+                yield break;
+            }
+            if (Run.IsOver) { Flow.ShowEnding(Run.Ending); yield break; }
+
+            var current = Run.CurrentNode;
+            if ((current.kind == NodeKind.Battle || current.kind == NodeKind.FinalBattle
+                 || current.kind == NodeKind.Judgment) && EmbeddedGame != null)
+                yield return SitAndDeal(current);
+            // 주막/이벤트: JumakAutoPush/EventAutoPush가 다음 프레임에 Push 한다.
+        }
+
+        // ── HUD ─────────────────────────────────────────────────────────
+
+        private void RefreshHud()
         {
             if (Run == null || Run.IsOver) return;
             var s = Run.State;
-            var node = Run.CurrentNode;
-
-            // 재 의식은 심판일 "입장" 시 1회 — 직렬화된 플래그가 재입장 중복 회복을 막는다
-            if (node.kind == NodeKind.Judgment) Run.TryJaetnalHeal();
-
-            _statusText.text =
-                $"{s.currentDay}일차 / {RunController.FinalDay}일 — 오늘: {KindLabel(node.kind)}"
-                + (s.dayAttempt > 0 ? $"  ·  오늘 재도전 {s.dayAttempt}회" : "");
+            // 걷기/갈림길 동안은 들어서는 날(N+1)을 표기한다 (마지막 날 제외).
+            bool walking = _phase == JourneyPhase.Walk || _phase == JourneyPhase.Crossroads;
+            int day = walking && !IsFinalWalk() ? s.currentDay + 1 : s.currentDay;
+            _dayText.text = $"{day}일째 / {RunController.FinalDay}일";
             RebuildHonbul(s.honbul, s.honbulMax);
             _nojatdonText.text = s.nojatdon.ToString();
             RebuildEffectChips(_relicRow, s.relicIds, "부적 없음");
-            RebuildJudgmentChips(node);
-
-            RebuildActionZone(node);
-            RebuildChoices();
-            MaybePushJumak(node);
-            MaybePushEvent(node);
         }
 
-        /// <summary>대왕명 + 지옥명 + 기믹 한 줄 (기믹 없는 대왕은 이름·지옥만).</summary>
-        private static string JudgmentLine(int day)
+        private void ShowHud(bool visible)
         {
-            var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(day));
-            return $"{king.KingName}({king.HellName})"
-                + (king.HasGimmick ? $" — {king.GimmickLine}" : "");
+            if (_hudRoot != null) _hudRoot.SetActive(visible);
         }
+
+        private void ShowNalCalligraphy(string text)
+        {
+            if (_calligraphyText == null || _calligraphyGroup == null) return;
+            _calligraphyText.text = text;
+            Tween.Cancel(_calligraphyGroup, "calligraphy");
+            float fade = ViewTuning.NalCalligraphyFadeSeconds;
+            float hold = ViewTuning.NalCalligraphyHoldSeconds;
+            float total = Mathf.Max(0.01f, fade * 2f + hold);
+            float inFrac = fade / total;
+            float outFrac = 1f - fade / total;
+            _calligraphyGroup.alpha = 0f;
+            Tween.Custom(_calligraphyGroup, "calligraphy", total, Ease.Linear, t =>
+            {
+                if (_calligraphyGroup == null) return;
+                float a = t < inFrac ? t / Mathf.Max(0.0001f, inFrac)
+                    : t > outFrac ? 1f - (t - outFrac) / Mathf.Max(0.0001f, 1f - outFrac)
+                    : 1f;
+                _calligraphyGroup.alpha = Mathf.Clamp01(a);
+            }, () => { if (_calligraphyGroup != null) _calligraphyGroup.alpha = 0f; });
+        }
+
+        private string WalkTitle() => IsFinalWalk() ? "여정의 끝" : $"{Run.State.currentDay + 1}일째";
+        private bool IsFinalWalk() => Run.GetTodayChoices().Count == 0;
 
         private static RectTransform CreateChipRow(Transform parent, string name)
         {
@@ -233,7 +410,7 @@ namespace Hwatu.View.Screens
             layout.LineSpacing = 6f;
             layout.RowHeight = 30f;
             layout.padding = new RectOffset(0, 0, 0, 0);
-            UIBuilder.SetPreferred(rowGo, 850f, 66f);
+            UIBuilder.SetPreferred(rowGo, 1000f, 40f);
             return (RectTransform)rowGo.transform;
         }
 
@@ -241,7 +418,7 @@ namespace Hwatu.View.Screens
         {
             ClearChildren(_honbulRow);
             for (int i = 0; i < max; i++)
-                UIStyles.CreateIcon(_honbulRow, i < current ? "honbul_on" : "honbul_off", new Vector2(30f, 30f));
+                UIStyles.CreateIcon(_honbulRow, i < current ? "honbul_on" : "honbul_off", new Vector2(28f, 28f));
         }
 
         private void RebuildEffectChips(RectTransform row, IReadOnlyList<string> ids, string emptyText)
@@ -250,29 +427,13 @@ namespace Hwatu.View.Screens
             row.gameObject.SetActive(true);
             if (ids == null || ids.Count == 0)
             {
-                var empty = UIStyles.CreateText(row, "Empty", UITextPreset.Body, emptyText, 18,
-                    UIStyles.Ash, TextAnchor.MiddleCenter);
-                UIBuilder.SetPreferred(empty.gameObject, 180f, 28f);
+                var empty = UIStyles.CreateText(row, "Empty", UITextPreset.Body, emptyText, 17,
+                    UIStyles.MutedPaper, TextAnchor.MiddleCenter);
+                UIBuilder.SetPreferred(empty.gameObject, 160f, 26f);
                 return;
             }
-
             foreach (var id in ids)
                 CreateEffectChip(row, id);
-        }
-
-        private void RebuildJudgmentChips(NodeSpec node)
-        {
-            ClearChildren(_judgmentRow);
-            bool isJudgment = node.kind == NodeKind.Judgment;
-            _judgmentRow.gameObject.SetActive(isJudgment);
-            if (!isJudgment) return;
-
-            var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
-            var label = UIStyles.CreateText(_judgmentRow, "King", UITextPreset.Body,
-                $"{king.KingName}({king.HellName})", 18, UIStyles.Ink, TextAnchor.MiddleCenter);
-            UIBuilder.SetPreferred(label.gameObject, 230f, 28f);
-            if (king.HasGimmick)
-                CreateEffectChip(_judgmentRow, king.EffectId);
         }
 
         private static void CreateEffectChip(Transform row, string effectId)
@@ -295,96 +456,23 @@ namespace Hwatu.View.Screens
             UIStyles.CreateIcon(chip.transform, "bujeok", new Vector2(48f, 24f));
             var text = UIStyles.CreateText(chip.transform, "Label", UITextPreset.Body, chipText, 17,
                 UIStyles.Ink, TextAnchor.MiddleLeft);
-            text.enableWordWrapping = false; // 칩은 단일행 설계 — 어절 줄바꿈 전역화의 영향 차단
+            text.enableWordWrapping = false;
             UIBuilder.SetPreferred(text.gameObject, chipWidth - 70f, 26f);
         }
 
-        private void RebuildActionZone(NodeSpec node)
+        // ── 판 진입 (기존 경로 유지 — 박스 버튼 대신 노드 도착이 트리거) ──
+
+        /// <summary>대왕명 + 지옥명 + 기믹 한 줄 (기믹 없는 대왕은 이름·지옥만).</summary>
+        private static string JudgmentLine(int day)
         {
-            ClearChildren(_actionZone);
-            bool cleared = Run.TodayNodeCleared;
-
-            switch (node.kind)
-            {
-                case NodeKind.Battle:
-                case NodeKind.FinalBattle:
-                    if (!cleared)
-                    {
-                        int target = TargetScoreFor(node);
-                        string label = node.kind == NodeKind.FinalBattle
-                            ? $"마지막 판 치기 — 목표 {target}점"
-                            : $"오늘의 판 치기 — 목표 {target}점";
-                        AddZoneButton("PlayRoundButton", label, PlayTodaysRound);
-                    }
-                    else
-                    {
-                        AddZoneLabel("오늘의 판을 이겼다.");
-                    }
-                    break;
-
-                case NodeKind.Jumak:
-                    AddZoneLabel("주막");
-                    AddZoneLabel(cleared ? "주막을 떠났다." : "문턱 너머로 등불이 흔들린다.");
-                    break;
-
-                case NodeKind.Event:
-                    AddZoneLabel("이벤트");
-                    AddZoneLabel(cleared ? "이벤트를 지나왔다." : "길 위에서 무언가가 걸음을 멈춰 세운다.");
-                    break;
-
-                case NodeKind.Judgment:
-                    // 재 의식(회복)은 RefreshHub 입장 처리에서 이미 발동했다 — 여기는 표기만 (연출 없음)
-                    var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(node.day));
-                    AddZoneLabel($"이승에서 재가 닿았다 — 혼불 +1 ({Run.State.honbul}/{Run.State.honbulMax})");
-                    AddZoneLabel($"{king.KingName} — {king.HellName}");
-                    if (king.HasGimmick) AddZoneLabel(king.GimmickLine);
-                    if (!cleared)
-                        AddZoneButton("PlayRoundButton", $"심판 받기 — 목표 {TargetScoreFor(node)}점", PlayTodaysRound);
-                    else
-                        AddZoneLabel("심판을 통과했다.");
-                    break;
-            }
+            var king = BossRegistry.Get(JourneyGenerator.KingIndexFor(day));
+            return $"{king.KingName}({king.HellName})"
+                + (king.HasGimmick ? $" — {king.GimmickLine}" : "");
         }
-
-        private void RebuildChoices()
-        {
-            ClearChildren(_choicesRow);
-            if (!Run.TodayNodeCleared)
-            {
-                var hint = UIStyles.CreateText(_choicesRow, "Hint", UITextPreset.Body,
-                    "오늘 노드를 완료하면 내일 갈림길이 열린다", 20,
-                    SecondaryTextColor, TextAnchor.MiddleCenter);
-                // ChoicesRow는 childControlWidth=false — LayoutElement가 아니라 rect 크기가
-                // 실제 폭을 결정한다 (좁은 기본 rect에 갇히면 글자 단위로 세로 깨짐)
-                ((RectTransform)hint.transform).sizeDelta = new Vector2(640f, 60f);
-                UIBuilder.SetPreferred(hint.gameObject, 640f, 60f);
-                return;
-            }
-
-            var choices = Run.GetTodayChoices();
-            if (choices.Count == 0)
-            {
-                // 49일차 — 갈 곳이 없다. 완료 = 여정의 끝(환생)
-                UIStyles.CreateButton(_choicesRow, "FinishJourneyButton", "여정의 끝",
-                    new Vector2(280f, 64f), 26, () => ChooseNextNode(0));
-                return;
-            }
-            foreach (var choice in choices)
-            {
-                int index = choice.indexInDay;
-                UIStyles.CreateButton(_choicesRow, $"ChoiceButton_{index}",
-                    $"내일: {KindLabel(choice.kind)}", new Vector2(240f, 64f), 24,
-                    () => ChooseNextNode(index));
-            }
-        }
-
-        // ── 노드 행동 ───────────────────────────────────────────
 
         /// <summary>
-        /// 오늘의 판 치기: 임베드 GameController로 판 1회 (목표 점수는 커브/심판 테이블 주입).
-        /// [A] 먹 와이프가 가린 사이 임베드를 세우고, 셔플·딜은 Reveal이 끝난 뒤 시작한다.
-        /// 심판일이면 대왕 기믹 효과를 부적과 같은 경로로 attach한다 — 판 종료 시
-        /// DetachAll이 함께 해제한다 (잔여 구독 없음).
+        /// 오늘의 판 자동 진입: 노드 도착 = 자리에 앉는다 (박스 버튼 철거). 먹 와이프가 가린 사이
+        /// 임베드를 세우고, 셔플·딜은 앉기(시선 하강)가 끝난 뒤 시작한다.
         /// </summary>
         public void PlayTodaysRound()
         {
@@ -396,16 +484,11 @@ namespace Hwatu.View.Screens
 
             Flow.StartCoroutine(EnterRoundWithWipe(node, () =>
             {
-                _hubPanel.SetActive(false);
+                ShowHud(false);
                 SetScreenBackgroundVisible(false);
             }));
         }
 
-        /// <summary>
-        /// [A] 판 첫 진입 와이프 (저승길 → 무대): Hide → preSetup + 임베드 설치(FrontView 눈맞춤) →
-        /// Reveal → 앉기 시선 이동(눈맞춤 0.3초 → TableView 하강) → 하강이 끝나는 프레임에 딜 시작.
-        /// 와이프는 무대 진입에 1회만이며, 딜(셔플·비행)은 하강 완료 이후에만 시작한다 (겹침 금지).
-        /// </summary>
         private IEnumerator EnterRoundWithWipe(NodeSpec node, System.Action preSetup)
         {
             bool entered = false;
@@ -415,37 +498,32 @@ namespace Hwatu.View.Screens
                 preSetup();
                 SetUpEmbeddedRound(node, gazeEntry: true);
             }, InkMaskKind.SweepDiag);
-            if (!entered) yield break; // 와이프가 거부됨(중복 전환) — 딜을 시작하면 안 된다
-            if (_worldStage != null) yield return _worldStage.PlaySitDown();
-            BeginEmbeddedDeal(node);
+            if (!entered) yield break;
+            yield return SitAndDeal(node);
         }
 
-        /// <summary>
-        /// 임베드 생성 + 효과 부착 + (심판일) 효과 표기 — 딜은 시작하지 않는다.
-        /// gazeEntry=true면 카메라를 FrontView(차사와 눈맞춤)로 스냅한다 (첫 진입, 이후 PlaySitDown이
-        /// TableView로 하강). 재도전은 무대를 재사용하므로 이 경로를 다시 타지 않는다.
-        /// </summary>
+        /// <summary>앉기 시선 하강 → 딜 시작 (첫 진입·갈림길 진입 공용).</summary>
+        private IEnumerator SitAndDeal(NodeSpec node)
+        {
+            if (_worldStage != null) yield return _worldStage.PlaySitDown();
+            if (EmbeddedGame != null) BeginEmbeddedDeal(node);
+        }
+
         private void SetUpEmbeddedRound(NodeSpec node, bool gazeEntry)
         {
             var go = new GameObject("EmbeddedGame");
-            EmbeddedGame = go.AddComponent<GameController>(); // Awake에서 자체 캔버스 생성 (여기선 스크린 스페이스)
+            EmbeddedGame = go.AddComponent<GameController>();
             EmbeddedGame.SetEmbeddedMode(true);
             EmbeddedGame.RoundFinished += OnRoundFinished;
+            EmbeddedGame.GoStopPresenter = ctx => ChasaGoStop.Present(ctx);
 
-            // [B] 판 월드화: 무대(원근 카메라·테이블·차사·깊이 배경) 구성 →
-            //     판 캔버스를 월드 스페이스로 전환(이벤트 카메라 = StageCamera) → 테이블로 눕혀 배치.
-            //     [A] 첫 진입은 FrontView(눈맞춤)로 스냅, 이후 PlaySitDown이 TableView로 내려간다.
             _worldStage = WorldStage.Create(EmbeddedGame.Engine);
             EmbeddedGame.ConfigureWorldCanvas(_worldStage.StageCamera);
             if (gazeEntry) _worldStage.EnterBoardWithGaze(EmbeddedGame.BoardCanvas);
             else _worldStage.EnterBoard(EmbeddedGame.BoardCanvas);
 
-            // 부적(+심판일이면 대왕 기믹) 부착은 딜 이전 — 딜 직후 총통 같은
-            // 즉시 종료 이벤트도 관찰할 수 있어야 한다
             AttachRoundEffects(node);
 
-            // 판 중 활성 효과 표기: 대왕명 + 지옥명 + 기믹 한 줄 (텍스트 수준, 연출 없음).
-            // 임베드 캔버스에 붙여 임베드 정리와 함께 사라진다.
             if (node.kind == NodeKind.Judgment && EmbeddedGame.UiRoot != null)
             {
                 var line = UIStyles.CreateText(EmbeddedGame.UiRoot.transform, "JudgmentLine", UITextPreset.Hwaje,
@@ -460,8 +538,6 @@ namespace Hwatu.View.Screens
             }
         }
 
-        /// <summary>부적(+심판일이면 대왕 기믹) 효과를 엔진에 부착한다 (첫 진입·재도전 공용).
-        /// 판 종료 시 DetachAll로 해제되므로 재도전 재사용 시 다시 부착한다.</summary>
         private void AttachRoundEffects(NodeSpec node)
         {
             var effectIds = new List<string>(Run.State.relicIds);
@@ -473,12 +549,9 @@ namespace Hwatu.View.Screens
             _effects.AttachAll(effectIds, new EffectContext(EmbeddedGame.Engine, Run));
         }
 
-        /// <summary>[A] Reveal 완료 후 딜 시작. 와이프 중 화면이 내려갔으면 아무것도 하지 않는다.</summary>
         private void BeginEmbeddedDeal(NodeSpec node)
         {
             if (EmbeddedGame == null || Root == null || Run == null) return;
-
-            // [C] 딜 시드 규약: Derive(runSeed, DeckShuffle, currentDay, dayAttempt)
             int dealSeed = SeedDerivation.Derive(Run.State.runSeed, RngStream.DeckShuffle,
                 Run.State.currentDay, Run.State.dayAttempt);
             var deck = CardSpecs.ToCards(Run.State.deck);
@@ -493,6 +566,8 @@ namespace Hwatu.View.Screens
                 : TargetScoreCurve.GetTarget(node.day, node.kind);
             return JumakShop.AdjustTargetScore(baseTarget, Run.State.relicIds);
         }
+
+        // ── 주막/이벤트 Auto-push (기존) ────────────────────────────────
 
         private void MaybePushJumak(NodeSpec node)
         {
@@ -514,14 +589,11 @@ namespace Hwatu.View.Screens
             _jumakPushPending = false;
         }
 
-        public void RefreshAfterJumakClosed()
-        {
-            RefreshHub();
-        }
+        public void RefreshAfterJumakClosed() => AdvanceJourney(fromEnter: false);
 
         public void TryOpenJumakIfNeeded()
         {
-            if (Run == null || Run.IsOver) return;
+            if (Run == null || Run.IsOver || _committing) return;
             MaybePushJumak(Run.CurrentNode);
         }
 
@@ -545,58 +617,53 @@ namespace Hwatu.View.Screens
             _eventPushPending = false;
         }
 
-        public void RefreshAfterEventClosed()
-        {
-            RefreshHub();
-        }
+        public void RefreshAfterEventClosed() => AdvanceJourney(fromEnter: false);
 
         public void TryOpenEventIfNeeded()
         {
-            if (Run == null || Run.IsOver) return;
+            if (Run == null || Run.IsOver || _committing) return;
             MaybePushEvent(Run.CurrentNode);
         }
 
-        /// <summary>내일 갈림길 선택 = CompleteNode. 마지막 날은 여정의 끝(인자 무시).</summary>
-        public void ChooseNextNode(int nextIndex)
-        {
-            if (IsRoundInProgress || Run == null || Run.IsOver || !Run.TodayNodeCleared) return;
-            Run.CompleteNode(nextIndex);
+        // ── 디버그 ──────────────────────────────────────────────────────
 
-            if (Run.IsOver)
-            {
-                Flow.ShowEnding(Run.Ending);
-                return;
-            }
-            // 밤 사이클 자리 (연출 없음 — 이후 지시서의 낮/밤 시스템이 여기 꽂힌다)
-            _nightText.text = "밤이 깊었다…";
-            _nightPanel.SetActive(true);
-        }
-
-        /// <summary>밤 패널 [다음 날로]: [A] 하루 넘김 와이프(SweepHoriz)를 사이에 두고 새 날의 허브로.</summary>
-        public void ConfirmNight()
-        {
-            if (!IsNightVisible || Flow.IsTransitioning) return;
-            Flow.StartCoroutine(Flow.PlayWipe(() =>
-            {
-                _nightPanel.SetActive(false);
-                RefreshHub();
-            }, InkMaskKind.SweepHoriz));
-        }
-
-        /// <summary>[디버그] 오늘 노드 강제 완료 + 첫 갈림길로 이동 (밤 패널 생략).</summary>
+        /// <summary>[디버그] 오늘 노드 강제 완료 + 다음 날로 (진행 중 판/걷기는 걷어내고 idle 착지).</summary>
         public void AdvanceDayDebug()
         {
-            if (IsRoundInProgress || Run == null || Run.IsOver) return;
+            if (Run == null || Run.IsOver || Flow.IsTransitioning || _committing) return;
+            CleanupStagesForDebug();
             Run.AdvanceDayDebug();
-            if (Run.IsOver) Flow.ShowEnding(Run.Ending);
-            else RefreshHub();
+            if (Run.IsOver) { Flow.ShowEnding(Run.Ending); return; }
+            if (Run.CurrentNode.kind == NodeKind.Judgment) Run.TryJaetnalHeal(); // 노드 진입 재 의식 (1회 가드)
+            _phase = JourneyPhase.Node;
+            ShowHud(true);
+            SetScreenBackgroundVisible(false);
+            RefreshHud();
         }
 
-        // ── 판 종료 처리 (뼈대와 동일한 수명주기) ────────────────
+        /// <summary>[디버그] 걷기 스킵 — 즉시 도착 + 갈림길 요소 즉시 완성.</summary>
+        public void SkipWalkDebug()
+        {
+            if (_journeyStage != null && _journeyStage.IsWalking)
+            {
+                _journeyStage.SkipWalk();
+                _phase = JourneyPhase.Crossroads;
+            }
+        }
+
+        private void CleanupStagesForDebug()
+        {
+            _effects.DetachAll();
+            _pendingResult = null;
+            if (_resultPanel != null) _resultPanel.SetActive(false);
+            TearDownEmbeddedGame();
+            DisposeJourneyStage();
+        }
+
+        // ── 판 종료 처리 (기존 수명주기) ────────────────────────────────
 
         private void OnRoundFinished(RoundResult result)
         {
-            // 엔진 이벤트 콜스택 안이므로 처리는 다음 프레임으로 미룬다
             _pendingResult = result;
             Flow.StartCoroutine(ProcessRoundFinished());
         }
@@ -608,7 +675,7 @@ namespace Hwatu.View.Screens
             var result = _pendingResult;
             _pendingResult = null;
 
-            _effects.DetachAll(); // 판 종료: 효과 전부 해제 (구독 누수 금지)
+            _effects.DetachAll();
 
             int targetScore = EmbeddedGame != null ? EmbeddedGame.Engine.Config.TargetScore : 0;
             bool wasJudgment = Run.CurrentNode.kind == NodeKind.Judgment;
@@ -616,16 +683,14 @@ namespace Hwatu.View.Screens
 
             _resultText.text = result.Success
                 ? $"성공! 최종점수 {result.FinalScore} (끗수 {result.BaseScore} x 배수 {result.Multiplier})\n"
-                  + $"노잣돈 +{RunController.RoundSuccessReward} → {Run.State.nojatdon}\n내일 갈 길을 고르시오."
+                  + $"노잣돈 +{RunController.RoundSuccessReward} → {Run.State.nojatdon}\n길을 나선다."
                 : $"실패… 최종점수 {result.FinalScore} / 목표 {targetScore}\n"
                   + $"혼불 -1 → {Run.State.honbul}"
                   + (Run.IsOver ? "\n혼불이 모두 꺼졌다…" : "\n같은 노드를 다시 친다 — 딜은 새로 섞인다.");
 
-            // [C] 승리 시 일어서기 시퀀스(셰이크 감쇠 → 0.4초 정지 → FrontView 상승 → 차사 끄덕임)를
-            //     결과 패널보다 먼저 재생한다. 실패는 기존 연출(먹 번짐) 유지 — 일어서기 없음.
             if (result.Success && _worldStage != null)
                 yield return _worldStage.PlayStandUp();
-            if (Root == null || _resultPanel == null) yield break; // 시퀀스 도중 화면이 내려갔으면 중단
+            if (Root == null || _resultPanel == null) yield break;
 
             _resultPanel.SetActive(true);
             if (result.Success)
@@ -636,8 +701,8 @@ namespace Hwatu.View.Screens
         }
 
         /// <summary>
-        /// 결과 패널 [계속]: (소멸) 엔딩 전환 / 성공 → [A] 판 종료 복귀 와이프로 허브 /
-        /// 실패 → [A] 재도전 와이프로 같은 날 새 딜 직행 (dayAttempt는 결과 반영 때 이미 +1).
+        /// 결과 패널 [계속]: (소멸) 엔딩 / 성공 → 판 무대 철거 후 걷기(먹 와이프 1회로 무대 교체) /
+        /// 실패 → 재도전 와이프 없이 같은 날 새 딜 직행.
         /// </summary>
         public void ConfirmRoundResult()
         {
@@ -647,32 +712,39 @@ namespace Hwatu.View.Screens
             {
                 _resultPanel.SetActive(false);
                 TearDownEmbeddedGame();
-                Flow.ShowEnding(Run.Ending); // 스택 전환(Navigate)이 와이프를 건다
+                Flow.ShowEnding(Run.Ending);
                 return;
             }
 
             if (Run.TodayNodeCleared)
             {
-                Flow.StartCoroutine(Flow.PlayWipe(() =>
-                {
-                    _resultPanel.SetActive(false);
-                    TearDownEmbeddedGame();
-                    RefreshHub();
-                    SetScreenBackgroundVisible(true);
-                    _hubPanel.SetActive(true);
-                }));
+                // 판 종료 → 일어서기(이미 재생) → 걷기. 판 철거와 걷기 무대 생성을 한 와이프로.
+                Flow.StartCoroutine(EnterWalkFromBoard());
             }
             else
             {
-                // [A] 실패 재도전: 와이프·시선 이동 없이 TableView를 유지한 채 딜만 재생한다.
                 RetryRoundDirect(Run.CurrentNode);
             }
         }
 
-        /// <summary>
-        /// [A] 실패 재도전 직행: 기존 무대·임베드 판을 그대로 재사용해 카메라가 TableView에서 미동도
-        /// 하지 않게 하고, 판 종료 시 해제된 효과만 다시 붙여 새 dayAttempt 시드로 딜만 재생한다.
-        /// </summary>
+        private IEnumerator EnterWalkFromBoard()
+        {
+            var slots = BuildSlots();
+            yield return Flow.PlayWipe(() =>
+            {
+                _resultPanel.SetActive(false);
+                TearDownEmbeddedGame();
+                DisposeJourneyStage();
+                _journeyStage = JourneyStage.Create(slots, SelectCrossroad);
+                ShowHud(true);
+                SetScreenBackgroundVisible(false);
+                _phase = JourneyPhase.Walk;
+                RefreshHud();
+            }, InkMaskKind.SweepHoriz);
+            ShowNalCalligraphy(WalkTitle());
+            if (_journeyStage != null) _journeyStage.BeginWalk();
+        }
+
         private void RetryRoundDirect(NodeSpec node)
         {
             if (EmbeddedGame == null) return;
@@ -683,11 +755,11 @@ namespace Hwatu.View.Screens
 
         private void TearDownEmbeddedGame()
         {
-            DisposeWorldStage(); // 무대는 판보다 먼저 정리 (카메라·셰이크 구독 해제)
+            DisposeWorldStage();
             if (EmbeddedGame == null) return;
             EmbeddedGame.RoundFinished -= OnRoundFinished;
             if (EmbeddedGame.UiRoot != null) Object.Destroy(EmbeddedGame.UiRoot);
-            Object.Destroy(EmbeddedGame.gameObject); // GameController.OnDestroy가 스크린 오버레이(비네트)까지 정리
+            Object.Destroy(EmbeddedGame.gameObject);
             EmbeddedGame = null;
         }
 
@@ -698,7 +770,14 @@ namespace Hwatu.View.Screens
             _worldStage = null;
         }
 
-        // ── 빌드 헬퍼 ───────────────────────────────────────────
+        private void DisposeJourneyStage()
+        {
+            if (_journeyStage == null) return;
+            _journeyStage.Dispose();
+            _journeyStage = null;
+        }
+
+        // ── 빌드 헬퍼 ───────────────────────────────────────────────────
 
         private void BuildTopRightTitleButton(Transform canvasRoot)
         {
@@ -712,14 +791,14 @@ namespace Hwatu.View.Screens
 
         private void BuildDebugPanel(Transform canvasRoot)
         {
-            var panel = UIStyles.CreatePanel(canvasRoot, "RunDebugPanel", new Vector2(322f, 74f));
+            var panel = UIStyles.CreatePanel(canvasRoot, "RunDebugPanel", new Vector2(322f, 128f));
             _devPanel = panel.gameObject;
             var rt = (RectTransform)_devPanel.transform;
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
             rt.anchoredPosition = new Vector2(24f, -24f);
 
-            var layout = _devPanel.AddComponent<HorizontalLayoutGroup>();
+            var layout = _devPanel.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(12, 12, 9, 9);
             layout.spacing = 8f;
             layout.childAlignment = TextAnchor.MiddleCenter;
@@ -730,6 +809,8 @@ namespace Hwatu.View.Screens
 
             UIStyles.CreateButton(_devPanel.transform, "AdvanceDayButton", "하루 넘기기",
                 new Vector2(290f, 50f), 22, AdvanceDayDebug);
+            UIStyles.CreateButton(_devPanel.transform, "SkipWalkButton", "걷기 스킵",
+                new Vector2(290f, 50f), 22, SkipWalkDebug);
             _devPanel.SetActive(false);
         }
 
@@ -742,7 +823,7 @@ namespace Hwatu.View.Screens
                                              string buttonName, string buttonLabel, System.Action onClick)
         {
             var dim = UIBuilder.CreatePanel(canvasRoot, name, WithAlpha(UIStyles.Ink, 0.55f));
-            dim.raycastTarget = true; // 아래(임베드 게임/허브) 입력 차단
+            dim.raycastTarget = true;
             UIBuilder.Stretch((RectTransform)dim.transform, 0f, 0f);
 
             var box = UIBuilder.CreatePanel(dim.transform, "Box", UIStyles.Paper);
@@ -771,19 +852,6 @@ namespace Hwatu.View.Screens
             return dim.gameObject;
         }
 
-        private void AddZoneLabel(string text)
-        {
-            var t = UIStyles.CreateText(_actionZone, "ZoneLabel", UITextPreset.Body, text, 28,
-                UIStyles.Paper, TextAnchor.MiddleCenter);
-            t.enableWordWrapping = false; // 고정 높이 단일행 — 경계선 폭에서 두 줄로 겹치는 것 방지
-            UIBuilder.SetPreferred(t.gameObject, 860f, 46f);
-        }
-
-        private void AddZoneButton(string name, string label, System.Action onClick)
-        {
-            UIStyles.CreateButton(_actionZone, name, label, new Vector2(420f, 64f), 26, onClick);
-        }
-
         private static void ClearChildren(Transform parent)
         {
             for (int i = parent.childCount - 1; i >= 0; i--)
@@ -796,19 +864,18 @@ namespace Hwatu.View.Screens
             return color;
         }
 
-        private static string KindLabel(NodeKind kind)
+        /// <summary>[B].2 갈림길 팻말 라벨: 판="노름판", 주막="주막", 이벤트="샛길", 심판="붉은 문".</summary>
+        private static string CrossroadLabel(NodeKind kind)
         {
             switch (kind)
             {
-                case NodeKind.Battle: return "판";
+                case NodeKind.Battle:
+                case NodeKind.FinalBattle: return "노름판";
                 case NodeKind.Jumak: return "주막";
-                case NodeKind.Event: return "이벤트";
-                case NodeKind.Judgment: return "심판";
-                case NodeKind.Jaetnal: return "잿날";       // 생성되지 않음
-                case NodeKind.FinalBattle: return "최종판"; // 생성되지 않음
-                default: return kind.ToString();
+                case NodeKind.Event: return "샛길";
+                case NodeKind.Judgment: return "붉은 문";
+                default: return "길";
             }
         }
     }
-
 }

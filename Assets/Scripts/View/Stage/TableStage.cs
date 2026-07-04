@@ -48,12 +48,12 @@ namespace Hwatu.View.Stage
         // 원경: 저승문/홍살문 실루엣 (gate_silhouette 에셋 우선, 없으면 절차 기둥2+상인방1 폴백).
         [SerializeField] private Vector3 _gatePos = new Vector3(0f, 2.0f, 8.0f);
         [SerializeField] private Vector2 _gateSize = new Vector2(9.8f, 6.4f);
-        [SerializeField, Range(0f, 1f)] private float _gateAssetAlpha = 0.6f;  // 에셋 사용 시 (사양 0.5~0.7)
+        [SerializeField, Range(0f, 1f)] private float _gateAssetAlpha = 0.68f; // 에셋 사용 시 (사양 0.5~0.7 상단)
         [SerializeField, Range(0f, 1f)] private float _gateProcAlpha = 0.82f;  // 절차 실루엣 폴백
-        // 중경: 지등 (distant_lantern 에셋 있으면 배치, 없으면 생략).
-        [SerializeField] private Vector3 _lanternPos = new Vector3(2.1f, 1.4f, 6.6f);
-        [SerializeField] private Vector2 _lanternSize = new Vector2(1.3f, 1.9f);
-        [SerializeField, Range(0f, 1f)] private float _lanternAlpha = 0.85f;
+        // 중경: 지등 (distant_lantern 에셋 있으면 우측 온광 악센트로 배치, 없으면 생략).
+        [SerializeField] private Vector3 _lanternPos = new Vector3(3.4f, 1.9f, 5.6f);
+        [SerializeField] private Vector2 _lanternSize = new Vector2(2.9f, 4.35f);
+        [SerializeField, Range(0f, 1f)] private float _lanternAlpha = 0.92f;
         // 안개: 절차 소프트 밴드 1~2장 (알파 0.15~0.25, 매우 느린 좌우 드리프트).
         [SerializeField] private Vector3[] _fogBandPositions =
         {

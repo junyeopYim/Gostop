@@ -100,5 +100,33 @@ namespace Hwatu.View
         public static float ShuffleHandSwayDegrees = 9f;      // 좌우 왕복 진폭
         public static float ShuffleHandDeckWidthScale = 1.8f; // [C] 손 폭 = 더미 스크린 폭 × 1.6~2.0 상한
         public static float ShuffleHandCoverFraction = 0.62f; // [C] 손(피벗=소매상단)을 더미 위로 올려 손끝이 더미를 덮는 비율
+
+        // ── [3단계] 차사의 목소리: 대화 타자기 (언더테일식) ──
+        public static float DialogueCharDelay = 0.035f;        // 글자당 지연 (기본)
+        public static int DialogueFontSize = 36;               // 대화 본문 크기 (가독성)
+        public static float DialogueLineSpacing = 12f;         // 2줄 대사 줄 간격
+        public static float DialogueCharSpacing = 2f;          // 명조 자간 살짝 벌려 또렷하게
+
+        // ── [3단계] 차사의 손 — 선택 제시 (ChasaOffer) ──
+        public static float ChasaOfferHandEnterDuration = 0.32f; // 상단→제시 위치 하강 (셔플 손 문법 재사용)
+        public static float ChasaOfferHandExitDuration = 0.28f;  // 손 퇴장
+        public static float ChasaOfferSlipStagger = 0.06f;       // 쪽지 부챗살 펼침 간격
+        public static float ChasaOfferPickLift = 26f;            // 고른 쪽지가 떠오르는 높이
+        public static float ChasaOfferPickDuration = 0.22f;      // 고른 쪽지 부양 + 나머지 흐려짐
+
+        // ── [3단계] 화제(畵題) 힌트 (재사용) ──
+        public static float HwajeHintDrawDuration = 0.4f;        // 지시선·글씨 그려지며 등장
+        public static float HwajeHintFadeDuration = 0.28f;       // 다음 유효 입력 시 페이드
+        public static float HwajeHintMinLifetime = 0.9f;         // 다음 힌트가 밀어내기 전 최소 노출 시간
+
+        // ── [4단계] 여정 걷기 (1인칭 노드 이동, JourneyStage) ──
+        public static float WalkDurationSeconds = 6.0f;          // 갈림길 도착까지 (느린 걸음, ease-in-out)
+        public static float WalkHoldAccelMultiplier = 3f;        // 클릭 꾹 누름 = 3배 가속
+        public static float WalkBounceAmplitude = 0.006f;        // 보행 y 사인 바운스 진폭 (더 작게 — 멀미 캡)
+        public static float WalkBouncePeriodSeconds = 1.2f;      // 보행 바운스 주기 (2배 이상 느리게)
+        public static float WalkRollDegrees = 0.08f;             // 보행 미세 롤 ±도 (더 작게)
+        public static float NalCalligraphyFadeSeconds = 0.45f;   // "N일째" 붓글씨 페인트-인/아웃
+        public static float NalCalligraphyHoldSeconds = 1.0f;    // "N일째" 붓글씨 유지 시간
+        public static float CrossroadAdvanceSeconds = 1.0f;      // [B] 선택 확정 후 그 길로 짧게 전진
     }
 }
